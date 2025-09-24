@@ -4,6 +4,9 @@ import users from './routes/users.js';
 
 const app = express();
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 app.use("/users", users)
 
 app.listen(process.env.PORT, () => {
