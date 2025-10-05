@@ -1,8 +1,8 @@
 <!-- frontend/components/PostCard.vue -->
 <template>
   <UCard 
-    class="hover:shadow-lg transition-shadow cursor-pointer"
-    @click="$emit('click')"
+    class="hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden"
+    @click.stop="$emit('click')"
   >
     <!-- Post Header -->
     <template #header>

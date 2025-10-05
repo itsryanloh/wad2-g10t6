@@ -61,10 +61,10 @@
 
       <div v-else-if="filteredPosts.length" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         <PostCard
-          v-for="post in filteredPosts"
-          :key="post.id"
-          :post="post"
-          @click="navigateTo(`/forum/${post.id}`)"
+            v-for="post in filteredPosts"
+            :key="post.id"
+            :post="post"
+            @click="goToPost(post.id)"
         />
       </div>
 
@@ -285,6 +285,11 @@ const closeCreateModal = () => {
   }
   tagsInput.value = ''
   imageUrlsInput.value = ''
+}
+
+const goToPost = (postId) => {
+  console.log('Navigating to post:', postId) // Debug log
+  navigateTo(`/forum/${postId}`)
 }
 
 onMounted(() => {
