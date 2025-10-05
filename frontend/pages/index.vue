@@ -20,7 +20,7 @@
       <div class="hero-content">
         <div class="logo-section">
           <i class="fas fa-paw paw-icon"></i>
-          <h1 class="hero-title">PawRescue</h1>
+          <h1 class="hero-title">Adore</h1>
         </div>
         
         <p class="hero-subtitle">

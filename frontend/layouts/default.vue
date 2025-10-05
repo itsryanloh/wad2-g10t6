@@ -86,11 +86,11 @@
           <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
             <p class="mb-0">
               <i class="fas fa-paw me-2"></i>
-              <strong>PawRescue</strong> - Connecting Cats with Loving Homes
+              <strong>Project Adore</strong> - Connecting Cats with Loving Homes
             </p>
           </div>
           <div class="col-md-6 text-center text-md-end">
-            <small class="text-muted">© 2025 PawRescue. All rights reserved.</small>
+            <small class="text-muted">© 2025 Adore. All rights reserved.</small>
           </div>
         </div>
       </div>
