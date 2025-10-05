@@ -2,7 +2,7 @@
   <div class="create-page">
     <div class="container">
       <!-- Back Button -->
-      <button class="back-btn" @click="navigateTo('/forum')">
+      <button class="back-btn" @click="navigateTo('/forum/main')">
         <i class="fas fa-arrow-left me-2"></i>Back to Forum
       </button>
 
@@ -135,7 +135,7 @@
 
           <!-- Submit Buttons -->
           <div class="form-actions">
-            <button type="button" class="btn btn-secondary-custom" @click="navigateTo('/forum')">
+            <button type="button" class="btn btn-secondary-custom" @click="navigateTo('/forum/main')">
               <i class="fas fa-times me-2"></i>Cancel
             </button>
             <button

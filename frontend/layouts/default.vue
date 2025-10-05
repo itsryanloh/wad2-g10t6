@@ -109,8 +109,8 @@ const handleLogout = () => {
 <style scoped>
 /* Navbar Styling */
 .navbar-custom {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #FF9800 0%, #FFC107 100%);
+  box-shadow: 0 4px 20px rgba(255, 152, 0, 0.3);
   padding: 15px 0;
   backdrop-filter: blur(10px);
   z-index: 1000;
