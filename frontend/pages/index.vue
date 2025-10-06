@@ -43,6 +43,7 @@
           </button>
         </div>
 
+        <!-- Features Inside Hero Content -->
         <div class="features-section">
           <div class="feature-item">
             <div class="feature-icon">
@@ -82,18 +83,19 @@ definePageMeta({
 <style scoped>
 .landing-page {
   position: relative;
-  min-height: 100vh;
+  min-height: 100vh; /* Full viewport height */
   overflow: hidden;
 }
 
 /* Video Background */
 .video-background {
-  position: fixed;
+  position: absolute; /* Changed from fixed to absolute */
   top: 0;
   left: 0;
   width: 100%;
-  height: 100%;
+  height: calc(100% + 200px); /* Extend beyond container to cover gap */
   z-index: 0;
+  pointer-events: none; /* Prevent blocking clicks */
 }
 
 .background-video {
@@ -110,46 +112,47 @@ definePageMeta({
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 155, 133, 0.7) 0%,
-    rgba(168, 230, 207, 0.6) 50%,
-    rgba(136, 216, 247, 0.7) 100%
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.1) 50%,
+    rgba(0, 0, 0, 0.4) 100%
   );
-  backdrop-filter: blur(2px);
+  backdrop-filter: none;
 }
 
-/* Content Wrapper */
+/* Content Wrapper - Flush to left with NO gap */
 .content-wrapper {
   position: relative;
   z-index: 10;
-  min-height: 100vh;
+  min-height: 100vh; /* Full viewport height */
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
+  justify-content: flex-start;
+  padding: 0; /* Remove all padding */
 }
 
 .hero-content {
-  max-width: 900px;
-  text-align: center;
-  background: rgba(255, 255, 255, 0.95);
-  padding: 60px 50px;
-  border-radius: 30px;
+  max-width: 500px;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.65);
+  padding: 50px 40px;
+  border-radius: 0 30px 30px 0; /* Rounded only on right side */
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(20px);
-  animation: fadeInUp 1s ease;
+  animation: slideInLeft 1s ease;
   border: 2px solid rgba(255, 255, 255, 0.8);
+  border-left: none; /* Remove left border since it's flush */
 }
 
-@keyframes fadeInUp {
+@keyframes slideInLeft {
   from {
     opacity: 0;
-    transform: translateY(60px);
+    transform: translateX(-100px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(0);
   }
 }
 
@@ -157,13 +160,13 @@ definePageMeta({
 .logo-section {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 25px;
+  justify-content: flex-start;
+  gap: 20px;
   margin-bottom: 20px;
 }
 
 .paw-icon {
-  font-size: 4rem;
+  font-size: 3.5rem;
   background: linear-gradient(135deg, #FF9B85 0%, #FFB88C 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -177,53 +180,49 @@ definePageMeta({
 }
 
 .hero-title {
-  font-size: 5rem;
+  font-size: 4rem;
   font-weight: 900;
   background: linear-gradient(135deg, #FF9B85 0%, #88D8F7 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   letter-spacing: 3px;
   text-transform: uppercase;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .hero-subtitle {
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   color: #5D4E37;
   font-weight: 600;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
   line-height: 1.4;
 }
 
 .hero-description {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   color: #7A7265;
-  margin-bottom: 40px;
-  line-height: 1.8;
-  max-width: 700px;
-  margin-left: auto;
-  margin-right: auto;
+  margin-bottom: 30px;
+  line-height: 1.6;
 }
 
 /* CTA Buttons */
 .cta-buttons {
   display: flex;
-  gap: 20px;
-  justify-content: center;
+  gap: 15px;
+  justify-content: flex-start;
   flex-wrap: wrap;
-  margin-bottom: 60px;
+  margin-bottom: 35px;
 }
 
 .btn {
-  padding: 18px 45px;
+  padding: 15px 35px;
   border-radius: 50px;
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 1rem;
   border: none;
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   text-transform: uppercase;
-  letter-spacing: 1.5px;
+  letter-spacing: 1.2px;
 }
 
 .btn-primary {
@@ -233,7 +232,7 @@ definePageMeta({
 }
 
 .btn-primary:hover {
-  transform: translateY(-8px) scale(1.08);
+  transform: translateY(-5px) scale(1.05);
   box-shadow: 0 20px 50px rgba(255, 155, 133, 0.6);
 }
 
@@ -248,73 +247,92 @@ definePageMeta({
   background: linear-gradient(135deg, #88D8F7 0%, #A8E6CF 100%);
   color: white;
   border-color: transparent;
-  transform: translateY(-8px) scale(1.08);
+  transform: translateY(-5px) scale(1.05);
   box-shadow: 0 15px 40px rgba(136, 216, 247, 0.5);
 }
 
-/* Features Section */
+/* Features Section - Now Inside Hero Content */
 .features-section {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 30px;
-  margin-top: 20px;
+  grid-template-columns: 1fr;
+  gap: 15px;
+  margin-top: 10px;
 }
 
 .feature-item {
   background: linear-gradient(135deg, #FFF4E6 0%, #ffffff 100%);
-  padding: 35px 25px;
-  border-radius: 25px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-  transition: all 0.4s ease;
+  padding: 20px;
+  border-radius: 20px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
   border: 2px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: 15px;
 }
 
 .feature-item:hover {
-  transform: translateY(-12px);
-  box-shadow: 0 20px 45px rgba(255, 155, 133, 0.25);
+  transform: translateX(10px);
+  box-shadow: 0 10px 25px rgba(255, 155, 133, 0.2);
   border-color: #FF9B85;
 }
 
 .feature-icon {
-  width: 80px;
-  height: 80px;
-  margin: 0 auto 20px;
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
   background: linear-gradient(135deg, #FF9B85 0%, #88D8F7 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 10px 30px rgba(255, 155, 133, 0.3);
+  box-shadow: 0 8px 20px rgba(255, 155, 133, 0.3);
   transition: all 0.3s ease;
 }
 
 .feature-item:hover .feature-icon {
-  transform: scale(1.15) rotate(10deg);
-  box-shadow: 0 15px 40px rgba(255, 155, 133, 0.5);
+  transform: scale(1.1) rotate(10deg);
+  box-shadow: 0 12px 30px rgba(255, 155, 133, 0.4);
 }
 
 .feature-icon i {
-  font-size: 2.5rem;
+  font-size: 1.8rem;
   color: white;
 }
 
 .feature-item h3 {
-  font-size: 1.3rem;
+  font-size: 1.1rem;
   color: #5D4E37;
-  margin-bottom: 10px;
+  margin-bottom: 3px;
   font-weight: 700;
 }
 
 .feature-item p {
   color: #7A7265;
-  font-size: 1rem;
-  line-height: 1.5;
+  font-size: 0.9rem;
+  margin: 0;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
+  .content-wrapper {
+    justify-content: center;
+    padding: 60px 20px;
+  }
+  
   .hero-content {
-    padding: 40px 30px;
+    text-align: center;
+    max-width: 100%;
+    border-radius: 30px;
+    border-left: 2px solid rgba(255, 255, 255, 0.8);
+  }
+
+  .logo-section {
+    justify-content: center;
+  }
+  
+  .cta-buttons {
+    justify-content: center;
   }
 
   .hero-title {
@@ -333,28 +351,13 @@ definePageMeta({
     font-size: 1rem;
   }
 
-  .cta-buttons {
-    flex-direction: column;
-    gap: 15px;
-  }
-
   .btn {
     width: 100%;
     padding: 16px 35px;
   }
 
-  .features-section {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-
-  .feature-icon {
-    width: 70px;
-    height: 70px;
-  }
-
-  .feature-icon i {
-    font-size: 2rem;
+  .feature-item {
+    justify-content: center;
   }
 }
 

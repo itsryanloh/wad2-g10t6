@@ -177,7 +177,7 @@
     </div>
 
     <!-- Floating Action Button -->
-    <button class="fab" @click="navigateTo('/forum/create')" title="Create New Post">
+    <button class="fab" @click="navigateTo('/forum/createPost')" title="Create New Post">
       <i class="fas fa-plus"></i>
     </button>
   </div>

@@ -30,7 +30,7 @@
               </NuxtLink>
             </li>
             <li class="nav-item">
-              <NuxtLink to="/forum" class="nav-link" active-class="active">
+              <NuxtLink to="/forum/main" class="nav-link" active-class="active">
                 <i class="fas fa-comments me-2"></i>Forum
               </NuxtLink>
             </li>
@@ -246,15 +246,22 @@ const handleLogout = () => {
 
 /* Footer */
 .footer-custom {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #FF9800 0%, #FFC107 100%);
   color: white;
   padding: 30px 0;
-  margin-top: 60px;
+  margin-top: 0;
+  box-shadow: 0 -4px 20px rgba(255, 152, 0, 0.3);
 }
 
 .footer-custom p {
   color: white;
   font-size: 1rem;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.footer-custom small {
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 /* Responsive */
