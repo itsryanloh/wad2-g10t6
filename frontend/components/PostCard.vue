@@ -1,4 +1,3 @@
-<!-- frontend/components/PostCard.vue -->
 <template>
   <UCard 
     class="hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden"

@@ -78,14 +78,6 @@
                 <i :class="getPostTypeIcon(currentPost.post_type)" class="me-2"></i>
                 {{ currentPost.post_type }}
               </span>
-              
-              <button
-                v-if="isAuthor"
-                class="edit-btn"
-                @click="navigateTo(`/forum/${currentPost.id}/editPost`)"
-              >
-                <i class="fas fa-pen me-2"></i>Edit
-              </button>
             </div>
           </div>
 

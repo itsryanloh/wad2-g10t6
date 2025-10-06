@@ -1,4 +1,3 @@
-<!-- frontend/components/CommentItem.vue -->
 <template>
   <div :class="['border-l-2 pl-4', depth > 0 ? 'ml-8 border-gray-300' : 'border-transparent']">
     <div class="flex gap-3">

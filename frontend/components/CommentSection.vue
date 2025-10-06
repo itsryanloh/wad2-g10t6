@@ -1,4 +1,3 @@
-<!-- frontend/components/CommentSection.vue -->
 <template>
   <div class="space-y-4">
     <h3 class="text-lg font-semibold">Comments ({{ comments.length }})</h3>

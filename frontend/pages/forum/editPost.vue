@@ -9,7 +9,7 @@
       <!-- Edit Form -->
       <div v-else-if="currentPost" class="edit-wrapper">
         <!-- Back Button -->
-        <button class="back-btn" @click="navigateTo(`/forum/${route.params.postId}`)">
+        <button class="back-btn" @click="navigateTo(`/forum/${route.query.postId}`)">
           <i class="fas fa-arrow-left me-2"></i>Back to Post
         </button>
 
@@ -84,32 +84,66 @@
               />
             </div>
 
-            <!-- Image URLs -->
+            <!-- Images Section -->
             <div class="form-section">
               <label class="section-label">
                 <i class="fas fa-images me-2"></i>Images (Optional)
               </label>
-              <textarea
-                v-model="imageUrlsText"
-                class="form-textarea"
-                placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg"
-                rows="4"
-              ></textarea>
-              <small class="form-hint">Enter image URLs, one per line</small>
               
-              <!-- Image Preview -->
+              <!-- Upload Area -->
+              <div 
+                class="upload-area"
+                :class="{ dragging: isDragging, uploading: uploading }"
+                @click="() => fileInput?.click()"
+                @drop.prevent="handleDrop"
+                @dragover.prevent="isDragging = true"
+                @dragleave.prevent="isDragging = false"
+              >
+                <input
+                  ref="fileInput"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  @change="handleFileSelect"
+                  style="display: none;"
+                />
+                
+                <div v-if="!uploading" class="upload-content">
+                  <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                  <p class="upload-text">Drag & drop images here</p>
+                  <p class="upload-subtext">or click to browse</p>
+                  <small class="upload-hint">PNG, JPG, GIF up to 5MB each (Max 5 images total)</small>
+                </div>
+                
+                <div v-else class="upload-loading">
+                  <i class="fas fa-spinner fa-spin"></i>
+                  <p>Uploading images...</p>
+                </div>
+              </div>
+              
+              <!-- Image Preview with Remove -->
               <div v-if="editForm.image_urls?.length" class="image-preview">
                 <div
-                  v-for="(url, index) in editForm.image_urls.slice(0, 5)"
+                  v-for="(url, index) in editForm.image_urls"
                   :key="index"
                   class="preview-item"
                 >
                   <img :src="url" alt="Preview" @error="(e) => e.target.style.display = 'none'" />
-                </div>
-                <div v-if="editForm.image_urls.length > 5" class="preview-more">
-                  +{{ editForm.image_urls.length - 5 }} more
+                  <button 
+                    type="button" 
+                    class="remove-image" 
+                    @click.stop="removeImage(index)"
+                    title="Remove image"
+                  >
+                    <i class="fas fa-times"></i>
+                  </button>
                 </div>
               </div>
+              
+              <small v-if="uploadError" class="upload-error">{{ uploadError }}</small>
+              <small v-else class="form-hint">
+                {{ editForm.image_urls?.length || 0 }}/5 images added
+              </small>
             </div>
 
             <!-- Tags -->
@@ -160,33 +194,21 @@
 
             <!-- Action Buttons -->
             <div class="action-buttons">
-              <!-- Delete Button -->
               <button
                 type="button"
-                class="btn-delete"
-                @click="showDeleteConfirm = true"
+                class="btn-cancel"
+                @click="navigateTo(`/profile/myPost`)"
               >
-                <i class="fas fa-trash-alt me-2"></i>Delete Post
+                Cancel
               </button>
-
-              <!-- Save/Cancel Buttons -->
-              <div class="save-buttons">
-                <button
-                  type="button"
-                  class="btn-cancel"
-                  @click="navigateTo(`/forum/${route.params.postId}`)"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  class="btn-save"
-                  :disabled="!isFormValid || updating"
-                >
-                  <i class="fas fa-check me-2"></i>
-                  {{ updating ? 'Saving...' : 'Save Changes' }}
-                </button>
-              </div>
+              <button
+                type="submit"
+                class="btn-save"
+                :disabled="!isFormValid || updating"
+              >
+                <i class="fas fa-check me-2"></i>
+                {{ updating ? 'Saving...' : 'Save Changes' }}
+              </button>
             </div>
           </form>
         </div>
@@ -204,37 +226,6 @@
         </button>
       </div>
     </div>
-
-    <!-- Delete Confirmation Modal -->
-    <div v-if="showDeleteConfirm" class="modal-overlay" @click="showDeleteConfirm = false">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <i class="fas fa-exclamation-triangle"></i>
-          <h3>Delete Post</h3>
-        </div>
-        
-        <p class="modal-body">
-          Are you sure you want to delete this post? This action cannot be undone.
-        </p>
-        
-        <div class="modal-footer">
-          <button
-            class="modal-btn-cancel"
-            @click="showDeleteConfirm = false"
-          >
-            Cancel
-          </button>
-          <button
-            class="modal-btn-delete"
-            @click="handleDelete"
-            :disabled="deleting"
-          >
-            <i class="fas fa-trash-alt me-2"></i>
-            {{ deleting ? 'Deleting...' : 'Delete Permanently' }}
-          </button>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -244,11 +235,13 @@ import { useRoute } from 'vue-router'
 import { useForum } from '~/composables/useForum'
 
 const route = useRoute()
-const { currentPost, loading, fetchPostById, updatePost, deletePost } = useForum()
+const { currentPost, loading, fetchPostById, updatePost } = useForum()
 
 const updating = ref(false)
-const deleting = ref(false)
-const showDeleteConfirm = ref(false)
+const isDragging = ref(false)
+const uploading = ref(false)
+const uploadError = ref('')
+const fileInput = ref(null)
 
 const editForm = ref({
   title: '',
@@ -259,15 +252,7 @@ const editForm = ref({
   is_resolved: false
 })
 
-const imageUrlsText = ref('')
 const tagsText = ref('')
-
-watch(imageUrlsText, (newVal) => {
-  editForm.value.image_urls = newVal
-    .split('\n')
-    .map(url => url.trim())
-    .filter(url => url.length > 0)
-})
 
 watch(tagsText, (newVal) => {
   editForm.value.tags = newVal
@@ -292,36 +277,117 @@ const getPostTypeIcon = (type) => {
   return icons[type] || 'fas fa-circle'
 }
 
+// Handle file selection
+const handleFileSelect = async (event) => {
+  const files = Array.from(event.target.files)
+  await uploadFiles(files)
+}
+
+// Handle drag and drop
+const handleDrop = async (event) => {
+  isDragging.value = false
+  const files = Array.from(event.dataTransfer.files).filter(file => 
+    file.type.startsWith('image/')
+  )
+  
+  if (files.length === 0) {
+    uploadError.value = 'Please drop image files only'
+    return
+  }
+  
+  await uploadFiles(files)
+}
+
+// Upload files to backend data bucket
+const uploadFiles = async (files) => {
+  if (files.length + (editForm.value.image_urls?.length || 0) > 5) {
+    uploadError.value = 'Maximum 5 images allowed'
+    return
+  }
+  
+  uploadError.value = ''
+  uploading.value = true
+  
+  try {
+    const formData = new FormData()
+    files.forEach(file => {
+      formData.append('images', file)
+    })
+    
+    // Upload to backend data bucket
+    const response = await fetch('http://localhost:3000/api/upload-images', {
+      method: 'POST',
+      body: formData
+    })
+    
+    const data = await response.json()
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Upload failed')
+    }
+    
+    // Add uploaded URLs to form
+    editForm.value.image_urls = [...(editForm.value.image_urls || []), ...data.urls]
+    
+  } catch (error) {
+    console.error('Error uploading images:', error)
+    uploadError.value = error.message || 'Failed to upload images'
+  } finally {
+    uploading.value = false
+  }
+}
+
+// Remove image
+const removeImage = (index) => {
+  editForm.value.image_urls.splice(index, 1)
+}
+
 const handleSubmit = async () => {
   if (!isFormValid.value) return
 
   updating.value = true
 
   try {
-    await updatePost(route.params.postId, editForm.value)
-    await navigateTo(`/forum/${route.params.postId}`)
+    const postId = route.query.postId
+    // Debug logging
+    console.log('=== SUBMITTING UPDATE ===')
+    console.log('Post ID:', postId)
+    console.log('Form data being sent:', {
+      title: editForm.value.title,
+      content: editForm.value.content,
+      location_name: editForm.value.location_name,
+      image_urls: editForm.value.image_urls,
+      tags: editForm.value.tags,
+      is_resolved: editForm.value.is_resolved
+    })
+    console.log('Number of images:', editForm.value.image_urls?.length)
+    console.log('Image URLs:', editForm.value.image_urls)
+    console.log('Tags:', editForm.value.tags)
+    
+    const result = await updatePost(postId, editForm.value)
+    
+    console.log('Update result:', result)
+    
+    await navigateTo(`/forum/${postId}`)
   } catch (error) {
     console.error('Error updating post:', error)
+    alert('Failed to update post. Check console for details.')
   } finally {
     updating.value = false
   }
 }
 
-const handleDelete = async () => {
-  deleting.value = true
-
-  try {
-    await deletePost(route.params.postId)
-    await navigateTo('/forum')
-  } catch (error) {
-    console.error('Error deleting post:', error)
-  } finally {
-    deleting.value = false
-  }
-}
-
 onMounted(async () => {
-  const postId = route.params.postId
+  const postId = route.query.postId
+  
+  console.log('EditPost mounted with postId:', postId)
+  
+  if (!postId) {
+    console.error('No postId found in query parameters')
+    await navigateTo('/forum')
+    return
+  }
+  
   await fetchPostById(postId)
 
   if (currentPost.value) {
@@ -334,8 +400,9 @@ onMounted(async () => {
       is_resolved: currentPost.value.is_resolved || false
     }
 
-    imageUrlsText.value = currentPost.value.image_urls?.join('\n') || ''
     tagsText.value = currentPost.value.tags?.join(', ') || ''
+    
+    console.log('Form populated with:', editForm.value)
   }
 })
 </script>
@@ -353,7 +420,6 @@ onMounted(async () => {
   padding: 0 20px;
 }
 
-/* Back Button */
 .back-btn {
   background: rgba(255, 155, 133, 0.15);
   color: #FF9B85;
@@ -373,7 +439,6 @@ onMounted(async () => {
   box-shadow: 0 5px 20px rgba(255, 155, 133, 0.3);
 }
 
-/* Page Header */
 .page-header {
   text-align: center;
   margin-bottom: 40px;
@@ -405,7 +470,6 @@ onMounted(async () => {
   font-size: 1.1rem;
 }
 
-/* Form Card */
 .form-card {
   background: white;
   border-radius: 25px;
@@ -443,7 +507,6 @@ onMounted(async () => {
   margin-left: 5px;
 }
 
-/* Type Display */
 .type-display {
   display: flex;
   flex-direction: column;
@@ -492,7 +555,6 @@ onMounted(async () => {
   font-style: italic;
 }
 
-/* Form Inputs */
 .form-input {
   width: 100%;
   padding: 15px 20px;
@@ -541,7 +603,90 @@ onMounted(async () => {
   margin-top: 8px;
 }
 
-/* Image Preview */
+.upload-area {
+  border: 3px dashed #FFB88C;
+  border-radius: 15px;
+  padding: 40px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  background: linear-gradient(135deg, #FFF5E6 0%, #FFE8D6 100%);
+}
+
+.upload-area:hover {
+  border-color: #FF9B85;
+  background: linear-gradient(135deg, #FFE8D6 0%, #FFD9B3 100%);
+  transform: translateY(-2px);
+}
+
+.upload-area.dragging {
+  border-color: #FF9B85;
+  background: linear-gradient(135deg, #FFD9B3 0%, #FFC999 100%);
+  transform: scale(1.02);
+  box-shadow: 0 10px 30px rgba(255, 155, 133, 0.2);
+}
+
+.upload-area.uploading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.upload-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.upload-icon {
+  font-size: 4rem;
+  color: #FF9B85;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.upload-text {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #5D4E37;
+  margin: 0;
+}
+
+.upload-subtext {
+  font-size: 1rem;
+  color: #7A7265;
+  margin: 0;
+}
+
+.upload-hint {
+  color: #7A7265;
+  font-size: 0.875rem;
+}
+
+.upload-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  color: #FF9B85;
+}
+
+.upload-loading i {
+  font-size: 3rem;
+}
+
+.upload-error {
+  display: block;
+  color: #FF6B6B;
+  font-size: 0.9rem;
+  margin-top: 8px;
+  font-weight: 600;
+}
+
 .image-preview {
   display: flex;
   flex-wrap: wrap;
@@ -550,12 +695,25 @@ onMounted(async () => {
 }
 
 .preview-item {
+  position: relative;
   width: 100px;
   height: 100px;
   border-radius: 12px;
   overflow: hidden;
   border: 3px solid #FFB88C;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .preview-item img {
@@ -564,20 +722,30 @@ onMounted(async () => {
   object-fit: cover;
 }
 
-.preview-more {
-  width: 100px;
-  height: 100px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #FFB88C 0%, #FF9B85 100%);
+.remove-image {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: rgba(255, 107, 107, 0.95);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-weight: 700;
-  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Tags Preview */
+.remove-image:hover {
+  background: #FF6B6B;
+  transform: scale(1.1);
+}
+
 .tags-preview {
   display: flex;
   flex-wrap: wrap;
@@ -594,7 +762,6 @@ onMounted(async () => {
   font-size: 0.9rem;
 }
 
-/* Toggle Switch */
 .toggle-wrapper {
   display: flex;
   align-items: center;
@@ -651,37 +818,13 @@ onMounted(async () => {
   font-weight: 500;
 }
 
-/* Action Buttons */
 .action-buttons {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  justify-content: flex-end;
+  gap: 15px;
   padding-top: 30px;
   margin-top: 30px;
   border-top: 2px solid #FFF4E6;
-}
-
-.btn-delete {
-  background: rgba(255, 107, 107, 0.1);
-  color: #FF6B6B;
-  border: 2px solid rgba(255, 107, 107, 0.3);
-  padding: 12px 25px;
-  border-radius: 50px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.btn-delete:hover {
-  background: #FF6B6B;
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
-}
-
-.save-buttons {
-  display: flex;
-  gap: 15px;
 }
 
 .btn-cancel {
@@ -724,117 +867,6 @@ onMounted(async () => {
   transform: none;
 }
 
-/* Modal */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.modal-content {
-  background: white;
-  border-radius: 25px;
-  padding: 40px;
-  max-width: 500px;
-  width: 90%;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  animation: modalSlideUp 0.3s ease;
-}
-
-@keyframes modalSlideUp {
-  from {
-    opacity: 0;
-    transform: translateY(50px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  margin-bottom: 20px;
-}
-
-.modal-header i {
-  font-size: 2.5rem;
-  color: #FF6B6B;
-}
-
-.modal-header h3 {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #5D4E37;
-  margin: 0;
-}
-
-.modal-body {
-  color: #7A7265;
-  font-size: 1.1rem;
-  line-height: 1.6;
-  margin-bottom: 30px;
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 15px;
-}
-
-.modal-btn-cancel {
-  background: rgba(122, 114, 101, 0.1);
-  color: #7A7265;
-  border: 2px solid rgba(122, 114, 101, 0.3);
-  padding: 12px 30px;
-  border-radius: 50px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.modal-btn-cancel:hover {
-  background: #7A7265;
-  color: white;
-}
-
-.modal-btn-delete {
-  background: linear-gradient(135deg, #FF6B6B 0%, #EE5A6F 100%);
-  color: white;
-  border: none;
-  padding: 12px 30px;
-  border-radius: 50px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.modal-btn-delete:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(255, 107, 107, 0.4);
-}
-
-.modal-btn-delete:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Loading State */
 .loading-skeleton {
   height: 600px;
   background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
@@ -848,7 +880,6 @@ onMounted(async () => {
   100% { background-position: -200% 0; }
 }
 
-/* Error State */
 .error-state {
   text-align: center;
   padding: 80px 20px;
@@ -900,7 +931,6 @@ onMounted(async () => {
   box-shadow: 0 10px 30px rgba(255, 155, 133, 0.4);
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .form-card {
     padding: 25px;
@@ -912,30 +942,10 @@ onMounted(async () => {
 
   .action-buttons {
     flex-direction: column;
-    gap: 15px;
-  }
-
-  .save-buttons {
-    width: 100%;
-    flex-direction: column;
   }
 
   .btn-cancel,
-  .btn-save,
-  .btn-delete {
-    width: 100%;
-  }
-
-  .modal-content {
-    padding: 30px 20px;
-  }
-
-  .modal-footer {
-    flex-direction: column;
-  }
-
-  .modal-btn-cancel,
-  .modal-btn-delete {
+  .btn-save {
     width: 100%;
   }
 }

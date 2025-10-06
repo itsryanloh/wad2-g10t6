@@ -1,8 +1,9 @@
-// backend/server.js - ES MODULE VERSION
 import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 import forumRoutes from './routes/forum.js';
+import avatarsRouter from './routes/avatars.js';
+import usersRouter from './routes/users.js';
 
 dotenv.config();
 
@@ -14,6 +15,8 @@ app.use(express.json());
 
 // Use Routes
 app.use('/api', forumRoutes);
+app.use('/api/users', usersRouter);
+app.use('/api/avatars', avatarsRouter);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

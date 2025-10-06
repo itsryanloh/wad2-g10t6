@@ -197,13 +197,18 @@ router.post('/posts', async (req, res) => {
 // UPDATE post
 router.put('/posts/:id', async (req, res) => {
   try {
-    const { title, content, location_name, is_resolved } = req.body;
+    const { title, content, location_name, is_resolved, image_urls, tags } = req.body;
 
     const updates = {};
     if (title !== undefined) updates.title = title;
     if (content !== undefined) updates.content = content;
     if (location_name !== undefined) updates.location_name = location_name;
     if (is_resolved !== undefined) updates.is_resolved = is_resolved;
+    if (image_urls !== undefined) updates.image_urls = image_urls;
+    if (tags !== undefined) updates.tags = tags;
+
+    console.log('Updating post:', req.params.id);
+    console.log('Update payload:', updates);
 
     const { data, error } = await supabase
       .from('posts')
@@ -218,6 +223,7 @@ router.put('/posts/:id', async (req, res) => {
     if (error) throw error;
     if (!data) return res.status(404).json({ error: 'Post not found' });
 
+    console.log('Post updated successfully:', data);
     res.json(data);
   } catch (error) {
     console.error('Error updating post:', error);

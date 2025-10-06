@@ -47,10 +47,9 @@
               </a>
             </li>
             <li class="nav-item">
-              <a href="#" class="nav-link disabled">
+              <NuxtLink to="/profile" class="nav-link">
                 <i class="fas fa-user me-2"></i>Profile
-                <span class="badge bg-secondary ms-1">Soon</span>
-              </a>
+              </NuxtLink>
             </li>
           </ul>
 

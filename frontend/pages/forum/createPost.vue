@@ -11,7 +11,7 @@
         <h1 class="page-title">
           <i class="fas fa-pen-fancy me-3"></i>Create New Post
         </h1>
-        <p class="page-subtitle">Share your story with the community</p>
+        <p class="page-subtitle">Share your cat story with the community</p>
       </div>
 
       <!-- Form Card -->
@@ -185,16 +185,41 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useForum } from '~/composables/useForum'
+import { useRouter } from 'vue-router'
 
 const { createPost } = useForum()
+const router = useRouter()
 
 const submitting = ref(false)
 const isDragging = ref(false)
 const uploading = ref(false)
 const uploadError = ref('')
 const fileInput = ref(null)
+
+// Get current user ID from database
+const currentUserId = ref(null)
+
+onMounted(async () => {
+  try {
+    const response = await fetch('http://localhost:3000/api/users')
+    const users = await response.json()
+    
+    // Find David Chen or use first user
+    const davidChen = users.find(user => 
+      user.username === 'davidchen' || user.name.toLowerCase().includes('david chen')
+    )
+    
+    const targetUser = davidChen || users[0]
+    
+    if (targetUser) {
+      currentUserId.value = targetUser.id
+    }
+  } catch (error) {
+    console.error('Error fetching user:', error)
+  }
+})
 
 const postTypes = [
   {
@@ -253,13 +278,12 @@ const isFormValid = computed(() => {
          form.value.content?.trim()
 })
 
-// Handle file selection
 const handleFileSelect = async (event) => {
   const files = Array.from(event.target.files)
   await uploadFiles(files)
+  event.target.value = ''
 }
 
-// Handle drag and drop
 const handleDrop = async (event) => {
   isDragging.value = false
   const files = Array.from(event.dataTransfer.files).filter(file => 
@@ -268,16 +292,25 @@ const handleDrop = async (event) => {
   
   if (files.length === 0) {
     uploadError.value = 'Please drop image files only'
+    setTimeout(() => uploadError.value = '', 3000)
     return
   }
   
   await uploadFiles(files)
 }
 
-// Upload files to backend
 const uploadFiles = async (files) => {
   if (files.length + form.value.image_urls.length > 5) {
     uploadError.value = 'Maximum 5 images allowed'
+    setTimeout(() => uploadError.value = '', 3000)
+    return
+  }
+  
+  const maxSize = 5 * 1024 * 1024
+  const oversizedFiles = files.filter(file => file.size > maxSize)
+  if (oversizedFiles.length > 0) {
+    uploadError.value = 'Some files exceed 5MB limit'
+    setTimeout(() => uploadError.value = '', 3000)
     return
   }
   
@@ -290,7 +323,6 @@ const uploadFiles = async (files) => {
       formData.append('images', file)
     })
     
-    // Upload to your backend
     const response = await fetch('http://localhost:3000/api/upload-images', {
       method: 'POST',
       body: formData
@@ -302,40 +334,54 @@ const uploadFiles = async (files) => {
       throw new Error(data.error || 'Upload failed')
     }
     
-    // Add uploaded URLs to form
     form.value.image_urls = [...form.value.image_urls, ...data.urls]
     
   } catch (error) {
     console.error('Error uploading images:', error)
     uploadError.value = error.message || 'Failed to upload images'
+    setTimeout(() => uploadError.value = '', 5000)
   } finally {
     uploading.value = false
   }
 }
 
-// Remove image
 const removeImage = (index) => {
   form.value.image_urls.splice(index, 1)
 }
 
 const handleSubmit = async () => {
   if (!isFormValid.value) return
+  
+  if (!currentUserId.value) {
+    uploadError.value = 'User not loaded. Please refresh the page.'
+    return
+  }
 
   submitting.value = true
 
   try {
-    const userId = 'current-user-id' // Replace with actual auth
+    const postData = {
+      user_id: currentUserId.value,
+      title: form.value.title.trim(),
+      content: form.value.content.trim(),
+      post_type: form.value.post_type,
+      location_name: form.value.location_name?.trim() || null,
+      image_urls: form.value.image_urls.length > 0 ? form.value.image_urls : [],
+      tags: form.value.tags.length > 0 ? form.value.tags : []
+    }
 
-    const result = await createPost({
-      ...form.value,
-      user_id: userId
-    })
+    console.log('Creating post with data:', postData)
+
+    const result = await createPost(postData)
 
     if (result) {
-      await navigateTo(`/forum/${result.id}`)
+      console.log('Post created successfully:', result)
+      await router.push(`/forum/${result.id}`)
     }
   } catch (error) {
     console.error('Error creating post:', error)
+    uploadError.value = 'Failed to create post. Please try again.'
+    setTimeout(() => uploadError.value = '', 5000)
   } finally {
     submitting.value = false
   }
@@ -351,6 +397,8 @@ const handleSubmit = async () => {
 
 .container {
   max-width: 900px;
+  margin: 0 auto;
+  padding: 0 20px;
 }
 
 .back-btn {
@@ -396,7 +444,6 @@ const handleSubmit = async () => {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   margin-bottom: 10px;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .page-subtitle {
@@ -470,32 +517,12 @@ const handleSubmit = async () => {
   background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
   color: white;
   transform: scale(1.05);
-  animation: pulse 0.5s;
   box-shadow: 0 10px 30px rgba(255, 152, 0, 0.3);
-}
-
-@keyframes pulse {
-  0%, 100% { transform: scale(1.05); }
-  50% { transform: scale(1.1); }
 }
 
 .type-icon {
   font-size: 2.5rem;
   margin-bottom: 10px;
-  transition: transform 0.3s;
-}
-
-.type-card:hover .type-icon {
-  transform: scale(1.2) rotate(5deg);
-}
-
-.type-card.active .type-icon {
-  animation: bounce 0.6s;
-}
-
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
 }
 
 .type-label {
@@ -546,7 +573,6 @@ const handleSubmit = async () => {
   margin-top: 8px;
 }
 
-/* Upload Area */
 .upload-area {
   border: 3px dashed #FFB74D;
   border-radius: 15px;
@@ -645,19 +671,7 @@ const handleSubmit = async () => {
   border-radius: 10px;
   overflow: hidden;
   border: 2px solid #FFB74D;
-  animation: fadeIn 0.3s;
   box-shadow: 0 4px 10px rgba(255, 152, 0, 0.1);
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
 }
 
 .preview-item img {
@@ -703,7 +717,6 @@ const handleSubmit = async () => {
   border-radius: 20px;
   font-size: 0.875rem;
   font-weight: 600;
-  animation: fadeIn 0.3s;
   box-shadow: 0 4px 10px rgba(136, 216, 247, 0.2);
 }
 
@@ -758,7 +771,6 @@ const handleSubmit = async () => {
   transform: none;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .form-card {
     padding: 25px;

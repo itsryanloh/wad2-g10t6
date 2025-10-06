@@ -1,7 +1,5 @@
-// frontend/composables/useForum.ts
 import { ref } from 'vue'
 
-// Define types for better TypeScript support
 interface PostFilters {
   type?: string
   search?: string
@@ -110,28 +108,36 @@ export const useForum = () => {
     loading.value = true
     error.value = null
     
-    try {
+    try 
+    {
       const response = await fetch(`${API_BASE}/posts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(postData)
       })
       
-      if (!response.ok) throw new Error('Failed to create post')
+      // Check if response is ok
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to create post')
+      }
       
       const data = await response.json()
+      
+      // Add to beginning of posts array
       posts.value.unshift(data)
+      
       return data
     } catch (e) {
       const errorMessage = e instanceof Error ? e.message : 'An error occurred'
       error.value = errorMessage
       console.error('Error creating post:', e)
-      return null
+      throw e 
     } finally {
       loading.value = false
     }
   }
-
+  
   // Update post
   const updatePost = async (postId: string, updates: any): Promise<Post | null> => {
     loading.value = true

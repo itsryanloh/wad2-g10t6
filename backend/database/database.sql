@@ -1,10 +1,5 @@
--- ================================================
 -- CAT ADOPTION PLATFORM - DATABASE SCHEMA
--- ================================================
-
--- CREATE TABLES
--- =====================================
-
+-- =======================================
 CREATE TABLE users (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
@@ -56,7 +51,7 @@ CREATE TABLE post_reactions (
 );
 
 -- CREATE INDEXES
--- =====================================
+-- ==============
 
 CREATE INDEX idx_users_username ON users(username);
 CREATE INDEX idx_users_created_at ON users(created_at);
@@ -70,7 +65,7 @@ CREATE INDEX idx_post_reactions_user_id ON post_reactions(user_id);
 
 
 -- ROW LEVEL SECURITY
--- =====================================
+-- ==================
 
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
@@ -105,7 +100,7 @@ CREATE POLICY "Users can remove own reactions" ON post_reactions FOR DELETE
 
 
 -- AUTO-UPDATE TRIGGERS
--- =====================================
+-- ====================
 
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -133,13 +128,13 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 
 -- TEST DATA
--- =====================================
+-- =========
 
 INSERT INTO users (name, username, password, contact_no, age, gender, avatar_url) VALUES
-('John Tan', 'johntan', '$2a$10$hashedpassword1', '+65 9123 4567', 28, 'male', 'https://i.pravatar.cc/150?img=12'),
-('Amy Lim', 'amylim', '$2a$10$hashedpassword2', '+65 8234 5678', 25, 'female', 'https://i.pravatar.cc/150?img=5'),
-('David Chen', 'davidchen', '$2a$10$hashedpassword3', '+65 9345 6789', 32, 'male', 'https://i.pravatar.cc/150?img=33'),
-('Sarah Wong', 'sarahwong', '$2a$10$hashedpassword4', '+65 8456 7890', 29, 'female', 'https://i.pravatar.cc/150?img=9');
+('John Tan', 'johntan', '00000000', '+65 9123 4567', 28, 'male', 'https://i.pravatar.cc/150?img=12'),
+('Amy Lim', 'amylim', '00000000', '+65 8234 5678', 25, 'female', 'https://i.pravatar.cc/150?img=5'),
+('David Chen', 'davidchen', '00000000', '+65 9345 6789', 32, 'male', 'https://i.pravatar.cc/150?img=33'),
+('Sarah Wong', 'sarahwong', '00000000', '+65 8456 7890', 29, 'female', 'https://i.pravatar.cc/150?img=9');
 
 INSERT INTO posts (user_id, title, content, post_type, location_name, location_lat, location_lng, tags) VALUES
 (
