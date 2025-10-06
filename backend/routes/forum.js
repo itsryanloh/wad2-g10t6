@@ -1,18 +1,81 @@
-// backend/routes/forum.js
 import express from 'express';
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
+import multer from 'multer';
 
-// IMPORTANT: Load environment variables
+//Load environment variables
 dotenv.config();
 
 const router = express.Router();
 
-// Now these environment variables will be available
+//environment variables
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_KEY
 );
+
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, //file limit
+  },
+  fileFilter: (req, file, cb) => {
+    //Only accept image files
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'), false);
+    }
+  }
+});
+
+//UPLOAD images endpoint
+router.post('/upload-images', upload.array('images', 5), async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: 'No files uploaded' });
+    }
+
+    const uploadedUrls = [];
+
+    //Upload each file to Supabase Storage
+    for (const file of req.files) {
+      // Generate unique filename
+      const filename = `${Date.now()}-${Math.random().toString(36).substring(7)}-${file.originalname}`;
+      const filepath = `post-images/${filename}`;
+
+      // Upload to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('postImages') 
+        .upload(filepath, file.buffer, {
+          contentType: file.mimetype,
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (error) {
+        console.error('Error uploading file:', error);
+        throw error;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('postImages')
+        .getPublicUrl(filepath);
+
+      uploadedUrls.push(publicUrl);
+    }
+
+    res.status(200).json({ 
+      message: 'Files uploaded successfully',
+      urls: uploadedUrls 
+    });
+
+  } catch (error) {
+    console.error('Error in upload endpoint:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // GET all posts with filters
 router.get('/posts', async (req, res) => {

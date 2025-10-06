@@ -70,32 +70,63 @@
             <small class="form-hint">Be as descriptive as possible</small>
           </div>
 
-          <!-- Image URLs -->
+          <!-- Image Upload -->
           <div class="form-section">
             <label class="section-label">
               <i class="fas fa-images me-2"></i>Images (Optional)
             </label>
-            <textarea
-              v-model="imageUrlsText"
-              class="form-textarea"
-              placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg"
-              rows="4"
-            ></textarea>
-            <small class="form-hint">Enter image URLs, one per line</small>
+            
+            <!-- Drag and Drop Area -->
+            <div 
+              class="upload-area"
+              :class="{ 'dragging': isDragging, 'uploading': uploading }"
+              @dragover.prevent="isDragging = true"
+              @dragleave.prevent="isDragging = false"
+              @drop.prevent="handleDrop"
+              @click="$refs.fileInput.click()"
+            >
+              <input
+                ref="fileInput"
+                type="file"
+                accept="image/*"
+                multiple
+                @change="handleFileSelect"
+                style="display: none;"
+              />
+              
+              <div v-if="!uploading" class="upload-content">
+                <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                <p class="upload-text">Drag & drop images here</p>
+                <p class="upload-subtext">or click to browse</p>
+                <small class="upload-hint">PNG, JPG, GIF up to 5MB each (Max 5 images)</small>
+              </div>
+              
+              <div v-else class="upload-loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Uploading images...</p>
+              </div>
+            </div>
             
             <!-- Image Preview -->
             <div v-if="form.image_urls?.length" class="image-preview">
               <div
-                v-for="(url, index) in form.image_urls.slice(0, 5)"
+                v-for="(url, index) in form.image_urls"
                 :key="index"
                 class="preview-item"
               >
-                <img :src="url" alt="Preview" @error="(e) => e.target.style.display = 'none'" />
-              </div>
-              <div v-if="form.image_urls.length > 5" class="preview-more">
-                +{{ form.image_urls.length - 5 }} more
+                <img :src="url" alt="Preview" />
+                <button 
+                  type="button" 
+                  class="remove-image" 
+                  @click.stop="removeImage(index)"
+                  title="Remove image"
+                >
+                  <i class="fas fa-times"></i>
+                </button>
               </div>
             </div>
+            
+            <small v-if="uploadError" class="upload-error">{{ uploadError }}</small>
           </div>
 
           <!-- Location -->
@@ -160,6 +191,10 @@ import { useForum } from '~/composables/useForum'
 const { createPost } = useForum()
 
 const submitting = ref(false)
+const isDragging = ref(false)
+const uploading = ref(false)
+const uploadError = ref('')
+const fileInput = ref(null)
 
 const postTypes = [
   {
@@ -203,15 +238,7 @@ const form = ref({
   tags: []
 })
 
-const imageUrlsText = ref('')
 const tagsText = ref('')
-
-watch(imageUrlsText, (newVal) => {
-  form.value.image_urls = newVal
-    .split('\n')
-    .map(url => url.trim())
-    .filter(url => url.length > 0)
-})
 
 watch(tagsText, (newVal) => {
   form.value.tags = newVal
@@ -225,6 +252,71 @@ const isFormValid = computed(() => {
          form.value.title?.trim() &&
          form.value.content?.trim()
 })
+
+// Handle file selection
+const handleFileSelect = async (event) => {
+  const files = Array.from(event.target.files)
+  await uploadFiles(files)
+}
+
+// Handle drag and drop
+const handleDrop = async (event) => {
+  isDragging.value = false
+  const files = Array.from(event.dataTransfer.files).filter(file => 
+    file.type.startsWith('image/')
+  )
+  
+  if (files.length === 0) {
+    uploadError.value = 'Please drop image files only'
+    return
+  }
+  
+  await uploadFiles(files)
+}
+
+// Upload files to backend
+const uploadFiles = async (files) => {
+  if (files.length + form.value.image_urls.length > 5) {
+    uploadError.value = 'Maximum 5 images allowed'
+    return
+  }
+  
+  uploadError.value = ''
+  uploading.value = true
+  
+  try {
+    const formData = new FormData()
+    files.forEach(file => {
+      formData.append('images', file)
+    })
+    
+    // Upload to your backend
+    const response = await fetch('http://localhost:3000/api/upload-images', {
+      method: 'POST',
+      body: formData
+    })
+    
+    const data = await response.json()
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Upload failed')
+    }
+    
+    // Add uploaded URLs to form
+    form.value.image_urls = [...form.value.image_urls, ...data.urls]
+    
+  } catch (error) {
+    console.error('Error uploading images:', error)
+    uploadError.value = error.message || 'Failed to upload images'
+  } finally {
+    uploading.value = false
+  }
+}
+
+// Remove image
+const removeImage = (index) => {
+  form.value.image_urls.splice(index, 1)
+}
 
 const handleSubmit = async () => {
   if (!isFormValid.value) return
@@ -252,7 +344,7 @@ const handleSubmit = async () => {
 
 <style scoped>
 .create-page {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #FFF5E6 0%, #FFE8D6 50%, #FFF0E0 100%);
   min-height: 100vh;
   padding: 40px 0 80px;
 }
@@ -262,9 +354,9 @@ const handleSubmit = async () => {
 }
 
 .back-btn {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 183, 77, 0.15);
+  color: #FF9800;
+  border: 2px solid rgba(255, 183, 77, 0.3);
   padding: 12px 25px;
   border-radius: 50px;
   font-weight: 600;
@@ -274,9 +366,10 @@ const handleSubmit = async () => {
 }
 
 .back-btn:hover {
-  background: white;
-  color: #667eea;
+  background: #FF9800;
+  color: white;
   transform: translateX(-5px);
+  box-shadow: 0 5px 20px rgba(255, 152, 0, 0.3);
 }
 
 .page-header {
@@ -297,24 +390,28 @@ const handleSubmit = async () => {
 }
 
 .page-title {
-  color: white;
   font-size: 2.5rem;
-  font-weight: 700;
+  font-weight: 800;
+  background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   margin-bottom: 10px;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .page-subtitle {
-  color: rgba(255, 255, 255, 0.9);
+  color: #7A7265;
   font-size: 1.1rem;
+  font-weight: 500;
 }
 
 .form-card {
   background: white;
   border-radius: 25px;
   padding: 40px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
   animation: slideUp 0.8s ease;
+  border: 2px solid rgba(255, 152, 0, 0.1);
 }
 
 @keyframes slideUp {
@@ -336,13 +433,13 @@ const handleSubmit = async () => {
   display: flex;
   align-items: center;
   font-weight: 700;
-  color: #2d3748;
+  color: #5D4E37;
   margin-bottom: 15px;
   font-size: 1.1rem;
 }
 
 .required {
-  color: #e53e3e;
+  color: #FF6B6B;
   margin-left: 5px;
 }
 
@@ -353,7 +450,7 @@ const handleSubmit = async () => {
 }
 
 .type-card {
-  border: 3px solid #e2e8f0;
+  border: 3px solid #FFE8D6;
   border-radius: 15px;
   padding: 25px 15px;
   text-align: center;
@@ -364,16 +461,17 @@ const handleSubmit = async () => {
 
 .type-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  border-color: #cbd5e0;
+  box-shadow: 0 10px 25px rgba(255, 152, 0, 0.15);
+  border-color: #FFB74D;
 }
 
 .type-card.active {
-  border-color: #667eea;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: #FF9800;
+  background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
   color: white;
   transform: scale(1.05);
   animation: pulse 0.5s;
+  box-shadow: 0 10px 30px rgba(255, 152, 0, 0.3);
 }
 
 @keyframes pulse {
@@ -415,7 +513,7 @@ const handleSubmit = async () => {
 .form-textarea {
   width: 100%;
   padding: 15px 20px;
-  border: 2px solid #e2e8f0;
+  border: 2px solid #FFB74D;
   border-radius: 12px;
   font-size: 16px;
   transition: all 0.3s;
@@ -425,8 +523,8 @@ const handleSubmit = async () => {
 .form-input:focus,
 .form-textarea:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+  border-color: #FF9800;
+  box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.1);
   transform: translateY(-2px);
 }
 
@@ -437,15 +535,100 @@ const handleSubmit = async () => {
 .char-counter {
   text-align: right;
   font-size: 0.875rem;
-  color: #718096;
+  color: #7A7265;
   margin-top: 5px;
 }
 
 .form-hint {
   display: block;
-  color: #718096;
+  color: #7A7265;
   font-size: 0.875rem;
   margin-top: 8px;
+}
+
+/* Upload Area */
+.upload-area {
+  border: 3px dashed #FFB74D;
+  border-radius: 15px;
+  padding: 40px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  background: linear-gradient(135deg, #FFF5E6 0%, #FFE8D6 100%);
+}
+
+.upload-area:hover {
+  border-color: #FF9800;
+  background: linear-gradient(135deg, #FFE8D6 0%, #FFD9B3 100%);
+  transform: translateY(-2px);
+}
+
+.upload-area.dragging {
+  border-color: #FF9800;
+  background: linear-gradient(135deg, #FFD9B3 0%, #FFC999 100%);
+  transform: scale(1.02);
+  box-shadow: 0 10px 30px rgba(255, 152, 0, 0.2);
+}
+
+.upload-area.uploading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.upload-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.upload-icon {
+  font-size: 4rem;
+  color: #FF9800;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.upload-text {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #5D4E37;
+  margin: 0;
+}
+
+.upload-subtext {
+  font-size: 1rem;
+  color: #7A7265;
+  margin: 0;
+}
+
+.upload-hint {
+  color: #7A7265;
+  font-size: 0.875rem;
+}
+
+.upload-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  color: #FF9800;
+}
+
+.upload-loading i {
+  font-size: 3rem;
+}
+
+.upload-error {
+  display: block;
+  color: #FF6B6B;
+  font-size: 0.875rem;
+  margin-top: 8px;
+  font-weight: 600;
 }
 
 .image-preview {
@@ -456,12 +639,14 @@ const handleSubmit = async () => {
 }
 
 .preview-item {
-  width: 80px;
-  height: 80px;
+  position: relative;
+  width: 100px;
+  height: 100px;
   border-radius: 10px;
   overflow: hidden;
-  border: 2px solid #e2e8f0;
+  border: 2px solid #FFB74D;
   animation: fadeIn 0.3s;
+  box-shadow: 0 4px 10px rgba(255, 152, 0, 0.1);
 }
 
 @keyframes fadeIn {
@@ -481,17 +666,27 @@ const handleSubmit = async () => {
   object-fit: cover;
 }
 
-.preview-more {
+.remove-image {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 107, 107, 0.95);
+  color: white;
+  border: none;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 80px;
-  height: 80px;
-  background: #f7fafc;
-  border: 2px dashed #cbd5e0;
-  border-radius: 10px;
-  color: #718096;
-  font-weight: 600;
+  transition: all 0.3s;
+  font-size: 0.75rem;
+}
+
+.remove-image:hover {
+  background: #FF6B6B;
+  transform: scale(1.1);
 }
 
 .tag-preview {
@@ -502,13 +697,14 @@ const handleSubmit = async () => {
 }
 
 .tag-badge {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #88D8F7 0%, #A8E6CF 100%);
   color: white;
   padding: 8px 15px;
   border-radius: 20px;
   font-size: 0.875rem;
   font-weight: 600;
   animation: fadeIn 0.3s;
+  box-shadow: 0 4px 10px rgba(136, 216, 247, 0.2);
 }
 
 .form-actions {
@@ -516,44 +712,50 @@ const handleSubmit = async () => {
   justify-content: flex-end;
   gap: 15px;
   padding-top: 30px;
-  border-top: 2px solid #e2e8f0;
+  border-top: 2px solid #FFF5E6;
   margin-top: 40px;
 }
 
 .btn {
   padding: 15px 40px;
   border-radius: 50px;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 16px;
   transition: all 0.3s;
   cursor: pointer;
   border: none;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .btn-secondary-custom {
-  background: #e2e8f0;
-  color: #4a5568;
+  background: rgba(122, 114, 101, 0.1);
+  color: #7A7265;
+  border: 2px solid rgba(122, 114, 101, 0.2);
 }
 
 .btn-secondary-custom:hover {
-  background: #cbd5e0;
+  background: #7A7265;
+  color: white;
   transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(122, 114, 101, 0.3);
 }
 
 .btn-primary-custom {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
   color: white;
-  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 10px 30px rgba(255, 152, 0, 0.3);
 }
 
 .btn-primary-custom:hover:not(:disabled) {
   transform: translateY(-3px);
-  box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 15px 40px rgba(255, 152, 0, 0.5);
 }
 
 .btn-primary-custom:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
 }
 
 /* Responsive */

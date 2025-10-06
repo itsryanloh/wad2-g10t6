@@ -1,280 +1,272 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800 py-8">
-    <div class="container mx-auto px-4 max-w-5xl">
-      <!-- Back Button -->
-      <UButton
-        variant="ghost"
-        icon="i-heroicons-arrow-left"
-        @click="navigateTo('/forum')"
-        class="mb-6"
-      >
-        Back to Forum
-      </UButton>
-
+  <div class="post-details-page">
+    <div class="container">
       <!-- Loading State -->
-      <div v-if="loading" class="space-y-6">
-        <USkeleton class="h-96" />
-        <USkeleton class="h-64" />
+      <div v-if="loading" class="loading-container">
+        <div class="loading-skeleton"></div>
       </div>
 
       <!-- Post Content -->
-      <div v-else-if="currentPost" class="space-y-6">
+      <div v-else-if="currentPost" class="post-wrapper">
+        <!-- Back Button -->
+        <button class="back-btn" @click="navigateTo('/forum/main')">
+          <i class="fas fa-arrow-left me-2"></i>Back to Forum
+        </button>
+
         <!-- Main Post Card -->
-        <UCard class="shadow-xl">
+        <div class="post-card">
           <!-- Image Carousel -->
-          <div v-if="currentPost.image_urls?.length" class="relative -mx-6 -mt-6 mb-6">
-            <div class="relative h-96 bg-gray-900 rounded-t-xl overflow-hidden">
-              <!-- Main Image -->
-              <img
-                :src="currentPost.image_urls[currentCarouselIndex]"
-                :alt="currentPost.title"
-                class="w-full h-full object-contain"
+          <div v-if="currentPost.image_urls?.length" class="carousel-container">
+            <div class="main-image-wrapper">
+              <img 
+                :src="currentPost.image_urls[currentCarouselIndex]" 
+                :alt="`Image ${currentCarouselIndex + 1}`"
+                class="main-image"
               />
-
-              <!-- Navigation Arrows -->
-              <button
+              
+              <!-- Carousel Controls -->
+              <button 
                 v-if="currentPost.image_urls.length > 1"
-                @click="previousImage"
-                class="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all"
+                @click="currentCarouselIndex = (currentCarouselIndex - 1 + currentPost.image_urls.length) % currentPost.image_urls.length"
+                class="carousel-btn prev-btn"
               >
-                <UIcon name="i-heroicons-chevron-left" class="w-6 h-6" />
+                <i class="fas fa-chevron-left"></i>
               </button>
-              <button
+              <button 
                 v-if="currentPost.image_urls.length > 1"
-                @click="nextImage"
-                class="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all"
+                @click="currentCarouselIndex = (currentCarouselIndex + 1) % currentPost.image_urls.length"
+                class="carousel-btn next-btn"
               >
-                <UIcon name="i-heroicons-chevron-right" class="w-6 h-6" />
+                <i class="fas fa-chevron-right"></i>
               </button>
-
-              <!-- Image Counter -->
-              <div class="absolute bottom-4 right-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
-                {{ currentCarouselIndex + 1 }} / {{ currentPost.image_urls.length }}
-              </div>
             </div>
 
-            <!-- Thumbnail Strip -->
-            <div v-if="currentPost.image_urls.length > 1" class="flex gap-2 p-4 bg-gray-100 dark:bg-gray-800 overflow-x-auto">
+            <!-- Thumbnail Navigation -->
+            <div v-if="currentPost.image_urls.length > 1" class="thumbnail-strip">
               <button
                 v-for="(url, index) in currentPost.image_urls"
                 :key="index"
                 @click="currentCarouselIndex = index"
-                :class="[
-                  'flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all',
-                  currentCarouselIndex === index 
-                    ? 'border-blue-500 scale-105' 
-                    : 'border-transparent opacity-60 hover:opacity-100'
-                ]"
+                :class="['thumbnail-btn', { active: currentCarouselIndex === index }]"
               >
-                <img :src="url" :alt="`Image ${index + 1}`" class="w-full h-full object-cover" />
+                <img :src="url" :alt="`Thumbnail ${index + 1}`" />
               </button>
             </div>
           </div>
 
           <!-- Post Header -->
-          <div class="flex items-start justify-between mb-6">
-            <div class="flex items-center gap-4">
-              <UAvatar
-                :src="currentPost.users?.avatar_url"
-                :alt="currentPost.users?.name"
-                size="xl"
-              />
-              <div>
-                <p class="font-bold text-xl text-gray-900 dark:text-white">
-                  {{ currentPost.users?.name || 'Anonymous' }}
-                </p>
-                <p class="text-sm text-gray-500">
-                  Posted {{ formatDate(currentPost.created_at) }}
+          <div class="post-header">
+            <div class="author-info">
+              <div class="avatar-wrapper">
+                <img 
+                  :src="currentPost.users?.avatar_url || 'https://i.pravatar.cc/150'" 
+                  :alt="currentPost.users?.name"
+                  class="author-avatar"
+                />
+              </div>
+              <div class="author-details">
+                <h3 class="author-name">{{ currentPost.users?.name || 'Anonymous' }}</h3>
+                <p class="post-date">
+                  <i class="far fa-clock me-1"></i>
+                  {{ formatDate(currentPost.created_at) }}
                 </p>
               </div>
             </div>
 
-            <div class="flex items-center gap-2">
-              <UBadge
-                :color="getPostTypeColor(currentPost.post_type)"
-                variant="subtle"
-                size="lg"
-              >
+            <div class="post-meta">
+              <span :class="['type-badge', `type-${currentPost.post_type}`]">
+                <i :class="getPostTypeIcon(currentPost.post_type)" class="me-2"></i>
                 {{ currentPost.post_type }}
-              </UBadge>
+              </span>
               
-              <UButton
+              <button
                 v-if="isAuthor"
-                icon="i-heroicons-pencil"
-                variant="ghost"
+                class="edit-btn"
                 @click="navigateTo(`/forum/${currentPost.id}/editPost`)"
               >
-                Edit
-              </UButton>
+                <i class="fas fa-pen me-2"></i>Edit
+              </button>
             </div>
           </div>
 
           <!-- Post Body -->
-          <div class="space-y-6">
-            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
-              {{ currentPost.title }}
-            </h1>
+          <div class="post-body">
+            <h1 class="post-title">{{ currentPost.title }}</h1>
 
-            <p class="text-lg text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
+            <div class="post-content">
               {{ currentPost.content }}
-            </p>
+            </div>
 
             <!-- Location -->
-            <div
-              v-if="currentPost.location_name"
-              class="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800"
-            >
-              <UIcon name="i-heroicons-map-pin" class="w-6 h-6 text-red-500" />
-              <div>
-                <div class="font-semibold text-gray-900 dark:text-white">Location</div>
-                <div class="text-gray-600 dark:text-gray-400">{{ currentPost.location_name }}</div>
+            <div v-if="currentPost.location_name" class="location-card">
+              <div class="location-icon">
+                <i class="fas fa-map-marker-alt"></i>
+              </div>
+              <div class="location-details">
+                <div class="location-label">Location</div>
+                <div class="location-value">{{ currentPost.location_name }}</div>
               </div>
             </div>
 
             <!-- Tags -->
-            <div v-if="currentPost.tags?.length" class="flex flex-wrap gap-2">
-              <UBadge
+            <div v-if="currentPost.tags?.length" class="tags-section">
+              <span
                 v-for="tag in currentPost.tags"
                 :key="tag"
-                color="blue"
-                variant="soft"
-                size="lg"
+                class="tag-item"
               >
                 #{{ tag }}
-              </UBadge>
+              </span>
+            </div>
+
+            <!-- Engagement Bar -->
+            <div class="engagement-bar">
+              <button 
+                @click="handleReaction" 
+                :class="['reaction-btn', { active: hasLiked }]"
+              >
+                <i :class="hasLiked ? 'fas fa-heart' : 'far fa-heart'"></i>
+                <span>{{ reactionCount }}</span>
+              </button>
+
+              <div class="stats">
+                <span class="stat-item">
+                  <i class="far fa-eye me-1"></i>
+                  {{ currentPost.view_count || 0 }} views
+                </span>
+                <span class="stat-item">
+                  <i class="far fa-comment me-1"></i>
+                  {{ comments.length }} comments
+                </span>
+              </div>
             </div>
           </div>
-
-          <!-- Post Footer -->
-          <template #footer>
-            <div class="flex items-center justify-between py-4">
-              <!-- Stats -->
-              <div class="flex items-center gap-6 text-gray-600">
-                <div class="flex items-center gap-2">
-                  <UIcon name="i-heroicons-eye" class="w-5 h-5" />
-                  <span class="font-semibold">{{ currentPost.view_count || 0 }}</span>
-                  <span class="text-sm">views</span>
-                </div>
-
-                <div class="flex items-center gap-2">
-                  <UIcon name="i-heroicons-chat-bubble-left" class="w-5 h-5" />
-                  <span class="font-semibold">{{ comments.length }}</span>
-                  <span class="text-sm">comments</span>
-                </div>
-              </div>
-
-              <!-- Actions -->
-              <div class="flex items-center gap-3">
-                <UButton
-                  :icon="hasLiked ? 'i-heroicons-heart-solid' : 'i-heroicons-heart'"
-                  :color="hasLiked ? 'red' : 'gray'"
-                  variant="soft"
-                  size="lg"
-                  @click="handleReaction"
-                >
-                  {{ reactionCount }}
-                </UButton>
-
-                <UButton
-                  v-if="isAuthor && !currentPost.is_resolved"
-                  color="green"
-                  variant="soft"
-                  size="lg"
-                  @click="markAsResolved"
-                >
-                  Mark Resolved
-                </UButton>
-              </div>
-            </div>
-
-            <!-- Resolved Alert -->
-            <UAlert
-              v-if="currentPost.is_resolved"
-              color="green"
-              variant="subtle"
-              title="This post has been marked as resolved"
-              icon="i-heroicons-check-circle"
-              class="mt-4"
-            />
-          </template>
-        </UCard>
+        </div>
 
         <!-- Comments Section -->
-        <UCard class="shadow-xl">
-          <template #header>
-            <h2 class="text-2xl font-bold">Comments ({{ comments.length }})</h2>
-          </template>
+        <div class="comments-section">
+          <h2 class="section-title">
+            <i class="fas fa-comments me-2"></i>
+            Comments ({{ comments.length }})
+          </h2>
 
-          <div class="space-y-6">
-            <!-- Add Comment Form -->
-            <div class="pb-6 border-b border-gray-200 dark:border-gray-700">
-              <UTextarea
-                v-model="newComment"
-                placeholder="Write a comment..."
-                :rows="3"
-                class="mb-3"
-              />
-              <div class="flex justify-end">
-                <UButton
-                  color="primary"
-                  icon="i-heroicons-paper-airplane"
-                  @click="handleAddComment"
-                  :disabled="!newComment.trim()"
-                  :loading="addingComment"
-                >
-                  Post Comment
-                </UButton>
-              </div>
-            </div>
+          <!-- Add Comment Form -->
+          <div class="add-comment-card">
+            <textarea
+              v-model="newComment"
+              placeholder="Share your thoughts..."
+              rows="3"
+              class="comment-textarea"
+            ></textarea>
+            <button
+              @click="handleAddComment"
+              :disabled="!newComment.trim() || addingComment"
+              class="submit-comment-btn"
+            >
+              <i class="fas fa-paper-plane me-2"></i>
+              {{ addingComment ? 'Posting...' : 'Post Comment' }}
+            </button>
+          </div>
 
-            <!-- Comments List -->
-            <div v-if="loadingComments" class="space-y-4">
-              <USkeleton v-for="i in 3" :key="i" class="h-24" />
-            </div>
+          <!-- Comments List -->
+          <div v-if="loadingComments" class="loading-comments">
+            <div class="comment-skeleton"></div>
+            <div class="comment-skeleton"></div>
+          </div>
 
-            <div v-else-if="comments.length > 0" class="space-y-4">
-              <div
-                v-for="comment in comments"
-                :key="comment.id"
-                class="flex gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl"
-              >
-                <UAvatar
-                  :src="comment.users?.avatar_url"
-                  :alt="comment.users?.name"
-                  size="md"
+          <div v-else-if="topLevelComments.length" class="comments-list">
+            <div
+              v-for="comment in topLevelComments"
+              :key="comment.id"
+              class="comment-thread"
+            >
+              <!-- Parent Comment -->
+              <div class="comment-item">
+                <img 
+                  :src="comment.users?.avatar_url || 'https://i.pravatar.cc/150'" 
+                  class="comment-avatar"
                 />
-                <div class="flex-1">
-                  <div class="flex items-center gap-2 mb-2">
-                    <span class="font-semibold text-gray-900 dark:text-white">
-                      {{ comment.users?.name || 'Anonymous' }}
-                    </span>
-                    <span class="text-sm text-gray-500">
-                      {{ formatDate(comment.created_at) }}
-                    </span>
+                <div class="comment-content">
+                  <div class="comment-header">
+                    <span class="comment-author">{{ comment.users?.name || 'Anonymous' }}</span>
+                    <span class="comment-date">{{ formatDate(comment.created_at) }}</span>
                   </div>
-                  <p class="text-gray-700 dark:text-gray-300">
-                    {{ comment.content }}
-                  </p>
+                  <p class="comment-text">{{ comment.content }}</p>
+                  
+                  <!-- Reply Button -->
+                  <button 
+                    class="reply-btn"
+                    @click="toggleReply(comment.id)"
+                  >
+                    <i class="fas fa-reply me-1"></i>
+                    Reply
+                  </button>
+                  
+                  <!-- Reply Form -->
+                  <div v-if="replyingTo === comment.id" class="reply-form">
+                    <textarea
+                      v-model="replyContent"
+                      placeholder="Write a reply..."
+                      rows="2"
+                      class="reply-textarea"
+                    ></textarea>
+                    <div class="reply-actions">
+                      <button @click="cancelReply" class="cancel-reply-btn">
+                        Cancel
+                      </button>
+                      <button 
+                        @click="handleReply(comment.id)"
+                        :disabled="!replyContent.trim() || addingComment"
+                        class="submit-reply-btn"
+                      >
+                        <i class="fas fa-paper-plane me-1"></i>
+                        {{ addingComment ? 'Posting...' : 'Reply' }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Nested Replies -->
+              <div v-if="getReplies(comment.id).length" class="replies-container">
+                <div
+                  v-for="reply in getReplies(comment.id)"
+                  :key="reply.id"
+                  class="comment-item reply-item"
+                >
+                  <img 
+                    :src="reply.users?.avatar_url || 'https://i.pravatar.cc/150'" 
+                    class="comment-avatar"
+                  />
+                  <div class="comment-content">
+                    <div class="comment-header">
+                      <span class="comment-author">{{ reply.users?.name || 'Anonymous' }}</span>
+                      <span class="comment-date">{{ formatDate(reply.created_at) }}</span>
+                    </div>
+                    <p class="comment-text">{{ reply.content }}</p>
+                  </div>
                 </div>
               </div>
             </div>
-
-            <div v-else class="text-center py-8 text-gray-500">
-              <UIcon name="i-heroicons-chat-bubble-left" class="w-12 h-12 mx-auto mb-2 opacity-50" />
-              <p>No comments yet. Be the first to comment!</p>
-            </div>
           </div>
-        </UCard>
+
+          <div v-else class="no-comments">
+            <i class="far fa-comment-dots"></i>
+            <p>Be the first to comment!</p>
+          </div>
+        </div>
       </div>
 
       <!-- Error State -->
-      <div v-else class="text-center py-20">
-        <UIcon name="i-heroicons-exclamation-triangle" class="w-24 h-24 mx-auto mb-4 text-red-400" />
-        <h2 class="text-2xl font-bold text-gray-600 dark:text-gray-400 mb-2">Post not found</h2>
-        <p class="text-gray-500 mb-6">The post you're looking for doesn't exist or has been removed.</p>
-        <UButton color="primary" size="lg" @click="navigateTo('/forum')">
-          Back to Forum
-        </UButton>
+      <div v-else class="error-state">
+        <div class="error-icon">
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h2>Post not found</h2>
+        <p>The post you're looking for doesn't exist or has been removed.</p>
+        <button class="back-home-btn" @click="navigateTo('/forum')">
+          <i class="fas fa-home me-2"></i>Back to Forum
+        </button>
       </div>
     </div>
   </div>
@@ -304,13 +296,60 @@ const reactionCount = ref(0)
 const newComment = ref('')
 const addingComment = ref(false)
 const currentCarouselIndex = ref(0)
+const replyingTo = ref(null)
+const replyContent = ref('')
 
-// Mock current user - replace with actual auth
 const currentUserId = 'current-user-id'
 
 const isAuthor = computed(() => {
   return currentPost.value?.user_id === currentUserId
 })
+
+// Get top-level comments (no parent)
+const topLevelComments = computed(() => {
+  return comments.value.filter(c => !c.parent_comment_id)
+})
+
+// Get replies for a specific comment
+const getReplies = (commentId) => {
+  return comments.value.filter(c => c.parent_comment_id === commentId)
+}
+
+const toggleReply = (commentId) => {
+  if (replyingTo.value === commentId) {
+    replyingTo.value = null
+    replyContent.value = ''
+  } else {
+    replyingTo.value = commentId
+    replyContent.value = ''
+  }
+}
+
+const cancelReply = () => {
+  replyingTo.value = null
+  replyContent.value = ''
+}
+
+const handleReply = async (parentCommentId) => {
+  if (!replyContent.value.trim()) return
+  
+  addingComment.value = true
+  try {
+    const result = await addComment(route.params.postId, {
+      content: replyContent.value,
+      user_id: currentUserId,
+      parent_comment_id: parentCommentId
+    })
+
+    if (result) {
+      replyContent.value = ''
+      replyingTo.value = null
+      await loadComments()
+    }
+  } finally {
+    addingComment.value = false
+  }
+}
 
 const formatDate = (date) => {
   const now = new Date()
@@ -329,16 +368,16 @@ const formatDate = (date) => {
   })
 }
 
-const getPostTypeColor = (type) => {
-  const colors = {
-    adoption: 'blue',
-    sighting: 'yellow',
-    lost: 'red',
-    found: 'green',
-    discussion: 'purple',
-    update: 'gray'
+const getPostTypeIcon = (type) => {
+  const icons = {
+    adoption: 'fas fa-heart',
+    sighting: 'fas fa-eye',
+    lost: 'fas fa-exclamation-triangle',
+    found: 'fas fa-check-circle',
+    discussion: 'fas fa-comments',
+    update: 'fas fa-sync'
   }
-  return colors[type] || 'gray'
+  return icons[type] || 'fas fa-circle'
 }
 
 const loadComments = async () => {
@@ -375,30 +414,781 @@ const handleReaction = async () => {
   reactionCount.value += hasLiked.value ? 1 : -1
 }
 
-const markAsResolved = async () => {
-  await updatePost(route.params.postId, { is_resolved: true })
+onMounted(async () => {
+  await fetchPostById(route.params.postId)
+  await loadComments()
+  await incrementViewCount(route.params.postId)
+  
   if (currentPost.value) {
-    currentPost.value.is_resolved = true
+    reactionCount.value = currentPost.value.reaction_count || 0
+  }
+})
+</script>
+
+<style scoped>
+.post-details-page {
+  background: linear-gradient(135deg, #FFF4E6 0%, #FFE4E1 50%, #E6F3FF 100%);
+  min-height: 100vh;
+  padding: 40px 0 80px;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Back Button */
+.back-btn {
+  background: rgba(255, 155, 133, 0.15);
+  color: #FF9B85;
+  border: 2px solid rgba(255, 155, 133, 0.3);
+  padding: 12px 25px;
+  border-radius: 50px;
+  font-weight: 600;
+  transition: all 0.3s;
+  margin-bottom: 30px;
+  cursor: pointer;
+}
+
+.back-btn:hover {
+  background: #FF9B85;
+  color: white;
+  transform: translateX(-5px);
+  box-shadow: 0 5px 20px rgba(255, 155, 133, 0.3);
+}
+
+/* Post Card */
+.post-card {
+  background: white;
+  border-radius: 25px;
+  overflow: hidden;
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
+  margin-bottom: 30px;
+  animation: slideUp 0.6s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-const previousImage = () => {
-  if (!currentPost.value?.image_urls?.length) return
-  currentCarouselIndex.value = 
-    (currentCarouselIndex.value - 1 + currentPost.value.image_urls.length) % 
-    currentPost.value.image_urls.length
+/* Carousel */
+.carousel-container {
+  position: relative;
 }
 
-const nextImage = () => {
-  if (!currentPost.value?.image_urls?.length) return
-  currentCarouselIndex.value = 
-    (currentCarouselIndex.value + 1) % currentPost.value.image_urls.length
+.main-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 500px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #FFF4E6 0%, #FFE4E1 100%);
 }
 
-onMounted(async () => {
-  const postId = route.params.postId
-  await fetchPostById(postId)
-  await loadComments()
-  await incrementViewCount(postId)
-})
-</script>
+.main-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.95);
+  border: none;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s;
+  color: #FF9B85;
+  font-size: 20px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+}
+
+.carousel-btn:hover {
+  background: #FF9B85;
+  color: white;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.prev-btn {
+  left: 20px;
+}
+
+.next-btn {
+  right: 20px;
+}
+
+.thumbnail-strip {
+  display: flex;
+  gap: 10px;
+  padding: 15px;
+  background: linear-gradient(135deg, #FFF4E6 0%, #ffffff 100%);
+  overflow-x: auto;
+}
+
+.thumbnail-btn {
+  flex-shrink: 0;
+  width: 80px;
+  height: 80px;
+  border: 3px solid transparent;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s;
+  opacity: 0.6;
+}
+
+.thumbnail-btn:hover {
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+.thumbnail-btn.active {
+  border-color: #FF9B85;
+  opacity: 1;
+  box-shadow: 0 5px 15px rgba(255, 155, 133, 0.3);
+}
+
+.thumbnail-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Post Header */
+.post-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 30px;
+  border-bottom: 2px solid #FFF4E6;
+}
+
+.author-info {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.avatar-wrapper {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid #FFB88C;
+  box-shadow: 0 5px 15px rgba(255, 155, 133, 0.2);
+}
+
+.author-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.author-details {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.author-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #5D4E37;
+  margin: 0;
+}
+
+.post-date {
+  color: #7A7265;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.post-meta {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.type-badge {
+  padding: 10px 20px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.type-adoption {
+  background: linear-gradient(135deg, #FFB88C 0%, #FF9B85 100%);
+  color: white;
+}
+
+.type-sighting {
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  color: white;
+}
+
+.type-lost {
+  background: linear-gradient(135deg, #FF6B6B 0%, #EE5A6F 100%);
+  color: white;
+}
+
+.type-found {
+  background: linear-gradient(135deg, #A8E6CF 0%, #88D8F7 100%);
+  color: white;
+}
+
+.type-discussion {
+  background: linear-gradient(135deg, #B8A4E8 0%, #9B7FD4 100%);
+  color: white;
+}
+
+.edit-btn {
+  background: rgba(255, 155, 133, 0.1);
+  color: #FF9B85;
+  border: 2px solid #FFB88C;
+  padding: 10px 20px;
+  border-radius: 50px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.edit-btn:hover {
+  background: #FF9B85;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(255, 155, 133, 0.3);
+}
+
+/* Post Body */
+.post-body {
+  padding: 30px;
+}
+
+.post-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #5D4E37;
+  margin-bottom: 20px;
+  line-height: 1.3;
+}
+
+.post-content {
+  font-size: 1.1rem;
+  color: #7A7265;
+  line-height: 1.8;
+  margin-bottom: 30px;
+  white-space: pre-wrap;
+}
+
+/* Location Card */
+.location-card {
+  display: flex;
+  gap: 15px;
+  padding: 20px;
+  background: linear-gradient(135deg, #FFE4E1 0%, #FFF4E6 100%);
+  border-radius: 15px;
+  border-left: 5px solid #FF9B85;
+  margin-bottom: 25px;
+}
+
+.location-icon {
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #FF9B85 0%, #FFB88C 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.location-details {
+  flex: 1;
+}
+
+.location-label {
+  font-weight: 700;
+  color: #5D4E37;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 5px;
+}
+
+.location-value {
+  color: #7A7265;
+  font-size: 1.1rem;
+}
+
+/* Tags */
+.tags-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 25px;
+}
+
+.tag-item {
+  padding: 8px 18px;
+  background: linear-gradient(135deg, #88D8F7 0%, #A8E6CF 100%);
+  color: white;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.3s;
+}
+
+.tag-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(136, 216, 247, 0.3);
+}
+
+/* Engagement Bar */
+.engagement-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #FFF4E6 0%, #ffffff 100%);
+  border-radius: 15px;
+  margin-top: 30px;
+}
+
+.reaction-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 25px;
+  background: white;
+  border: 2px solid #FFB88C;
+  border-radius: 50px;
+  color: #FF9B85;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.reaction-btn:hover {
+  background: linear-gradient(135deg, #FF9B85 0%, #FFB88C 100%);
+  color: white;
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px rgba(255, 155, 133, 0.3);
+}
+
+.reaction-btn.active {
+  background: linear-gradient(135deg, #FF9B85 0%, #FFB88C 100%);
+  color: white;
+}
+
+.reaction-btn i {
+  font-size: 1.2rem;
+}
+
+.stats {
+  display: flex;
+  gap: 20px;
+}
+
+.stat-item {
+  color: #7A7265;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+/* Comments Section */
+.comments-section {
+  background: white;
+  border-radius: 25px;
+  padding: 30px;
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
+  animation: slideUp 0.6s ease 0.2s backwards;
+}
+
+.section-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #5D4E37;
+  margin-bottom: 25px;
+}
+
+.add-comment-card {
+  background: linear-gradient(135deg, #FFF4E6 0%, #FFE4E1 100%);
+  padding: 20px;
+  border-radius: 15px;
+  margin-bottom: 30px;
+}
+
+.comment-textarea {
+  width: 100%;
+  padding: 15px;
+  border: 2px solid #FFB88C;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+  margin-bottom: 15px;
+  transition: all 0.3s;
+}
+
+.comment-textarea:focus {
+  outline: none;
+  border-color: #FF9B85;
+  box-shadow: 0 0 0 4px rgba(255, 155, 133, 0.1);
+}
+
+.submit-comment-btn {
+  background: linear-gradient(135deg, #FF9B85 0%, #FFB88C 100%);
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 50px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.submit-comment-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(255, 155, 133, 0.4);
+}
+
+.submit-comment-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Comments List */
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.comment-item {
+  display: flex;
+  gap: 15px;
+  padding: 20px;
+  background: linear-gradient(135deg, #FFF4E6 0%, #ffffff 100%);
+  border-radius: 15px;
+  transition: all 0.3s;
+}
+
+.comment-item:hover {
+  transform: translateX(5px);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+}
+
+.comment-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #FFB88C;
+  flex-shrink: 0;
+}
+
+.comment-content {
+  flex: 1;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.comment-author {
+  font-weight: 700;
+  color: #5D4E37;
+}
+
+.comment-date {
+  font-size: 0.85rem;
+  color: #7A7265;
+}
+
+.comment-text {
+  color: #7A7265;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Reply Button */
+.reply-btn {
+  background: rgba(255, 152, 0, 0.1);
+  border: 2px solid rgba(255, 152, 0, 0.3);
+  color: #FF9800;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 20px;
+  transition: all 0.3s;
+  display: inline-flex;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.reply-btn:hover {
+  background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+  color: white;
+  border-color: transparent;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(255, 152, 0, 0.3);
+}
+
+/* Comment Thread */
+.comment-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Reply Item */
+.reply-item {
+  background: linear-gradient(135deg, #FFE8D6 0%, #FFF5E6 100%);
+  border-left: 3px solid #FF9800;
+}
+
+/* Replies Container */
+.replies-container {
+  margin-left: 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  position: relative;
+}
+
+.replies-container::before {
+  content: '';
+  position: absolute;
+  left: -30px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, #FFB74D, transparent);
+}
+
+/* Reply Form */
+.reply-form {
+  margin-top: 15px;
+  padding: 15px;
+  background: white;
+  border-radius: 12px;
+  border: 2px solid #FFB74D;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reply-textarea {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #FFB74D;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: vertical;
+  margin-bottom: 10px;
+  transition: all 0.3s;
+}
+
+.reply-textarea:focus {
+  outline: none;
+  border-color: #FF9800;
+  box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
+}
+
+.reply-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.cancel-reply-btn {
+  padding: 8px 20px;
+  background: rgba(122, 114, 101, 0.1);
+  color: #7A7265;
+  border: 2px solid rgba(122, 114, 101, 0.2);
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.cancel-reply-btn:hover {
+  background: #7A7265;
+  color: white;
+}
+
+.submit-reply-btn {
+  padding: 8px 20px;
+  background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: inline-flex;
+  align-items: center;
+}
+
+.submit-reply-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(255, 152, 0, 0.3);
+}
+
+.submit-reply-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.no-comments {
+  text-align: center;
+  padding: 60px 20px;
+  color: #7A7265;
+}
+
+.no-comments i {
+  font-size: 4rem;
+  color: #FFB88C;
+  margin-bottom: 15px;
+}
+
+.no-comments p {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+/* Loading States */
+.loading-skeleton,
+.comment-skeleton {
+  height: 300px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 20px;
+  margin-bottom: 20px;
+}
+
+.comment-skeleton {
+  height: 100px;
+}
+
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Error State */
+.error-state {
+  text-align: center;
+  padding: 80px 20px;
+  animation: fadeIn 0.8s ease;
+}
+
+.error-icon {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 30px;
+  background: linear-gradient(135deg, #FFB88C 0%, #FF9B85 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.error-icon i {
+  font-size: 4rem;
+  color: white;
+}
+
+.error-state h2 {
+  font-size: 2rem;
+  color: #5D4E37;
+  margin-bottom: 15px;
+}
+
+.error-state p {
+  color: #7A7265;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.back-home-btn {
+  background: linear-gradient(135deg, #FF9B85 0%, #FFB88C 100%);
+  color: white;
+  border: none;
+  padding: 15px 40px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.back-home-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(255, 155, 133, 0.4);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .main-image-wrapper {
+    height: 300px;
+  }
+
+  .post-title {
+    font-size: 1.8rem;
+  }
+
+  .post-header {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .carousel-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+
+  .engagement-bar {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .comment-item {
+    flex-direction: column;
+  }
+}
+</style>
