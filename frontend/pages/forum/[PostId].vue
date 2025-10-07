@@ -224,18 +224,104 @@
                 <div
                   v-for="reply in getReplies(comment.id)"
                   :key="reply.id"
-                  class="comment-item reply-item"
+                  class="reply-wrapper"
                 >
-                  <img 
-                    :src="reply.users?.avatar_url || 'https://i.pravatar.cc/150'" 
-                    class="comment-avatar"
-                  />
-                  <div class="comment-content">
-                    <div class="comment-header">
-                      <span class="comment-author">{{ reply.users?.name || 'Anonymous' }}</span>
-                      <span class="comment-date">{{ formatDate(reply.created_at) }}</span>
+                  <div class="comment-item reply-item">
+                    <img 
+                      :src="reply.users?.avatar_url || 'https://i.pravatar.cc/150'" 
+                      class="comment-avatar"
+                    />
+                    <div class="comment-content">
+                      <div class="comment-header">
+                        <span class="comment-author">{{ reply.users?.name || 'Anonymous' }}</span>
+                        <span class="comment-date">{{ formatDate(reply.created_at) }}</span>
+                      </div>
+                      <p class="comment-text">{{ reply.content }}</p>
+                      
+                      <!-- Reply Button on Replies -->
+                      <button 
+                        class="reply-btn"
+                        @click="toggleReply(reply.id)"
+                      >
+                        <i class="fas fa-reply me-1"></i>
+                        Reply
+                      </button>
+                      
+                      <!-- Reply Form on Replies -->
+                      <div v-if="replyingTo === reply.id" class="reply-form">
+                        <textarea
+                          v-model="replyContent"
+                          placeholder="Write a reply..."
+                          rows="2"
+                          class="reply-textarea"
+                        ></textarea>
+                        <div class="reply-actions">
+                          <button @click="cancelReply" class="cancel-reply-btn">
+                            Cancel
+                          </button>
+                          <button 
+                            @click="handleReply(reply.id)"
+                            :disabled="!replyContent.trim() || addingComment"
+                            class="submit-reply-btn"
+                          >
+                            <i class="fas fa-paper-plane me-1"></i>
+                            {{ addingComment ? 'Posting...' : 'Reply' }}
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                    <p class="comment-text">{{ reply.content }}</p>
+                  </div>
+                  
+                  <!-- Show nested replies to this reply -->
+                  <div v-if="getReplies(reply.id).length" class="nested-replies">
+                    <div
+                      v-for="nestedReply in getReplies(reply.id)"
+                      :key="nestedReply.id"
+                      class="comment-item reply-item nested-reply-item"
+                    >
+                      <img 
+                        :src="nestedReply.users?.avatar_url || 'https://i.pravatar.cc/150'" 
+                        class="comment-avatar small-avatar"
+                      />
+                      <div class="comment-content">
+                        <div class="comment-header">
+                          <span class="comment-author">{{ nestedReply.users?.name || 'Anonymous' }}</span>
+                          <span class="comment-date">{{ formatDate(nestedReply.created_at) }}</span>
+                        </div>
+                        <p class="comment-text">{{ nestedReply.content }}</p>
+                        
+                        <!-- Can also reply to nested replies -->
+                        <button 
+                          class="reply-btn small-reply-btn"
+                          @click="toggleReply(nestedReply.id)"
+                        >
+                          <i class="fas fa-reply me-1"></i>
+                          Reply
+                        </button>
+                        
+                        <div v-if="replyingTo === nestedReply.id" class="reply-form">
+                          <textarea
+                            v-model="replyContent"
+                            placeholder="Write a reply..."
+                            rows="2"
+                            class="reply-textarea"
+                          ></textarea>
+                          <div class="reply-actions">
+                            <button @click="cancelReply" class="cancel-reply-btn">
+                              Cancel
+                            </button>
+                            <button 
+                              @click="handleReply(nestedReply.id)"
+                              :disabled="!replyContent.trim() || addingComment"
+                              class="submit-reply-btn"
+                            >
+                              <i class="fas fa-paper-plane me-1"></i>
+                              {{ addingComment ? 'Posting...' : 'Reply' }}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -277,8 +363,7 @@ const {
   fetchComments,
   addComment,
   toggleReaction,
-  incrementViewCount,
-  updatePost
+  incrementViewCount
 } = useForum()
 
 const comments = ref([])
@@ -290,11 +375,10 @@ const addingComment = ref(false)
 const currentCarouselIndex = ref(0)
 const replyingTo = ref(null)
 const replyContent = ref('')
-
-const currentUserId = 'current-user-id'
+const currentUserId = ref(null)
 
 const isAuthor = computed(() => {
-  return currentPost.value?.user_id === currentUserId
+  return currentPost.value?.user_id === currentUserId.value
 })
 
 // Get top-level comments (no parent)
@@ -325,19 +409,34 @@ const cancelReply = () => {
 const handleReply = async (parentCommentId) => {
   if (!replyContent.value.trim()) return
   
+  if (!currentUserId.value) {
+    alert('User not loaded. Please refresh the page.')
+    return
+  }
+  
   addingComment.value = true
   try {
+    console.log('Adding reply to comment:', parentCommentId)
+    
     const result = await addComment(route.params.postId, {
       content: replyContent.value,
-      user_id: currentUserId,
+      user_id: currentUserId.value,
       parent_comment_id: parentCommentId
     })
+
+    console.log('Reply result:', result)
 
     if (result) {
       replyContent.value = ''
       replyingTo.value = null
       await loadComments()
+    } else {
+      console.error('Failed to add reply')
+      alert('Failed to post reply. Please try again.')
     }
+  } catch (error) {
+    console.error('Error adding reply:', error)
+    alert('Error posting reply. Check console for details.')
   } finally {
     addingComment.value = false
   }
@@ -375,7 +474,13 @@ const getPostTypeIcon = (type) => {
 const loadComments = async () => {
   loadingComments.value = true
   try {
-    comments.value = await fetchComments(route.params.postId)
+    console.log('Loading comments for post:', route.params.postId)
+    const result = await fetchComments(route.params.postId)
+    console.log('Comments loaded:', result)
+    comments.value = result || []
+  } catch (error) {
+    console.error('Error loading comments:', error)
+    comments.value = []
   } finally {
     loadingComments.value = false
   }
@@ -384,35 +489,91 @@ const loadComments = async () => {
 const handleAddComment = async () => {
   if (!newComment.value.trim()) return
   
+  if (!currentUserId.value) {
+    alert('User not loaded. Please refresh the page.')
+    return
+  }
+  
   addingComment.value = true
   try {
+    console.log('Adding comment to post:', route.params.postId)
+    console.log('Comment content:', newComment.value)
+    console.log('User ID:', currentUserId.value)
+    
     const result = await addComment(route.params.postId, {
       content: newComment.value,
-      user_id: currentUserId
+      user_id: currentUserId.value
     })
+
+    console.log('Comment result:', result)
 
     if (result) {
       newComment.value = ''
       await loadComments()
+    } else {
+      console.error('Failed to add comment')
+      alert('Failed to post comment. Please try again.')
     }
+  } catch (error) {
+    console.error('Error adding comment:', error)
+    alert('Error posting comment. Check console for details.')
   } finally {
     addingComment.value = false
   }
 }
 
 const handleReaction = async () => {
-  await toggleReaction(route.params.postId, 'like')
-  hasLiked.value = !hasLiked.value
-  reactionCount.value += hasLiked.value ? 1 : -1
+  if (!currentUserId.value) {
+    alert('User not loaded. Please refresh the page.')
+    return
+  }
+  
+  try {
+    console.log('Toggling reaction for post:', route.params.postId)
+    const result = await toggleReaction(route.params.postId, currentUserId.value, 'like')
+    console.log('Reaction result:', result)
+    
+    hasLiked.value = !hasLiked.value
+    reactionCount.value += hasLiked.value ? 1 : -1
+  } catch (error) {
+    console.error('Error toggling reaction:', error)
+  }
+}
+
+const loadCurrentUser = async () => {
+  try {
+    const response = await fetch('http://localhost:3000/api/users')
+    const users = await response.json()
+    
+    // Find David Chen or use first user
+    const davidChen = users.find(user => 
+      user.username === 'davidchen' || user.name.toLowerCase().includes('david chen')
+    )
+    
+    const targetUser = davidChen || users[0]
+    
+    if (targetUser) {
+      currentUserId.value = targetUser.id
+      console.log('Current user loaded:', targetUser.name, targetUser.id)
+    } else {
+      console.error('No users found in database')
+    }
+  } catch (error) {
+    console.error('Error fetching user:', error)
+  }
 }
 
 onMounted(async () => {
+  console.log('Post page mounted with ID:', route.params.postId)
+  
+  await loadCurrentUser()
   await fetchPostById(route.params.postId)
   await loadComments()
   await incrementViewCount(route.params.postId)
   
   if (currentPost.value) {
     reactionCount.value = currentPost.value.reaction_count || 0
+    console.log('Post loaded:', currentPost.value)
   }
 })
 </script>
@@ -430,7 +591,6 @@ onMounted(async () => {
   padding: 0 20px;
 }
 
-/* Back Button */
 .back-btn {
   background: rgba(255, 155, 133, 0.15);
   color: #FF9B85;
@@ -450,7 +610,6 @@ onMounted(async () => {
   box-shadow: 0 5px 20px rgba(255, 155, 133, 0.3);
 }
 
-/* Post Card */
 .post-card {
   background: white;
   border-radius: 25px;
@@ -471,7 +630,6 @@ onMounted(async () => {
   }
 }
 
-/* Carousel */
 .carousel-container {
   position: relative;
 }
@@ -557,7 +715,6 @@ onMounted(async () => {
   object-fit: cover;
 }
 
-/* Post Header */
 .post-header {
   display: flex;
   justify-content: space-between;
@@ -646,25 +803,6 @@ onMounted(async () => {
   color: white;
 }
 
-.edit-btn {
-  background: rgba(255, 155, 133, 0.1);
-  color: #FF9B85;
-  border: 2px solid #FFB88C;
-  padding: 10px 20px;
-  border-radius: 50px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.edit-btn:hover {
-  background: #FF9B85;
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(255, 155, 133, 0.3);
-}
-
-/* Post Body */
 .post-body {
   padding: 30px;
 }
@@ -685,7 +823,6 @@ onMounted(async () => {
   white-space: pre-wrap;
 }
 
-/* Location Card */
 .location-card {
   display: flex;
   gap: 15px;
@@ -727,7 +864,6 @@ onMounted(async () => {
   font-size: 1.1rem;
 }
 
-/* Tags */
 .tags-section {
   display: flex;
   flex-wrap: wrap;
@@ -750,7 +886,6 @@ onMounted(async () => {
   box-shadow: 0 5px 15px rgba(136, 216, 247, 0.3);
 }
 
-/* Engagement Bar */
 .engagement-bar {
   display: flex;
   justify-content: space-between;
@@ -803,7 +938,6 @@ onMounted(async () => {
   font-weight: 500;
 }
 
-/* Comments Section */
 .comments-section {
   background: white;
   border-radius: 25px;
@@ -865,7 +999,6 @@ onMounted(async () => {
   cursor: not-allowed;
 }
 
-/* Comments List */
 .comments-list {
   display: flex;
   flex-direction: column;
@@ -922,7 +1055,6 @@ onMounted(async () => {
   margin: 0;
 }
 
-/* Reply Button */
 .reply-btn {
   background: rgba(255, 152, 0, 0.1);
   border: 2px solid rgba(255, 152, 0, 0.3);
@@ -946,20 +1078,17 @@ onMounted(async () => {
   box-shadow: 0 5px 15px rgba(255, 152, 0, 0.3);
 }
 
-/* Comment Thread */
 .comment-thread {
   display: flex;
   flex-direction: column;
   gap: 15px;
 }
 
-/* Reply Item */
 .reply-item {
   background: linear-gradient(135deg, #FFE8D6 0%, #FFF5E6 100%);
   border-left: 3px solid #FF9800;
 }
 
-/* Replies Container */
 .replies-container {
   margin-left: 60px;
   display: flex;
@@ -978,7 +1107,6 @@ onMounted(async () => {
   background: linear-gradient(to bottom, #FFB74D, transparent);
 }
 
-/* Reply Form */
 .reply-form {
   margin-top: 15px;
   padding: 15px;
@@ -1064,6 +1192,38 @@ onMounted(async () => {
   cursor: not-allowed;
 }
 
+.reply-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.nested-replies {
+  margin-left: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  position: relative;
+  padding-left: 20px;
+  border-left: 2px solid rgba(255, 183, 77, 0.3);
+}
+
+.nested-reply-item {
+  background: linear-gradient(135deg, #FFF5E6 0%, #FFFAF0 100%);
+  border-left: 3px solid #F57C00;
+  padding: 15px;
+}
+
+.small-avatar {
+  width: 40px;
+  height: 40px;
+}
+
+.small-reply-btn {
+  font-size: 0.85rem;
+  padding: 6px 14px;
+}
+
 .no-comments {
   text-align: center;
   padding: 60px 20px;
@@ -1081,7 +1241,6 @@ onMounted(async () => {
   margin: 0;
 }
 
-/* Loading States */
 .loading-skeleton,
 .comment-skeleton {
   height: 300px;
@@ -1101,7 +1260,6 @@ onMounted(async () => {
   100% { background-position: -200% 0; }
 }
 
-/* Error State */
 .error-state {
   text-align: center;
   padding: 80px 20px;
@@ -1153,7 +1311,6 @@ onMounted(async () => {
   box-shadow: 0 10px 30px rgba(255, 155, 133, 0.4);
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .main-image-wrapper {
     height: 300px;
@@ -1181,6 +1338,20 @@ onMounted(async () => {
 
   .comment-item {
     flex-direction: column;
+  }
+
+  .nested-replies {
+    margin-left: 20px;
+    padding-left: 10px;
+  }
+  
+  .replies-container {
+    margin-left: 30px;
+  }
+  
+  .small-avatar {
+    width: 35px;
+    height: 35px;
   }
 }
 </style>
