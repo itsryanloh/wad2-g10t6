@@ -418,7 +418,7 @@ const handleReply = async (parentCommentId) => {
   try {
     console.log('Adding reply to comment:', parentCommentId)
     
-    const result = await addComment(route.params.PostId, {
+    const result = await addComment(route.params.postId, {
       content: replyContent.value,
       user_id: currentUserId.value,
       parent_comment_id: parentCommentId
@@ -474,8 +474,8 @@ const getPostTypeIcon = (type) => {
 const loadComments = async () => {
   loadingComments.value = true
   try {
-    console.log('Loading comments for post:', route.params.PostId)
-    const result = await fetchComments(route.params.PostId)
+    console.log('Loading comments for post:', route.params.postId)
+    const result = await fetchComments(route.params.postId)
     console.log('Comments loaded:', result)
     comments.value = result || []
   } catch (error) {
@@ -496,11 +496,11 @@ const handleAddComment = async () => {
   
   addingComment.value = true
   try {
-    console.log('Adding comment to post:', route.params.PostId)
+    console.log('Adding comment to post:', route.params.postId)
     console.log('Comment content:', newComment.value)
     console.log('User ID:', currentUserId.value)
     
-    const result = await addComment(route.params.PostId, {
+    const result = await addComment(route.params.postId, {
       content: newComment.value,
       user_id: currentUserId.value
     })
@@ -529,8 +529,8 @@ const handleReaction = async () => {
   }
   
   try {
-    console.log('Toggling reaction for post:', route.params.PostId)
-    const result = await toggleReaction(route.params.PostId, currentUserId.value, 'like')
+    console.log('Toggling reaction for post:', route.params.postId)
+    const result = await toggleReaction(route.params.postId, currentUserId.value, 'like')
     console.log('Reaction result:', result)
     
     hasLiked.value = !hasLiked.value
@@ -547,7 +547,7 @@ const loadCurrentUser = async () => {
     
     // Find David Chen or use first user
     const davidChen = users.find(user => 
-      user.username === 'david_chen' || user.name.toLowerCase().includes('david chen')
+      user.username === 'davidchen' || user.name.toLowerCase().includes('david chen')
     )
     
     const targetUser = davidChen || users[0]
@@ -564,15 +564,15 @@ const loadCurrentUser = async () => {
 }
 
 onMounted(async () => {
-  console.log('Post page mounted with ID:', route.params.PostId)
+  console.log('Post page mounted with ID:', route.params.postId)
   
   await loadCurrentUser()
-  await fetchPostById(route.params.PostId)
+  await fetchPostById(route.params.postId)
   await loadComments()
-  await incrementViewCount(route.params.PostId)
+  await incrementViewCount(route.params.postId)
   
   if (currentPost.value) {
-    reactionCount.value = currentPost.value.reaction_count || 1
+    reactionCount.value = currentPost.value.reaction_count || 0
     console.log('Post loaded:', currentPost.value)
   }
 })
