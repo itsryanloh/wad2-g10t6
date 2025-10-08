@@ -1,144 +1,93 @@
-import express from 'express';
-import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
-
-dotenv.config();
+import express from "express";
+import supabase from "../database.js";
+import * as z from "zod";
+import twilio from "twilio";
 
 const router = express.Router();
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_KEY
-);
+const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH)
 
-// GET all users (for user selection)
-router.get('/', async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from('users')
-      .select('id, name, username, contact_no, age, gender, avatar_url, role, created_at')
-      .order('created_at', { ascending: false })
-      .limit(10);
+const User = z.object({
+  name: z.string(),
+  age: z.number(),
+  gender: z.string(),
+  password: z.string(),
+  contact_no: z.string(),
+  role: z.literal(["user", "shelter"]),
+});
 
-    if (error) throw error;
+router.get("/", async (_, res) => {
+  const { error, data } = await supabase.from("users").select("*");
+  if (error) throw new Error(error);
+  res.send(data);
+});
 
-    res.json(data || []);
-  } catch (error) {
-    console.error('Error fetching users:', error);
-    res.status(500).json({ error: error.message });
+router.get("/:id", async (req, res) => {
+  const id = req.params.id;
+  const { error, data } = await supabase.from("users").select("*").eq("id", id);
+  if (error) {
+    return res.status(400).send(error.message);
+  } else if (!data.length) {
+    return res.status(404).send(`User with id ${id} not found`);
+  }
+  res.send(data);
+});
+
+router.post("/", async (req, res) => {
+  const user = req.body;
+  const { error: parseError } = User.safeParse(user);
+  if (parseError) return res.status(400).send(JSON.parse(parseError.message));
+
+  const { error, data } = await supabase.from("users").insert(user).select();
+  if (error) return res.status(400).send(error.message);
+  return res.status(201).send(data[0]);
+});
+
+router.patch("/:id", async (req, res) => {
+  const id = req.params.id;
+  // check if user exists
+  const { error: fetchError, data: currentData } = await supabase.from("users").select("*").eq("id", id);
+  if (fetchError) return res.status(404).send(`User with id ${id} not found`);
+
+  // check if new fields are valid
+  const newUser = { ...currentData[0], ...req.body };
+  const { error: parseError } = User.safeParse(newUser);
+  if (parseError) return res.status(400).send(JSON.parse(parseError.message));
+
+  // execute update on db
+  const { error: updateError, data: newData } = await supabase.from("users").update(newUser).eq("id", id).select();
+  if (updateError) return res.status(400).send(JSON.parse(updateError.message));
+
+  return res.status(201).send(newData[0]);
+});
+
+router.delete("/:id", async (req, res) => {
+  const id = req.params.id;
+  const { data  } = await supabase.from("users").select("id").eq("id", id);
+  if (!data.length) return res.status(404).send(`User with id ${id} not found`);
+
+  const { error } = await supabase.from("users").delete().eq("id", id);
+  if (error) return res.status(400).send(JSON.parse(deleteError.message));
+
+  return res.send(`User with id ${id} was deleted`);
+});
+
+router.post("/send-code", async (req, res) => {
+  const { phone } = req.body;
+  await client.verify.v2.services(process.env.TWILIO_VERIFY_SID)
+    .verifications.create({ to: phone, channel: "sms" });
+  res.json({ message: "Code sent" });
+})
+
+router.post("/verify-code", async (req, res) => {
+  const { phone, code } = req.body;
+  const check = await client.verify.v2.services(process.env.TWILIO_VERIFY_SID)
+    .verificationChecks.create({ to: phone, code });
+  
+  if (check.status === "approved") {
+    res.json({ success: true });
+  } else {
+    res.status(401).json({ success: false });
   }
 });
 
-// GET current user by ID
-router.get('/:id', async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from('users')
-      .select('id, name, username, contact_no, age, gender, avatar_url, role, created_at, updated_at')
-      .eq('id', req.params.id)
-      .single();
-
-    if (error) throw error;
-    if (!data) return res.status(404).json({ error: 'User not found' });
-
-    res.json(data);
-  } catch (error) {
-    console.error('Error fetching user:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// UPDATE user profile
-router.put('/:id', async (req, res) => {
-  try {
-    const userId = req.params.id;
-    const { name, username, contact_no, age, gender, avatar_url } = req.body;
-
-    console.log('Updating user:', userId);
-    console.log('Update data:', { name, username, contact_no, age, gender, avatar_url });
-
-    // Build update object
-    const updates = {
-      updated_at: new Date().toISOString()
-    };
-    
-    if (name !== undefined) updates.name = name;
-    if (username !== undefined) updates.username = username;
-    if (contact_no !== undefined) updates.contact_no = contact_no;
-    if (age !== undefined) updates.age = age;
-    if (gender !== undefined) updates.gender = gender;
-    if (avatar_url !== undefined) updates.avatar_url = avatar_url;
-
-    // Perform update
-    const { data, error } = await supabase
-      .from('users')
-      .update(updates)
-      .eq('id', userId)
-      .select();
-
-    if (error) {
-      console.error('Supabase update error:', error);
-      return res.status(500).json({ error: error.message });
-    }
-
-    if (!data || data.length === 0) {
-      console.error('No user found with ID:', userId);
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    // Get first result and remove password
-    const updatedUser = data[0];
-    delete updatedUser.password;
-
-    console.log('User updated successfully:', updatedUser.id);
-    res.json(updatedUser);
-
-  } catch (error) {
-    console.error('Error in PUT /users/:id:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// UPDATE password
-router.put('/:id/password', async (req, res) => {
-  try {
-    const { current_password, new_password } = req.body;
-
-    if (!current_password || !new_password) {
-      return res.status(400).json({ 
-        error: 'Current and new password required' 
-      });
-    }
-
-    // Verify current password
-    const { data: user, error: fetchError } = await supabase
-      .from('users')
-      .select('password')
-      .eq('id', req.params.id)
-      .single();
-
-    if (fetchError) throw fetchError;
-    if (!user) return res.status(404).json({ error: 'User not found' });
-
-    // Check if current password matches
-    if (user.password !== current_password) {
-      return res.status(401).json({ error: 'Current password is incorrect' });
-    }
-
-    // Update password
-    const { error: updateError } = await supabase
-      .from('users')
-      .update({ 
-        password: new_password,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', req.params.id);
-
-    if (updateError) throw updateError;
-
-    res.json({ message: 'Password updated successfully' });
-  } catch (error) {
-    console.error('Error updating password:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
 export default router;
