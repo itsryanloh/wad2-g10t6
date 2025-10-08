@@ -424,7 +424,7 @@ const handleSubmit = async () => {
     console.log('Saving profile data:', form.value)
     
     const response = await fetch(`http://localhost:3000/api/users/${form.value.id}`, {
-      method: 'PUT',
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: form.value.name.trim(),
@@ -485,7 +485,7 @@ const handlePasswordChange = async () => {
   }
 
   try {
-    const response = await fetch(`http://localhost:3000/api/users/${form.value.id}/password`, {
+    const response = await fetch(`http://localhost:3000/api/auth/password/${form.value.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

@@ -8,10 +8,12 @@ const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH)
 
 const User = z.object({
   name: z.string(),
+  username: z.string(),
   age: z.number(),
   gender: z.string(),
   password: z.string(),
   contact_no: z.string(),
+  avatar_url: z.string(),
   role: z.literal(["user", "shelter"]),
 });
 
@@ -43,6 +45,8 @@ router.post("/", async (req, res) => {
 });
 
 router.patch("/:id", async (req, res) => {
+  if (!req.body.password) return res.status(400).send("Wrong endpoint for changing password, use /api/auth/password");
+
   const id = req.params.id;
   // check if user exists
   const { error: fetchError, data: currentData } = await supabase.from("users").select("*").eq("id", id);

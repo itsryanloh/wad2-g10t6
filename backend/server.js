@@ -4,6 +4,7 @@ import cors from 'cors';
 import forumRoutes from './routes/forum.js';
 import avatarsRouter from './routes/avatars.js';
 import usersRouter from './routes/users.js';
+import authRouter from  './routes/auth.js';
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ app.use(express.json());
 app.use('/api', forumRoutes);
 app.use('/api/users', usersRouter);
 app.use('/api/avatars', avatarsRouter);
+app.use('/api/auth', authRouter);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
