@@ -111,15 +111,39 @@
               </span>
             </div>
 
-            <!-- Engagement Bar -->
+            <!-- Engagement Bar with Multiple Reactions -->
             <div class="engagement-bar">
-              <button 
-                @click="handleReaction" 
-                :class="['reaction-btn', { active: hasLiked }]"
-              >
-                <i :class="hasLiked ? 'fas fa-heart' : 'far fa-heart'"></i>
-                <span>{{ reactionCount }}</span>
-              </button>
+              <div class="reactions-group">
+                <!-- Heart Reaction -->
+                <button 
+                  @click="handleReaction('heart')" 
+                  :class="['reaction-btn', 'heart-btn', { active: userReactions.heart }]"
+                  :title="userReactions.heart ? 'Remove heart' : 'Add heart'"
+                >
+                  <i :class="userReactions.heart ? 'fas fa-heart' : 'far fa-heart'"></i>
+                  <span>{{ reactionCounts.heart }}</span>
+                </button>
+
+                <!-- Like Reaction -->
+                <button 
+                  @click="handleReaction('like')" 
+                  :class="['reaction-btn', 'like-btn', { active: userReactions.like }]"
+                  :title="userReactions.like ? 'Remove like' : 'Add like'"
+                >
+                  <i :class="userReactions.like ? 'fas fa-thumbs-up' : 'far fa-thumbs-up'"></i>
+                  <span>{{ reactionCounts.like }}</span>
+                </button>
+
+                <!-- Helpful Reaction -->
+                <button 
+                  @click="handleReaction('helpful')" 
+                  :class="['reaction-btn', 'helpful-btn', { active: userReactions.helpful }]"
+                  :title="userReactions.helpful ? 'Remove helpful' : 'Mark as helpful'"
+                >
+                  <i :class="userReactions.helpful ? 'fas fa-star' : 'far fa-star'"></i>
+                  <span>{{ reactionCounts.helpful }}</span>
+                </button>
+              </div>
 
               <div class="stats">
                 <span class="stat-item">
@@ -185,7 +209,6 @@
                   </div>
                   <p class="comment-text">{{ comment.content }}</p>
                   
-                  <!-- Reply Button -->
                   <button 
                     class="reply-btn"
                     @click="toggleReply(comment.id)"
@@ -194,7 +217,6 @@
                     Reply
                   </button>
                   
-                  <!-- Reply Form -->
                   <div v-if="replyingTo === comment.id" class="reply-form">
                     <textarea
                       v-model="replyContent"
@@ -238,7 +260,6 @@
                       </div>
                       <p class="comment-text">{{ reply.content }}</p>
                       
-                      <!-- Reply Button on Replies -->
                       <button 
                         class="reply-btn"
                         @click="toggleReply(reply.id)"
@@ -247,7 +268,6 @@
                         Reply
                       </button>
                       
-                      <!-- Reply Form on Replies -->
                       <div v-if="replyingTo === reply.id" class="reply-form">
                         <textarea
                           v-model="replyContent"
@@ -272,7 +292,6 @@
                     </div>
                   </div>
                   
-                  <!-- Show nested replies to this reply -->
                   <div v-if="getReplies(reply.id).length" class="nested-replies">
                     <div
                       v-for="nestedReply in getReplies(reply.id)"
@@ -290,7 +309,6 @@
                         </div>
                         <p class="comment-text">{{ nestedReply.content }}</p>
                         
-                        <!-- Can also reply to nested replies -->
                         <button 
                           class="reply-btn small-reply-btn"
                           @click="toggleReply(nestedReply.id)"
@@ -363,13 +381,23 @@ const {
   fetchComments,
   addComment,
   toggleReaction,
-  incrementViewCount
+  incrementViewCount,
+  getReactionCounts,
+  checkUserReaction
 } = useForum()
 
 const comments = ref([])
 const loadingComments = ref(false)
-const hasLiked = ref(false)
-const reactionCount = ref(0)
+const userReactions = ref({
+  heart: false,
+  like: false,
+  helpful: false
+})
+const reactionCounts = ref({
+  heart: 0,
+  like: 0,
+  helpful: 0
+})
 const newComment = ref('')
 const addingComment = ref(false)
 const currentCarouselIndex = ref(0)
@@ -381,12 +409,10 @@ const isAuthor = computed(() => {
   return currentPost.value?.user_id === currentUserId.value
 })
 
-// Get top-level comments (no parent)
 const topLevelComments = computed(() => {
   return comments.value.filter(c => !c.parent_comment_id)
 })
 
-// Get replies for a specific comment
 const getReplies = (commentId) => {
   return comments.value.filter(c => c.parent_comment_id === commentId)
 }
@@ -416,27 +442,20 @@ const handleReply = async (parentCommentId) => {
   
   addingComment.value = true
   try {
-    console.log('Adding reply to comment:', parentCommentId)
-    
     const result = await addComment(route.params.postId, {
       content: replyContent.value,
       user_id: currentUserId.value,
       parent_comment_id: parentCommentId
     })
 
-    console.log('Reply result:', result)
-
     if (result) {
       replyContent.value = ''
       replyingTo.value = null
       await loadComments()
-    } else {
-      console.error('Failed to add reply')
-      alert('Failed to post reply. Please try again.')
     }
   } catch (error) {
     console.error('Error adding reply:', error)
-    alert('Error posting reply. Check console for details.')
+    alert('Error posting reply.')
   } finally {
     addingComment.value = false
   }
@@ -474,9 +493,7 @@ const getPostTypeIcon = (type) => {
 const loadComments = async () => {
   loadingComments.value = true
   try {
-    console.log('Loading comments for post:', route.params.postId)
     const result = await fetchComments(route.params.postId)
-    console.log('Comments loaded:', result)
     comments.value = result || []
   } catch (error) {
     console.error('Error loading comments:', error)
@@ -496,45 +513,73 @@ const handleAddComment = async () => {
   
   addingComment.value = true
   try {
-    console.log('Adding comment to post:', route.params.postId)
-    console.log('Comment content:', newComment.value)
-    console.log('User ID:', currentUserId.value)
-    
     const result = await addComment(route.params.postId, {
       content: newComment.value,
       user_id: currentUserId.value
     })
 
-    console.log('Comment result:', result)
-
     if (result) {
       newComment.value = ''
       await loadComments()
-    } else {
-      console.error('Failed to add comment')
-      alert('Failed to post comment. Please try again.')
     }
   } catch (error) {
     console.error('Error adding comment:', error)
-    alert('Error posting comment. Check console for details.')
+    alert('Error posting comment.')
   } finally {
     addingComment.value = false
   }
 }
 
-const handleReaction = async () => {
+const loadReactionCounts = async () => {
+  try {
+    console.log('Fetching reaction counts for post:', route.params.postId)
+    const counts = await getReactionCounts(route.params.postId)
+    console.log('API returned counts:', counts)
+    reactionCounts.value = counts
+    console.log('Updated reactionCounts.value:', reactionCounts.value)
+  } catch (error) {
+    console.error('Error loading reaction counts:', error)
+  }
+}
+
+const checkUserReactions = async () => {
+  if (!currentUserId.value) return
+  
+  try {
+    const reactionTypes = ['heart', 'like', 'helpful']
+    for (const type of reactionTypes) {
+      const hasReacted = await checkUserReaction(route.params.postId, currentUserId.value, type)
+      userReactions.value[type] = hasReacted
+    }
+    console.log('User reactions loaded:', userReactions.value)
+  } catch (error) {
+    console.error('Error checking user reactions:', error)
+  }
+}
+
+const handleReaction = async (reactionType) => {
   if (!currentUserId.value) {
     alert('User not loaded. Please refresh the page.')
     return
   }
   
   try {
-    console.log('Toggling reaction for post:', route.params.postId)
-    const result = await toggleReaction(route.params.postId, currentUserId.value, 'like')
+    console.log(`Toggling ${reactionType} reaction for post:`, route.params.postId)
+    const result = await toggleReaction(route.params.postId, currentUserId.value, reactionType)
     console.log('Reaction result:', result)
     
-    hasLiked.value = !hasLiked.value
-    reactionCount.value += hasLiked.value ? 1 : -1
+    // Toggle the user's reaction state
+    userReactions.value[reactionType] = !userReactions.value[reactionType]
+    
+    // Update the count
+    reactionCounts.value[reactionType] += userReactions.value[reactionType] ? 1 : -1
+    
+    // Update currentPost to persist data when navigating back
+    if (currentPost.value) {
+      currentPost.value[`${reactionType}_count`] = reactionCounts.value[reactionType]
+    }
+    
+    console.log(`Updated ${reactionType} state:`, userReactions.value[reactionType], 'Count:', reactionCounts.value[reactionType])
   } catch (error) {
     console.error('Error toggling reaction:', error)
   }
@@ -545,7 +590,6 @@ const loadCurrentUser = async () => {
     const response = await fetch('http://localhost:3000/api/users')
     const users = await response.json()
     
-    // Find David Chen or use first user
     const davidChen = users.find(user => 
       user.username === 'davidchen' || user.name.toLowerCase().includes('david chen')
     )
@@ -568,13 +612,22 @@ onMounted(async () => {
   
   await loadCurrentUser()
   await fetchPostById(route.params.postId)
-  await loadComments()
-  await incrementViewCount(route.params.postId)
   
   if (currentPost.value) {
-    reactionCount.value = currentPost.value.reaction_count || 0
     console.log('Post loaded:', currentPost.value)
+    
+    // Load reaction counts
+    await loadReactionCounts()
+    
+    // Check which reactions the user has made
+    await checkUserReactions()
+    
+    console.log('Final reaction counts:', reactionCounts.value)
+    console.log('User reactions:', userReactions.value)
   }
+  
+  await loadComments()
+  await incrementViewCount(route.params.postId)
 })
 </script>
 
@@ -894,37 +947,105 @@ onMounted(async () => {
   background: linear-gradient(135deg, #FFF4E6 0%, #ffffff 100%);
   border-radius: 15px;
   margin-top: 30px;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.reactions-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .reaction-btn {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 25px;
+  gap: 8px;
+  padding: 10px 20px;
   background: white;
-  border: 2px solid #FFB88C;
+  border: 2px solid;
   border-radius: 50px;
-  color: #FF9B85;
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 0.95rem;
   cursor: pointer;
   transition: all 0.3s;
+  min-width: 80px;
+  justify-content: center;
 }
 
-.reaction-btn:hover {
+.reaction-btn i {
+  font-size: 1.1rem;
+}
+
+.heart-btn {
+  border-color: #FFB88C;
+  color: #FF9B85;
+}
+
+.heart-btn:hover {
   background: linear-gradient(135deg, #FF9B85 0%, #FFB88C 100%);
   color: white;
   transform: scale(1.05);
   box-shadow: 0 5px 15px rgba(255, 155, 133, 0.3);
 }
 
-.reaction-btn.active {
+.heart-btn.active {
   background: linear-gradient(135deg, #FF9B85 0%, #FFB88C 100%);
   color: white;
+  animation: heartBeat 0.5s;
 }
 
-.reaction-btn i {
-  font-size: 1.2rem;
+@keyframes heartBeat {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.2); }
+  50% { transform: scale(1.1); }
+  75% { transform: scale(1.15); }
+}
+
+.like-btn {
+  border-color: #64B5F6;
+  color: #2196F3;
+}
+
+.like-btn:hover {
+  background: linear-gradient(135deg, #2196F3 0%, #64B5F6 100%);
+  color: white;
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px rgba(33, 150, 243, 0.3);
+}
+
+.like-btn.active {
+  background: linear-gradient(135deg, #2196F3 0%, #64B5F6 100%);
+  color: white;
+  animation: thumbsUp 0.5s;
+}
+
+@keyframes thumbsUp {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.2) rotate(-10deg); }
+}
+
+.helpful-btn {
+  border-color: #FFD54F;
+  color: #FFA000;
+}
+
+.helpful-btn:hover {
+  background: linear-gradient(135deg, #FFA000 0%, #FFD54F 100%);
+  color: white;
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px rgba(255, 160, 0, 0.3);
+}
+
+.helpful-btn.active {
+  background: linear-gradient(135deg, #FFA000 0%, #FFD54F 100%);
+  color: white;
+  animation: starSpin 0.5s;
+}
+
+@keyframes starSpin {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.2) rotate(180deg); }
 }
 
 .stats {
@@ -1334,6 +1455,16 @@ onMounted(async () => {
   .engagement-bar {
     flex-direction: column;
     gap: 15px;
+  }
+
+  .reactions-group {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .reaction-btn {
+    flex: 1;
+    min-width: 70px;
   }
 
   .comment-item {

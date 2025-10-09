@@ -153,9 +153,17 @@
                   <i class="fas fa-eye"></i>
                   {{ post.view_count || 0 }}
                 </span>
-                <span class="stat-item">
+                <span class="stat-item heart-stat" :title="`${post.heart_count || 0} hearts`">
                   <i class="fas fa-heart"></i>
-                  {{ post.reaction_count || 0 }}
+                  {{ post.heart_count || 0 }}
+                </span>
+                <span class="stat-item like-stat" :title="`${post.like_count || 0} likes`">
+                  <i class="fas fa-thumbs-up"></i>
+                  {{ post.like_count || 0 }}
+                </span>
+                <span class="stat-item helpful-stat" :title="`${post.helpful_count || 0} helpful`">
+                  <i class="fas fa-star"></i>
+                  {{ post.helpful_count || 0 }}
                 </span>
               </div>
             </div>
@@ -700,6 +708,22 @@ onMounted(async () => {
   align-items: center;
   gap: 5px;
   font-weight: 500;
+}
+.heart-stat {
+  color: #FF9B85;
+}
+
+.like-stat {
+  color: #2196F3;
+}
+
+.helpful-stat {
+  color: #FFA000;
+}
+
+.stat-item i 
+{
+  margin-right: 4px;
 }
 
 /* Loading Skeleton */

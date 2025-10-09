@@ -87,8 +87,8 @@ router.get('/posts', async (req, res) => {
       .select(`
         *,
         users (id, name, username, avatar_url),
-        comments (count),
-        post_reactions (count)
+        comments (id),
+        post_reactions (id, reaction_type)
       `)
       .order('created_at', { ascending: false })
       .limit(limit);
@@ -110,11 +110,17 @@ router.get('/posts', async (req, res) => {
 
     if (error) throw error;
 
-    const postsWithCounts = data.map(post => ({
-      ...post,
-      comment_count: post.comments?.length || 0,
-      reaction_count: post.post_reactions?.length || 0
-    }));
+    const postsWithCounts = data.map(post => {
+      const reactions = post.post_reactions || [];
+      return {
+        ...post,
+        comment_count: post.comments?.length || 0,
+        reaction_count: reactions.length,
+        heart_count: reactions.filter(r => r.reaction_type === 'heart').length,
+        like_count: reactions.filter(r => r.reaction_type === 'like').length,
+        helpful_count: reactions.filter(r => r.reaction_type === 'helpful').length
+      };
+    });
 
     res.json(postsWithCounts);
   } catch (error) {
@@ -362,6 +368,61 @@ router.post('/posts/:id/view', async (req, res) => {
     res.json({ message: 'View counted' });
   } catch (error) {
     console.error('Error incrementing view:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET reaction counts for a post
+router.get('/posts/:id/reactions/counts', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('post_reactions')
+      .select('reaction_type')
+      .eq('post_id', req.params.id);
+
+    if (error) throw error;
+
+    const counts = {
+      heart: 0,
+      like: 0,
+      helpful: 0
+    };
+
+    data.forEach(reaction => {
+      if (counts.hasOwnProperty(reaction.reaction_type)) {
+        counts[reaction.reaction_type]++;
+      }
+    });
+
+    res.json(counts);
+  } catch (error) {
+    console.error('Error fetching reaction counts:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// CHECK if user has reacted to a post
+router.get('/posts/:id/reactions/check', async (req, res) => {
+  try {
+    const { user_id, reaction_type } = req.query;
+
+    if (!user_id || !reaction_type) {
+      return res.status(400).json({ error: 'Missing user_id or reaction_type' });
+    }
+
+    const { data, error } = await supabase
+      .from('post_reactions')
+      .select('*')
+      .eq('post_id', req.params.id)
+      .eq('user_id', user_id)
+      .eq('reaction_type', reaction_type)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    res.json({ hasReacted: !!data });
+  } catch (error) {
+    console.error('Error checking reaction:', error);
     res.status(500).json({ error: error.message });
   }
 });

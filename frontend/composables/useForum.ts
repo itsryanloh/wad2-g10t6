@@ -254,6 +254,47 @@ export const useForum = () => {
     }
   }
 
+  // Get reaction counts for a post
+  const getReactionCounts = async (postId: string) => {
+    try {
+      const response = await fetch(`${API_BASE}/posts/${postId}/reactions/counts`)
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch reaction counts')
+      }
+      
+      const data = await response.json()
+      
+      return {
+        heart: data.heart || 0,
+        like: data.like || 0,
+        helpful: data.helpful || 0
+      }
+    } catch (e) {
+      console.error('Error fetching reaction counts:', e)
+      return { heart: 0, like: 0, helpful: 0 }
+    }
+  }
+
+  // Check if user has reacted to a post
+  const checkUserReaction = async (postId: string, userId: string, reactionType: string) => {
+    try {
+      const response = await fetch(
+        `${API_BASE}/posts/${postId}/reactions/check?user_id=${userId}&reaction_type=${reactionType}`
+      )
+      
+      if (!response.ok) {
+        throw new Error('Failed to check user reaction')
+      }
+      
+      const data = await response.json()
+      return data.hasReacted || false
+    } catch (e) {
+      console.error('Error checking user reaction:', e)
+      return false
+    }
+  }
+
   return {
     posts,
     currentPost,
@@ -267,6 +308,8 @@ export const useForum = () => {
     fetchComments,
     addComment,
     toggleReaction,
-    incrementViewCount
-  }
+    incrementViewCount,
+    getReactionCounts,     
+    checkUserReaction       
+  } 
 }
