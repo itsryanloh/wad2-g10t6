@@ -1,21 +1,10 @@
 import express from "express";
 import supabase from "../database.js";
-import * as z from "zod";
 import twilio from "twilio";
+import { User } from "../schemas/user.js"
 
 const router = express.Router();
 const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH)
-
-const User = z.object({
-  name: z.string(),
-  username: z.string(),
-  age: z.number(),
-  gender: z.string(),
-  password: z.string(),
-  contact_no: z.string(),
-  avatar_url: z.string(),
-  role: z.literal(["user", "shelter"]),
-});
 
 router.get("/", async (_, res) => {
   const { error, data } = await supabase.from("users").select("*");
