@@ -71,10 +71,12 @@
         </div>
       </div>
     </div>
+    <LoginForm />
   </div>
 </template>
 
 <script setup>
+import LoginForm from '~/components/LoginForm.vue';
 definePageMeta({
   layout: 'default'
 })
