@@ -45,7 +45,7 @@ router.post("/", async (req, res) => {
 });
 
 router.patch("/:id", async (req, res) => {
-  if (!req.body.password) return res.status(400).send("Wrong endpoint for changing password, use /api/auth/password");
+  if (req.body.password) return res.status(400).send("Wrong endpoint for changing password, use /api/auth/password");
 
   const id = req.params.id;
   // check if user exists
