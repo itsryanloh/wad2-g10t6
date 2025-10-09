@@ -323,7 +323,7 @@ onMounted(async () => {
     
     // Find David Chen or use first user
     const davidChen = users.find(user => 
-      user.username === 'davidchen' || user.name.toLowerCase().includes('david chen')
+      user.username === 'david_chen'
     )
     
     const targetUser = davidChen || users[0]
