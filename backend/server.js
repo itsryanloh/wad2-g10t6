@@ -5,6 +5,7 @@ import forumRoutes from './routes/forum.js';
 import avatarsRouter from './routes/avatars.js';
 import usersRouter from './routes/users.js';
 import authRouter from  './routes/auth.js';
+import morgan from 'morgan';
 
 dotenv.config();
 
@@ -13,6 +14,7 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(morgan('combined'));
 
 // Use Routes
 app.use('/api', forumRoutes);

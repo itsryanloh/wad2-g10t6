@@ -11,6 +11,4 @@ const User = z.object({
   role: z.literal(["user", "shelter"]),
 });
 
-export {
-  User
-}
+export { User };
