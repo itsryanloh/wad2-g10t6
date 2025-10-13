@@ -3,10 +3,15 @@ import express from "express";
 import supabase from "../database.js";
 import twilio from "twilio";
 import z from "zod";
+import jwt from "jsonwebtoken";
 import { User } from "../schemas/user.js";
 
 const router = express.Router();
 const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH)
+
+if (!process.env.TOKEN_SECRET) {
+  throw new Error("TOKEN_SECRET env var not set.")
+}
 
 const loginSchema = z.object({
   username: z.string().min(3),
@@ -42,12 +47,17 @@ router.post("/login", async (req, res) => {
   const user = data[0]
   const success = await bcrypt.compare(password, user.password);
   if (success) {
-    await client.verify.v2.services(process.env.TWILIO_VERIFY_SID)
-      .verifications.create({ to: user.contact_no.split(" ").join(""), channel: "sms" });
+    if (user.has_2fa_enabled) {
+      await client.verify.v2.services(process.env.TWILIO_VERIFY_SID)
+        .verifications.create({ to: user.contact_no.split(" ").join(""), channel: "sms" });
+      return res.json({ message: "User has 2fa enabled. Code has been sent to user's phone number." });
+    }
+
+    const token = jwt.sign({ username: user.username, name: user.name }, process.env.TOKEN_SECRET, { expiresIn: "1h" });
+    return res.json({ message: "Login successful.", token });
   } else {
     return res.status(400).send({ error: "Wrong password" });
   }
-  res.json({ message: "Code sent" })
 })
 
 router.post("/send-code", async (req, res) => {

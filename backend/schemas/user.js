@@ -9,6 +9,7 @@ const User = z.object({
   contact_no: z.string(),
   avatar_url: z.string(),
   role: z.literal(["user", "shelter"]),
+  has_2fa_enabled: z.boolean().default(false)
 });
 
 export { User };
