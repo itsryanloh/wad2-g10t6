@@ -5,12 +5,13 @@
       <div class="card">
         <!-- Progress Section -->
         <div class="progress-section">
+          <!-- Rive Cat Animation -->
           <div 
-            class="cat-placeholder" 
-            ref="catElement"
-            :style="{ left: `calc(${progress * 6.8 - 40}px)` }"
+            class="cat-container" 
+            ref="catContainer"
+            :style="{ left: catPosition + 'px' }"
           >
-            <img src="/cat-checklist.png" alt="Cat" class="cat-image">
+            <canvas ref="canvas" class="cat-canvas"></canvas>
           </div>
           
           <div class="progress-container">
@@ -54,9 +55,13 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { Rive } from '@rive-app/canvas'
 
-const catElement = ref(null)
+const canvas = ref(null)
+const catContainer = ref(null)
+let riveInstance = null
+let onResize = null
 
 const checklistItems = ref([
   { text: 'Schedule a vet visit within the first week (even if the cat looks healthy).', completed: false },
@@ -67,15 +72,49 @@ const checklistItems = ref([
 ])
 
 const progress = computed(() => {
-  const completed = checklistItems.value.filter(item => item.completed).length
+  const completed = checklistItems.value.filter(i => i.completed).length
   const total = checklistItems.value.length
   return (completed / total) * 100
+})
+
+const catPositions = {
+  0: -220,
+  20: -140,
+  40: 10,
+  60: 165,
+  80: 310,    
+  100: 450
+}
+
+const catPosition = computed(() => {
+  return catPositions[progress.value] || 0
+})
+
+onMounted(() => {
+  riveInstance = new Rive({
+    src: '/cute_cat2.0.riv',
+    canvas: canvas.value,
+    autoplay: true,
+    animations: 'Main',    // just this one
+    onLoad: () => {
+      riveInstance.resizeDrawingSurfaceToCanvas()
+      riveInstance.play('Main') // ensure it's running
+    }
+  })
+
+  onResize = () => riveInstance?.resizeDrawingSurfaceToCanvas()
+  window.addEventListener('resize', onResize)
+})
+
+onBeforeUnmount(() => {
+  if (onResize) window.removeEventListener('resize', onResize)
 })
 
 const toggleItem = (index) => {
   checklistItems.value[index].completed = !checklistItems.value[index].completed
 }
 </script>
+
 
 <style scoped>
 .checklist-page {
@@ -103,22 +142,19 @@ const toggleItem = (index) => {
   margin-bottom: 40px;
 }
 
-.cat-placeholder {
+/* Cat Container with Rive Animation */
+.cat-container {
   position: absolute;
-  left: 0;
-  top: -13px;           
-  width: 70px;
-  height: 70px;
-  font-size: 50px;
+  top: -220px;           
+  width: 500px;
+  height: 500px;
   z-index: 2;
-  cursor: pointer;
   transition: left 0.5s ease;
 }
 
-.cat-image {
-  width: 200%;
-  height: 200%;
-  object-fit: contain;
+.cat-canvas {
+  width: 100%;
+  height: 100%;
 }
 
 .progress-container {

@@ -1,0 +1,9 @@
+"node_modules/" 
+"frontend/node_modules/" 
+"dist/\n.nuxt/\n.output/\n.env" 
+node_modules/
+frontend/node_modules/
+dist/
+.nuxt/
+.output/
+.env
