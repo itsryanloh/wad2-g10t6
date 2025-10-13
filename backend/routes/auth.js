@@ -92,11 +92,9 @@ router.post("/verify-code", async (req, res) => {
       const token = jwt.sign({ username: user.username, name: user.name }, process.env.TOKEN_SECRET, { expiresIn: "1h" });
       res.json({ message: "Login successful.", token });
     } else {
-      console.log(check);
       res.status(401).json({ error: "Login failed. Incorrect code." });
     }
   } catch (error) {
-    console.log(error);
     res.status(400).json({ error: "Login failed.", message: error });
   }
 });
