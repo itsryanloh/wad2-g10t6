@@ -4,20 +4,49 @@ import * as z from "zod";
 const schema = z.object({
   username: z.string("Username is required"),
   password: z.string("Password is required").min(8, "Must be at least 8 characters"),
-  token: z.int().gte(100000).lte(999999)
 });
 
 type Schema = z.output<typeof schema>;
 
+const codeSchema = z.object({
+  code: z.int().gte(100000).lte(999999)
+});
+
+type CodeSchema = z.output<typeof codeSchema>;
+
 const state = reactive<Partial<Schema>>({
   username: undefined,
   password: undefined,
-  token: undefined
 });
+
+const codeState = reactive<Partial<CodeSchema>>({
+  code: undefined
+})
 
 let show_2fa_check = ref(false);
 let error = ref("");
 let token = useCookie("token");
+
+async function onCodeSubmit(_: SubmitEvent) {
+  const base_url = import.meta.env.VITE_BASE_URL;
+  const verifyData = {
+    username: state.username,
+    code: codeState.code
+  }
+  const response = await fetch(`${base_url}/auth/verify-code`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(verifyData),
+  });
+  const data = await response.json();
+  if (response.ok) {
+    error.value = "";
+    token.value = data.token;
+    await navigateTo("/");
+  }
+}
 
 async function onLoginSubmit(_: SubmitEvent) {
   const base_url = import.meta.env.VITE_BASE_URL;
@@ -48,10 +77,10 @@ async function onLoginSubmit(_: SubmitEvent) {
   <div class="card mx-auto" style="width: 28rem">
     <div class="card-body">
       <h5 class="card-title">Login</h5>
-      <form v-if="show_2fa_check" :schema="schema" :state="state" @submit.prevent="onLoginSubmit">
+      <form v-if="show_2fa_check" :schema="codeSchema" :state="codeState" @submit.prevent="onCodeSubmit">
         <div class="mb-3" v-if="show_2fa_check">
           <label for="code" class="form-label">Enter the 6-digit code sent to your phone number.</label>
-          <input type="code" class="form-control" v-model="state.token" id="token" />
+          <input type="code" class="form-control" v-model="codeState.code" id="token" />
         </div>
         <div id="error" class="form-text text-danger mb-2" v-text="error"></div>
         <button type="submit" class="btn btn-save">Submit</button>

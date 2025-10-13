@@ -18,6 +18,11 @@ const loginSchema = z.object({
   password: z.string().min(8),
 })
 
+const codeSchema = z.object({
+  username: z.string().min(3),
+  code: z.string().length(6),
+})
+
 router.post("/register", async (req, res) => {
   const user = req.body;
   const { error: parseError } = User.safeParse(user);
@@ -60,22 +65,39 @@ router.post("/login", async (req, res) => {
   }
 })
 
-router.post("/send-code", async (req, res) => {
-  const { phone } = req.body;
-  await client.verify.v2.services(process.env.TWILIO_VERIFY_SID)
-    .verifications.create({ to: phone, channel: "sms" });
-  res.json({ message: "Code sent" });
-})
+// router.post("/send-code", async (req, res) => {
+//   const { phone } = req.body;
+//   await client.verify.v2.services(process.env.TWILIO_VERIFY_SID)
+//     .verifications.create({ to: phone, channel: "sms" });
+//   res.json({ message: "Code sent" });
+// })
 
 router.post("/verify-code", async (req, res) => {
-  const { phone, code } = req.body;
-  const check = await client.verify.v2.services(process.env.TWILIO_VERIFY_SID)
-    .verificationChecks.create({ to: phone, code });
-  
-  if (check.status === "approved") {
-    res.json({ success: true });
-  } else {
-    res.status(401).json({ success: false });
+  const { error: parseError } = codeSchema.safeParse(req.body);
+  if (parseError) return res.status(400).send(JSON.parse(parseError.message));
+
+  const { username, code } = req.body;
+  const { error, data } = await supabase.from("users").select("*").eq("username", username);
+  if (error) {
+    return res.status(400).send({ error: error.message });
+  } else if (!data.length) {
+    return res.status(404).send({ error: `User with username ${username} not found` });
+  }
+  const user = data[0]
+  try {
+    const check = await client.verify.v2.services(process.env.TWILIO_VERIFY_SID)
+      .verificationChecks.create({ to: user.contact_no, code });
+    
+    if (check.status === "approved") {
+      const token = jwt.sign({ username: user.username, name: user.name }, process.env.TOKEN_SECRET, { expiresIn: "1h" });
+      res.json({ message: "Login successful.", token });
+    } else {
+      console.log(check);
+      res.status(401).json({ error: "Login failed. Incorrect code." });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({ error: "Login failed.", message: error });
   }
 });
 
