@@ -283,6 +283,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
+const token = useCookie("token")
 
 const loading = ref(true)
 const uploadingAvatar = ref(false)
@@ -316,15 +317,20 @@ const passwordError = ref('')
 
 // Fetch user data on mount - using David Chen's data
 onMounted(async () => {
+  if (!token.value) return await navigateTo("/login");
+
   try {
+    const base_url = import.meta.env.VITE_BASE_URL;
+    const tokenResponse = await fetch(`${base_url}/auth/me`, { headers: { Authorization: `Bearer ${token.value}` } });
+    const tokenData = await tokenResponse.json();
+
     // Fetch all users from database
-    const response = await fetch('http://localhost:3000/api/users')
+    // TODO: avoid fetch all (exposes all users)
+    const response = await fetch(`${base_url}/users`)
     const users = await response.json()
     
     // Find David Chen or use first user
-    const davidChen = users.find(user => 
-      user.username === 'davidchen' || user.name.toLowerCase().includes('david chen')
-    )
+    const davidChen = users.find(user => user.username === tokenData.username)
     
     const targetUser = davidChen || users[0]
     
@@ -511,8 +517,9 @@ const handlePasswordChange = async () => {
 }
 
 const handleLogout = () => {
-  // TODO: Implement actual logout
-  router.push('/forum/main')
+  token.value = null;
+  router.push('/')
+  window.location.reload();
 }
 </script>
 

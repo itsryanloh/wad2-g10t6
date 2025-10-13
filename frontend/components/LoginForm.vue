@@ -25,7 +25,6 @@ const codeState = reactive<Partial<CodeSchema>>({
 
 let show_2fa_check = ref(false);
 let error = ref("");
-let token = useCookie("token");
 
 async function onCodeSubmit(_: SubmitEvent) {
   const base_url = import.meta.env.VITE_BASE_URL;
@@ -43,7 +42,12 @@ async function onCodeSubmit(_: SubmitEvent) {
   const data = await response.json();
   if (response.ok) {
     error.value = "";
+
+    const expires = new Date();
+    expires.setHours(expires.getHours() + 1);
+    let token = useCookie("token", { expires });
     token.value = data.token;
+
     await navigateTo("/");
   }
 }
@@ -61,8 +65,13 @@ async function onLoginSubmit(_: SubmitEvent) {
   if (response.ok) {
     error.value = "";
     if (data.token) {
+      const expires = new Date();
+      expires.setHours(expires.getHours() + 1);
+      let token = useCookie("token", { expires });
+
       token.value = data.token;
       await navigateTo("/");
+      window.location.reload();
     } else {
       show_2fa_check.value = true;
     }

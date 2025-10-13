@@ -58,7 +58,7 @@ router.post("/login", async (req, res) => {
       return res.json({ message: "User has 2fa enabled. Code has been sent to user's phone number." });
     }
 
-    const token = jwt.sign({ username: user.username, name: user.name }, process.env.TOKEN_SECRET, { expiresIn: "1h" });
+    const token = jwt.sign({ username: user.username, name: user.name, avatar_url: user.avatar_url }, process.env.TOKEN_SECRET, { expiresIn: "1h" });
     return res.json({ message: "Login successful.", token });
   } else {
     return res.status(400).send({ error: "Wrong password" });
@@ -99,7 +99,6 @@ router.post("/verify-code", async (req, res) => {
   }
 });
 
-// TODO: convert to hashes
 router.put("/password/:id", async (req, res) => {
   const id = req.params.id;
   const { error, data } = await supabase.from("users").select("*").eq("id", id);
@@ -112,15 +111,33 @@ router.put("/password/:id", async (req, res) => {
   const user = data[0]
   const { current_password, new_password } = req.body;
 
-  if (current_password != user.password) {
+  const success = await bcrypt.compare(current_password, user.password);
+  if (!success) {
     return res.status(400).send({ error: "Wrong password" })
   }
 
-  const newUser = { ...user, password: new_password }
+  const saltRounds = 10;
+  const hashedPassword = await bcrypt.hash(new_password, saltRounds);
+  const newUser = { ...user, password: hashedPassword }
   const { error: updateError } = await supabase.from("users").update(newUser).eq("id", id).select();
   if (updateError) return res.status(400).send(JSON.parse(updateError.message));
 
   return res.status(201).send("Password change successful")
+})
+
+router.get("/me", async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).send({ error: 'Unauthorized: No Bearer token provided or invalid format.' });
+  }
+  const token = authHeader.split(' ')[1];
+  try {
+    const payload = jwt.verify(token, process.env.TOKEN_SECRET);
+    res.send(payload);
+  } catch (error) {
+    res.status(401).send({ error: error })
+  }
+
 })
 
 export default router;

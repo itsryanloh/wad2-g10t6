@@ -2,7 +2,7 @@
   <div>
     <div class="video-background">
       <video autoplay loop muted playsinline class="background-video">
-        <source src="/cat-runningundefined.mp4" type="video/mp4" />
+        <source src="/cat-running.mp4" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
       <div class="video-overlay"></div>
