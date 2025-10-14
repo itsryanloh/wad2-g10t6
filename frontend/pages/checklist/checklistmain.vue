@@ -95,10 +95,10 @@ onMounted(() => {
     src: '/cute_cat2.0.riv',
     canvas: canvas.value,
     autoplay: true,
-    animations: 'Main',    // just this one
+    animations: 'Main',
     onLoad: () => {
       riveInstance.resizeDrawingSurfaceToCanvas()
-      riveInstance.play('Main') // ensure it's running
+      riveInstance.play('Main')
     }
   })
 
