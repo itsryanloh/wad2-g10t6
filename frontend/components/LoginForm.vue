@@ -6,6 +6,7 @@ const schema = z.object({
   password: z.string("Password is required").min(8, "Must be at least 8 characters"),
 });
 
+const base_url = import.meta.env.VITE_BASE_URL;
 type Schema = z.output<typeof schema>;
 
 const codeSchema = z.object({
@@ -14,20 +15,17 @@ const codeSchema = z.object({
 
 type CodeSchema = z.output<typeof codeSchema>;
 
-const state = reactive<Partial<Schema>>({
-  username: undefined,
-  password: undefined,
+const state = reactive<Schema>({
+  username: "",
+  password: "",
 });
 
-const codeState = reactive<Partial<CodeSchema>>({
-  code: undefined
-})
+const codeState = reactive<Partial<CodeSchema>>({})
 
 let show_2fa_check = ref(false);
 let error = ref("");
 
 async function onCodeSubmit(_: SubmitEvent) {
-  const base_url = import.meta.env.VITE_BASE_URL;
   const verifyData = {
     username: state.username,
     code: codeState.code
@@ -53,7 +51,6 @@ async function onCodeSubmit(_: SubmitEvent) {
 }
 
 async function onLoginSubmit(_: SubmitEvent) {
-  const base_url = import.meta.env.VITE_BASE_URL;
   const response = await fetch(`${base_url}/auth/login`, {
     method: "POST",
     headers: {
