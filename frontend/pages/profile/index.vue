@@ -329,10 +329,8 @@ onMounted(async () => {
     const response = await fetch(`${base_url}/users`)
     const users = await response.json()
     
-    // Find David Chen or use first user
-    const davidChen = users.find(user => user.username === tokenData.username)
-    
-    const targetUser = davidChen || users[0]
+    // Find current user
+    const targetUser = users.find(user => user.username === tokenData.username)
     
     if (targetUser) {
       currentUser.value = targetUser

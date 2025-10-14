@@ -67,8 +67,11 @@
             </div>
 
             <!-- Logout Button -->
-            <button class="btn btn-logout" @click="handleLogout">
+            <button v-if="token" class="btn btn-logout" @click="handleLogout">
               <i class="fas fa-sign-out-alt me-2"></i>Logout
+            </button>
+            <button v-else class="btn btn-logout" @click="handleLogin">
+              <i class="fas fa-sign-out-alt me-2"></i>Login
             </button>
           </div>
         </div>
@@ -119,6 +122,10 @@ const handleLogout = () => {
   token.value = null;
   router.push('/')
   window.location.reload();
+}
+
+const handleLogin = async () => {
+  await navigateTo("/login");
 }
 </script>
 

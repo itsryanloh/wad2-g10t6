@@ -13,11 +13,6 @@ if (!process.env.TOKEN_SECRET) {
   throw new Error("TOKEN_SECRET env var not set.")
 }
 
-const loginSchema = z.object({
-  username: z.string().min(3),
-  password: z.string().min(8),
-})
-
 const codeSchema = z.object({
   username: z.string().min(3),
   code: z.string().length(6),
@@ -38,9 +33,6 @@ router.post("/register", async (req, res) => {
 })
 
 router.post("/login", async (req, res) => {
-  const { error: parseError } = loginSchema.safeParse(req.body);
-  if (parseError) return res.status(400).send(JSON.parse(parseError.message));
-
   const { username, password } = req.body;
   const { error, data } = await supabase.from("users").select("*").eq("username", username);
   if (error) {
