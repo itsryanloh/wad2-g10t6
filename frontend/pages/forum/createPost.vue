@@ -190,6 +190,7 @@ import { useForum } from '~/composables/useForum'
 import { useRouter } from 'vue-router'
 
 const { createPost } = useForum()
+const token = useCookie("token")
 const router = useRouter()
 
 const submitting = ref(false)
@@ -202,16 +203,19 @@ const fileInput = ref(null)
 const currentUserId = ref(null)
 
 onMounted(async () => {
+  if (!token.value) return await navigateTo("/login");
+
   try {
-    const response = await fetch('http://localhost:3000/api/users')
+    const base_url = import.meta.env.VITE_BASE_URL;
+    const tokenResponse = await fetch(`${base_url}/auth/me`, { headers: { Authorization: `Bearer ${token.value}` } });
+    const tokenData = await tokenResponse.json();
+
+    // TODO: avoid fetch all (exposes all users)
+    const response = await fetch(`${base_url}/users`)
     const users = await response.json()
     
-    // Find David Chen or use first user
-    const davidChen = users.find(user => 
-      user.username === 'davidchen' || user.name.toLowerCase().includes('david chen')
-    )
-    
-    const targetUser = davidChen || users[0]
+    // Find current user
+    const targetUser = users.find(user => user.username === tokenData.username)
     
     if (targetUser) {
       currentUserId.value = targetUser.id
