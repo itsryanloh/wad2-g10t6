@@ -51,6 +51,11 @@ async function onCodeSubmit(_: SubmitEvent) {
 }
 
 async function onLoginSubmit(_: SubmitEvent) {
+  const emptyInputField = Object.entries(state).find(([_, v]) => !v)?.[0]
+  if (emptyInputField) {
+    error.value = `Please input ${emptyInputField}`
+    return
+  }
   const response = await fetch(`${base_url}/auth/login`, {
     method: "POST",
     headers: {
