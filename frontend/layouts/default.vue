@@ -43,8 +43,12 @@
             <li class="nav-item">
               <NuxtLink to="/checklist/checklistmain" class="nav-link" active-class="active">
                 <i class="fas fa-list-check me-2"></i>Checklist
-                <span class="badge bg-secondary ms-1">Soon</span>
               </NuxtLink>
+            </li>
+            <li class="nav-item">
+              <a href="#" class="nav-link" active-class="active">
+                <i class="fas fa-search me-2"></i>Lost Animal Dashboard
+              </a>
             </li>
             <li class="nav-item">
               <NuxtLink to="/profile" class="nav-link">
@@ -130,24 +134,23 @@ const handleLogin = async () => {
 </script>
 
 <style scoped>
-/* Navbar Styling */
 .navbar-custom {
   background: linear-gradient(135deg, #FF9800 0%, #FFC107 100%);
   box-shadow: 0 4px 20px rgba(255, 152, 0, 0.3);
-  padding: 15px 0;
+  padding: 8px 0; 
   backdrop-filter: blur(10px);
   z-index: 1000;
 }
 
 .logo-container {
-  width: 50px;
-  height: 50px;
+  width: 40px; 
+  height: 40px;
   background: white;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: 20px; 
   color: #667eea;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   transition: transform 0.3s ease;
@@ -158,7 +161,7 @@ const handleLogin = async () => {
 }
 
 .brand-text {
-  font-size: 1.5rem;
+  font-size: 1.3rem; 
   font-weight: 700;
   color: white;
   letter-spacing: 1px;
@@ -176,7 +179,7 @@ const handleLogin = async () => {
 .nav-link {
   color: rgba(255, 255, 255, 0.85) !important;
   font-weight: 500;
-  padding: 10px 20px !important;
+  padding: 8px 16px !important; 
   border-radius: 25px;
   transition: all 0.3s ease;
   position: relative;
@@ -216,8 +219,8 @@ const handleLogin = async () => {
 }
 
 .user-avatar {
-  width: 45px;
-  height: 45px;
+  width: 40px; 
+  height: 40px; 
   border-radius: 50%;
   border: 3px solid white;
   overflow: hidden;
@@ -240,7 +243,7 @@ const handleLogin = async () => {
   background: rgba(255, 255, 255, 0.2);
   color: white;
   border: 2px solid rgba(255, 255, 255, 0.3);
-  padding: 10px 25px;
+  padding: 8px 20px; 
   border-radius: 50px;
   font-weight: 600;
   transition: all 0.3s ease;

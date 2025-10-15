@@ -247,7 +247,7 @@ onMounted(async () => {
 /* Hero Section */
 .hero-section {
   background: linear-gradient(135deg, #FFB74D 0%, #FFA726 50%, #FF9800 100%);
-  padding: 60px 0 100px;
+  padding: 35px 0 70px; 
   position: relative;
   overflow: hidden;
   box-shadow: 0 10px 40px rgba(255, 183, 77, 0.3);
@@ -259,7 +259,7 @@ onMounted(async () => {
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 100px;
+  height: 70px; 
   overflow: hidden;
 }
 
@@ -293,10 +293,10 @@ onMounted(async () => {
 
 .hero-title {
   color: white;
-  font-size: 3rem;
+  font-size: 2.5rem; 
   font-weight: 800;
   text-align: center;
-  margin-bottom: 10px;
+  margin-bottom: 8px; 
   text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
   animation: fadeInDown 1s ease;
   letter-spacing: 1px;
@@ -315,11 +315,21 @@ onMounted(async () => {
 
 .hero-subtitle {
   color: rgba(255, 255, 255, 0.95);
-  font-size: 1.2rem;
+  font-size: 1.1rem; 
   text-align: center;
   margin: 0;
   font-weight: 500;
   text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 1.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .content-container {

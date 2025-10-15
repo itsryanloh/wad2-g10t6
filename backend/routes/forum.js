@@ -30,6 +30,7 @@ const upload = multer({
 });
 
 //UPLOAD images endpoint
+//Route: POST /api/forum/upload-images
 router.post('/upload-images', upload.array('images', 5), async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
@@ -44,7 +45,7 @@ router.post('/upload-images', upload.array('images', 5), async (req, res) => {
       const filename = `${Date.now()}-${Math.random().toString(36).substring(7)}-${file.originalname}`;
       const filepath = `post-images/${filename}`;
 
-      // Upload to Supabase Storage
+      //Upload to Supabase Storage
       const { data, error } = await supabase.storage
         .from('postImages') 
         .upload(filepath, file.buffer, {
@@ -58,7 +59,7 @@ router.post('/upload-images', upload.array('images', 5), async (req, res) => {
         throw error;
       }
 
-      // Get public URL
+      //Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('postImages')
         .getPublicUrl(filepath);
@@ -77,7 +78,8 @@ router.post('/upload-images', upload.array('images', 5), async (req, res) => {
   }
 });
 
-// GET all posts with filters
+//GET all posts with filters
+//Route: GET /api/forum/posts
 router.get('/posts', async (req, res) => {
   try {
     const { type, search, tags, limit = 50 } = req.query;
@@ -123,7 +125,8 @@ router.get('/posts', async (req, res) => {
   }
 });
 
-// GET single post by ID
+//GET single post by ID
+//Route: GET /api/forum/posts/:id
 router.get('/posts/:id', async (req, res) => {
   try {
     const { data, error } = await supabase
@@ -145,7 +148,8 @@ router.get('/posts/:id', async (req, res) => {
   }
 });
 
-// CREATE new post
+//CREATE new post
+//Route: POST /api/forum/posts
 router.post('/posts', async (req, res) => {
   try {
     const {
@@ -194,7 +198,8 @@ router.post('/posts', async (req, res) => {
   }
 });
 
-// UPDATE post
+//UPDATE post
+//Route: PUT /api/forum/posts/:id
 router.put('/posts/:id', async (req, res) => {
   try {
     const { title, content, location_name, is_resolved, image_urls, tags } = req.body;
@@ -231,7 +236,8 @@ router.put('/posts/:id', async (req, res) => {
   }
 });
 
-// DELETE post
+//DELETE post
+//Route: DELETE /api/forum/posts/:id
 router.delete('/posts/:id', async (req, res) => {
   try {
     const { error } = await supabase
@@ -248,7 +254,8 @@ router.delete('/posts/:id', async (req, res) => {
   }
 });
 
-// GET comments for a post
+//GET comments for a post
+//Route: GET /api/forum/posts/:id/comments
 router.get('/posts/:id/comments', async (req, res) => {
   try {
     const { data, error } = await supabase
@@ -269,7 +276,8 @@ router.get('/posts/:id/comments', async (req, res) => {
   }
 });
 
-// ADD comment to post
+//ADD comment to post
+//Route: POST /api/forum/posts/:id/comments
 router.post('/posts/:id/comments', async (req, res) => {
   try {
     const { user_id, content, parent_comment_id } = req.body;
@@ -303,7 +311,8 @@ router.post('/posts/:id/comments', async (req, res) => {
   }
 });
 
-// TOGGLE reaction on post
+//TOGGLE reaction on post
+//Route: POST /api/forum/posts/:id/reactions
 router.post('/posts/:id/reactions', async (req, res) => {
   try {
     const { user_id, reaction_type = 'like' } = req.body;
@@ -350,7 +359,8 @@ router.post('/posts/:id/reactions', async (req, res) => {
   }
 });
 
-// INCREMENT view count
+//INCREMENT view count
+//Route: POST /api/forum/posts/:id/view
 router.post('/posts/:id/view', async (req, res) => {
   try {
     const { error } = await supabase.rpc('increment_post_views', {

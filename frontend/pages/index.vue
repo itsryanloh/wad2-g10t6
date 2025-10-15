@@ -49,24 +49,30 @@
             <div class="feature-icon">
               <i class="fas fa-heart"></i>
             </div>
-            <h3>Adoptions</h3>
-            <p>Help cats find homes</p>
+            <div>
+              <h3>Adoptions</h3>
+              <p>Help cats find homes</p>
+            </div>
           </div>
           
           <div class="feature-item">
             <div class="feature-icon">
               <i class="fas fa-map-marker-alt"></i>
             </div>
-            <h3>Track Sightings</h3>
-            <p>Report cat locations</p>
+            <div>
+              <h3>Track Sightings</h3>
+              <p>Report cat locations</p>
+            </div>
           </div>
           
           <div class="feature-item">
             <div class="feature-icon">
               <i class="fas fa-users"></i>
             </div>
-            <h3>Community</h3>
-            <p>Connect with helpers</p>
+            <div>
+              <h3>Community</h3>
+              <p>Connect with helpers</p>
+            </div>
           </div>
         </div>
       </div>
@@ -80,22 +86,48 @@ definePageMeta({
 })
 </script>
 
+<style>
+/* Global override - make content fit between navbar and footer with NO GAPS */
+.main-content {
+  min-height: auto !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: block !important;
+}
+
+/* Ensure app-layout has no gaps */
+.app-layout {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 100vh !important;
+}
+
+.app-layout > .main-content {
+  flex: 1 !important;
+}
+</style>
+
 <style scoped>
 .landing-page {
   position: relative;
-  min-height: 100vh; /* Full viewport height */
-  overflow: hidden;
+  min-height: 600px; /* Set a minimum height instead of auto */
+  height: auto; /* Allow content to define height */
+  overflow: visible; /* Changed from hidden */
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100%;
+  display: block; /* Changed from flex to block */
 }
 
 /* Video Background */
 .video-background {
-  position: absolute; /* Changed from fixed to absolute */
+  position: absolute; /* Changed back to absolute */
   top: 0;
   left: 0;
   width: 100%;
-  height: calc(100% + 200px); /* Extend beyond container to cover gap */
+  height: 100%; /* Match parent height */
   z-index: 0;
-  pointer-events: none; /* Prevent blocking clicks */
+  pointer-events: none;
 }
 
 .background-video {
@@ -105,7 +137,6 @@ definePageMeta({
   object-position: center;
 }
 
-/* Overlay for readability */
 .video-overlay {
   position: absolute;
   top: 0;
@@ -118,37 +149,38 @@ definePageMeta({
     rgba(0, 0, 0, 0.1) 50%,
     rgba(0, 0, 0, 0.4) 100%
   );
-  backdrop-filter: none;
+  backdrop-filter: blur(2px);
 }
 
-/* Content Wrapper - Flush to left with NO gap */
+/* Content Styling */
 .content-wrapper {
   position: relative;
-  z-index: 10;
-  min-height: 100vh; /* Full viewport height */
+  z-index: 1;
+  min-height: 600px; /* Set minimum height */
+  height: auto; /* Allow natural height */
   display: flex;
   align-items: center;
-  justify-content: flex-start;
   padding: 0; /* Remove all padding */
+  margin: 0;
 }
 
 .hero-content {
-  max-width: 500px;
-  text-align: left;
-  background: rgba(255, 255, 255, 0.65);
-  padding: 50px 40px;
-  border-radius: 0 30px 30px 0; /* Rounded only on right side */
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(20px);
-  animation: slideInLeft 1s ease;
+  max-width: 500px; /* Reduced from 650px */
+  background: rgba(255, 255, 255, 0.95);
+  padding: 35px 30px; /* Further reduced padding */
+  border-radius: 0 35px 35px 0;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(10px);
   border: 2px solid rgba(255, 255, 255, 0.8);
-  border-left: none; /* Remove left border since it's flush */
+  border-left: none;
+  animation: fadeInLeft 1s ease;
+  margin: 0; /* Ensure no margin */
 }
 
-@keyframes slideInLeft {
+@keyframes fadeInLeft {
   from {
     opacity: 0;
-    transform: translateX(-100px);
+    transform: translateX(-50px);
   }
   to {
     opacity: 1;
@@ -156,32 +188,35 @@ definePageMeta({
   }
 }
 
-/* Logo Section */
+/* Logo and Title */
 .logo-section {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
   gap: 20px;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
 }
 
 .paw-icon {
-  font-size: 3.5rem;
-  background: linear-gradient(135deg, #FF9B85 0%, #FFB88C 100%);
+  font-size: 4rem;
+  background: linear-gradient(135deg, #FF9B85 0%, #88D8F7 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: wiggle 2s ease-in-out infinite;
+  animation: bounce 2s ease-in-out infinite;
 }
 
-@keyframes wiggle {
-  0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(-12deg); }
-  75% { transform: rotate(12deg); }
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 .hero-title {
   font-size: 4rem;
   font-weight: 900;
+  margin: 0;
   background: linear-gradient(135deg, #FF9B85 0%, #88D8F7 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -251,7 +286,7 @@ definePageMeta({
   box-shadow: 0 15px 40px rgba(136, 216, 247, 0.5);
 }
 
-/* Features Section - Now Inside Hero Content */
+/* Features Section - NO HOVER EFFECTS */
 .features-section {
   display: grid;
   grid-template-columns: 1fr;
@@ -264,18 +299,14 @@ definePageMeta({
   padding: 20px;
   border-radius: 20px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
+  /* REMOVED: transition, border */
   display: flex;
   align-items: center;
   gap: 15px;
 }
 
-.feature-item:hover {
-  transform: translateX(10px);
-  box-shadow: 0 10px 25px rgba(255, 155, 133, 0.2);
-  border-color: #FF9B85;
-}
+/* REMOVED ALL HOVER EFFECTS */
+/* .feature-item:hover { ... } */
 
 .feature-icon {
   width: 60px;
@@ -287,13 +318,11 @@ definePageMeta({
   align-items: center;
   justify-content: center;
   box-shadow: 0 8px 20px rgba(255, 155, 133, 0.3);
-  transition: all 0.3s ease;
+  /* REMOVED: transition */
 }
 
-.feature-item:hover .feature-icon {
-  transform: scale(1.1) rotate(10deg);
-  box-shadow: 0 12px 30px rgba(255, 155, 133, 0.4);
-}
+/* REMOVED HOVER ON ICON */
+/* .feature-item:hover .feature-icon { ... } */
 
 .feature-icon i {
   font-size: 1.8rem;

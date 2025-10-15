@@ -1,5 +1,16 @@
--- CAT ADOPTION PLATFORM - DATABASE SCHEMA
--- =======================================
+-- ============================================
+-- CAT ADOPTION PLATFORM - COMPLETE DATABASE
+-- ============================================
+
+-- DROP existing tables if they exist (for fresh install)
+DROP TABLE IF EXISTS community_members CASCADE;
+DROP TABLE IF EXISTS communities CASCADE;
+DROP TABLE IF EXISTS post_reactions CASCADE;
+DROP TABLE IF EXISTS comments CASCADE;
+DROP TABLE IF EXISTS posts CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+
+-- 1. Users Table
 CREATE TABLE users (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
@@ -14,9 +25,23 @@ CREATE TABLE users (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- 2. Communities Table
+CREATE TABLE communities (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name VARCHAR(100) NOT NULL UNIQUE,
+  description TEXT,
+  location_name VARCHAR(255) NOT NULL,
+  member_count INTEGER DEFAULT 0,
+  post_count INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 3. Posts Table
 CREATE TABLE posts (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  community_id UUID REFERENCES communities(id) ON DELETE SET NULL,
   title VARCHAR(255) NOT NULL,
   content TEXT NOT NULL,
   post_type VARCHAR(50) NOT NULL CHECK (post_type IN ('adoption', 'sighting', 'lost', 'found', 'discussion', 'update')),
@@ -31,6 +56,7 @@ CREATE TABLE posts (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- 4. Comments Table
 CREATE TABLE comments (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
@@ -41,6 +67,7 @@ CREATE TABLE comments (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- 5. Post Reactions Table
 CREATE TABLE post_reactions (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
@@ -50,28 +77,45 @@ CREATE TABLE post_reactions (
   UNIQUE(post_id, user_id, reaction_type)
 );
 
--- CREATE INDEXES
--- ==============
+-- 6. Community Members Table
+CREATE TABLE community_members (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  community_id UUID NOT NULL REFERENCES communities(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(community_id, user_id)
+);
+
+-- ============================================
+-- INDEXES
+-- ============================================
 
 CREATE INDEX idx_users_username ON users(username);
 CREATE INDEX idx_users_created_at ON users(created_at);
 CREATE INDEX idx_posts_user_id ON posts(user_id);
 CREATE INDEX idx_posts_created_at ON posts(created_at DESC);
 CREATE INDEX idx_posts_post_type ON posts(post_type);
+CREATE INDEX idx_posts_community ON posts(community_id);
 CREATE INDEX idx_comments_post_id ON comments(post_id);
 CREATE INDEX idx_comments_user_id ON comments(user_id);
 CREATE INDEX idx_post_reactions_post_id ON post_reactions(post_id);
 CREATE INDEX idx_post_reactions_user_id ON post_reactions(user_id);
+CREATE INDEX idx_communities_location ON communities(location_name);
+CREATE INDEX idx_community_members_user ON community_members(user_id);
+CREATE INDEX idx_community_members_community ON community_members(community_id);
 
-
--- ROW LEVEL SECURITY
--- ==================
+-- ============================================
+-- ROW LEVEL SECURITY POLICIES
+-- ============================================
 
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE post_reactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE communities ENABLE ROW LEVEL SECURITY;
+ALTER TABLE community_members ENABLE ROW LEVEL SECURITY;
 
+-- Users Policies
 CREATE POLICY "Anyone can view users" ON users FOR SELECT USING (true);
 CREATE POLICY "Users can create profile" ON users FOR INSERT WITH CHECK (true);
 CREATE POLICY "Users can update own profile" ON users FOR UPDATE 
@@ -79,6 +123,7 @@ CREATE POLICY "Users can update own profile" ON users FOR UPDATE
 CREATE POLICY "Users can delete own profile" ON users FOR DELETE 
   USING (id = (current_setting('request.jwt.claims', true)::json->>'user_id')::uuid);
 
+-- Posts Policies
 CREATE POLICY "Anyone can view posts" ON posts FOR SELECT USING (true);
 CREATE POLICY "Users can create posts" ON posts FOR INSERT WITH CHECK (true);
 CREATE POLICY "Users can update own posts" ON posts FOR UPDATE 
@@ -86,6 +131,7 @@ CREATE POLICY "Users can update own posts" ON posts FOR UPDATE
 CREATE POLICY "Users can delete own posts" ON posts FOR DELETE 
   USING (user_id = (current_setting('request.jwt.claims', true)::json->>'user_id')::uuid);
 
+-- Comments Policies
 CREATE POLICY "Anyone can view comments" ON comments FOR SELECT USING (true);
 CREATE POLICY "Users can create comments" ON comments FOR INSERT WITH CHECK (true);
 CREATE POLICY "Users can update own comments" ON comments FOR UPDATE 
@@ -93,15 +139,23 @@ CREATE POLICY "Users can update own comments" ON comments FOR UPDATE
 CREATE POLICY "Users can delete own comments" ON comments FOR DELETE 
   USING (user_id = (current_setting('request.jwt.claims', true)::json->>'user_id')::uuid);
 
+-- Post Reactions Policies
 CREATE POLICY "Anyone can view reactions" ON post_reactions FOR SELECT USING (true);
 CREATE POLICY "Users can add reactions" ON post_reactions FOR INSERT WITH CHECK (true);
 CREATE POLICY "Users can remove own reactions" ON post_reactions FOR DELETE 
   USING (user_id = (current_setting('request.jwt.claims', true)::json->>'user_id')::uuid);
 
+-- Communities Policies
+CREATE POLICY "Anyone can view communities" ON communities FOR SELECT USING (true);
+CREATE POLICY "Users can create communities" ON communities FOR INSERT WITH CHECK (true);
 
--- AUTO-UPDATE TRIGGERS
--- ====================
+-- Community Members Policies
+CREATE POLICY "Anyone can view memberships" ON community_members FOR SELECT USING (true);
+CREATE POLICY "Users can join communities" ON community_members FOR INSERT WITH CHECK (true);
+CREATE POLICY "Users can leave communities" ON community_members FOR DELETE 
+  USING (user_id = (current_setting('request.jwt.claims', true)::json->>'user_id')::uuid);
 
+-- Function: Update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -110,6 +164,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Triggers for updated_at
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -119,6 +174,7 @@ CREATE TRIGGER update_posts_updated_at BEFORE UPDATE ON posts
 CREATE TRIGGER update_comments_updated_at BEFORE UPDATE ON comments
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+-- Function: Increment post view count
 CREATE OR REPLACE FUNCTION increment_post_views(post_id UUID)
 RETURNS void AS $$
 BEGIN
@@ -126,16 +182,73 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Function: Update community member count
+CREATE OR REPLACE FUNCTION update_community_member_count()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    UPDATE communities SET member_count = member_count + 1 WHERE id = NEW.community_id;
+  ELSIF TG_OP = 'DELETE' THEN
+    UPDATE communities SET member_count = member_count - 1 WHERE id = OLD.community_id;
+  END IF;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
 
--- TEST DATA
--- =========
+CREATE TRIGGER trigger_update_member_count
+AFTER INSERT OR DELETE ON community_members
+FOR EACH ROW EXECUTE FUNCTION update_community_member_count();
 
+-- Function: Update community post count
+CREATE OR REPLACE FUNCTION update_community_post_count()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'INSERT' AND NEW.community_id IS NOT NULL THEN
+    UPDATE communities SET post_count = post_count + 1 WHERE id = NEW.community_id;
+  ELSIF TG_OP = 'DELETE' AND OLD.community_id IS NOT NULL THEN
+    UPDATE communities SET post_count = post_count - 1 WHERE id = OLD.community_id;
+  ELSIF TG_OP = 'UPDATE' THEN
+    IF OLD.community_id IS NOT NULL AND NEW.community_id IS NULL THEN
+      UPDATE communities SET post_count = post_count - 1 WHERE id = OLD.community_id;
+    ELSIF OLD.community_id IS NULL AND NEW.community_id IS NOT NULL THEN
+      UPDATE communities SET post_count = post_count + 1 WHERE id = NEW.community_id;
+    ELSIF OLD.community_id IS NOT NULL AND NEW.community_id IS NOT NULL AND OLD.community_id != NEW.community_id THEN
+      UPDATE communities SET post_count = post_count - 1 WHERE id = OLD.community_id;
+      UPDATE communities SET post_count = post_count + 1 WHERE id = NEW.community_id;
+    END IF;
+  END IF;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_update_post_count
+AFTER INSERT OR UPDATE OR DELETE ON posts
+FOR EACH ROW EXECUTE FUNCTION update_community_post_count();
+
+
+-- ============================================
+-- SAMPLE DATA
+-- ============================================
+
+-- Insert sample users
 INSERT INTO users (name, username, password, contact_no, age, gender, avatar_url) VALUES
 ('John Tan', 'johntan', '00000000', '+65 9123 4567', 28, 'male', 'https://i.pravatar.cc/150?img=12'),
 ('Amy Lim', 'amylim', '00000000', '+65 8234 5678', 25, 'female', 'https://i.pravatar.cc/150?img=5'),
 ('David Chen', 'davidchen', '00000000', '+65 9345 6789', 32, 'male', 'https://i.pravatar.cc/150?img=33'),
 ('Sarah Wong', 'sarahwong', '00000000', '+65 8456 7890', 29, 'female', 'https://i.pravatar.cc/150?img=9');
 
+-- Insert communities (SG Location Based )
+INSERT INTO communities (name, description, location_name) VALUES
+('Tampines Cat Community', 'For cat lovers and rescuers in Tampines area', 'Tampines'),
+('Bishan Cat Network', 'Bishan residents helping local stray cats', 'Bishan'),
+('Clementi Feline Friends', 'Community cats and adoption in Clementi', 'Clementi'),
+('Ang Mo Kio Cats', 'AMK cat sightings, adoptions, and TNR', 'Ang Mo Kio'),
+('Jurong Cat Guardians', 'West side cat community', 'Jurong'),
+('Bedok Paw Patrol', 'East coast cat lovers unite', 'Bedok'),
+('Woodlands Cat Care', 'North region cat welfare', 'Woodlands'),
+('Punggol Pet Lovers', 'Punggol cat community and adoptions', 'Punggol');
+
+-- Insert sample posts
 INSERT INTO posts (user_id, title, content, post_type, location_name, location_lat, location_lng, tags) VALUES
 (
   (SELECT id FROM users WHERE username = 'johntan'),
@@ -188,6 +301,7 @@ INSERT INTO posts (user_id, title, content, post_type, location_name, location_l
   ARRAY['tips', 'adoption', 'first time', 'advice']
 );
 
+-- Insert sample comments
 INSERT INTO comments (post_id, user_id, content) VALUES
 (
   (SELECT id FROM posts WHERE title = 'Friendly Orange Tabby Looking for Home'),
@@ -215,6 +329,7 @@ INSERT INTO comments (post_id, user_id, content) VALUES
   'Great tips! I would also add - get pet insurance early. Vet bills can be expensive and it is better to be prepared.'
 );
 
+-- Insert sample reactions
 INSERT INTO post_reactions (post_id, user_id, reaction_type) VALUES
 (
   (SELECT id FROM posts WHERE title = 'Friendly Orange Tabby Looking for Home'),
@@ -246,3 +361,32 @@ INSERT INTO post_reactions (post_id, user_id, reaction_type) VALUES
   (SELECT id FROM users WHERE username = 'davidchen'),
   'like'
 );
+
+-- Link posts to communities based on location
+UPDATE posts 
+SET community_id = (SELECT id FROM communities WHERE location_name = 'Ang Mo Kio' LIMIT 1)
+WHERE location_name LIKE '%Ang Mo Kio%';
+
+UPDATE posts 
+SET community_id = (SELECT id FROM communities WHERE location_name = 'Bishan' LIMIT 1)
+WHERE location_name LIKE '%Bishan%';
+
+UPDATE posts 
+SET community_id = (SELECT id FROM communities WHERE location_name = 'Clementi' LIMIT 1)
+WHERE location_name LIKE '%Clementi%';
+
+UPDATE posts 
+SET community_id = (SELECT id FROM communities WHERE location_name = 'Tampines' LIMIT 1)
+WHERE location_name LIKE '%Tampines%';
+
+-- Add sample community memberships
+INSERT INTO community_members (community_id, user_id)
+SELECT c.id, u.id
+FROM communities c
+CROSS JOIN users u
+WHERE (c.location_name = 'Ang Mo Kio' AND u.username = 'johntan')
+   OR (c.location_name = 'Bishan' AND u.username = 'amylim')
+   OR (c.location_name = 'Clementi' AND u.username = 'sarahwong')
+   OR (c.location_name = 'Tampines' AND u.username = 'davidchen')
+   OR (c.location_name = 'Bedok' AND u.username = 'johntan')
+   OR (c.location_name = 'Jurong' AND u.username = 'amylim');

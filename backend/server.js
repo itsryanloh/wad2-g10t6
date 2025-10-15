@@ -5,6 +5,7 @@ import forumRoutes from './routes/forum.js';
 import avatarsRouter from './routes/avatars.js';
 import usersRouter from './routes/users.js';
 import authRouter from  './routes/auth.js';
+import communitiesRouter from './routes/communities.js';
 import morgan from 'morgan';
 
 dotenv.config();
@@ -17,7 +18,8 @@ app.use(express.json());
 app.use(morgan('combined'));
 
 // Use Routes
-app.use('/api', forumRoutes);
+app.use('/api/forum', forumRoutes);
+app.use('/api/communities', communitiesRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/avatars', avatarsRouter);
 app.use('/api/auth', authRouter);

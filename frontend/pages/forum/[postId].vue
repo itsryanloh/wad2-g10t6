@@ -132,6 +132,18 @@
                 </span>
               </div>
             </div>
+
+            <!-- Adopt Pet Button (Only for adoption posts) -->
+            <div v-if="currentPost.post_type === 'adoption'" class="adopt-section">
+              <button class="adopt-pet-btn" @click="navigateTo('/checklist/checklistmain')">
+                <i class="fas fa-heart me-2"></i>
+                Adopt This Pet
+                <i class="fas fa-arrow-right ms-2"></i>
+              </button>
+              <p class="adopt-description">
+                Ready to give this cat a loving home? Click above to start the adoption checklist!
+              </p>
+            </div>
           </div>
         </div>
 
@@ -342,7 +354,7 @@
         </div>
         <h2>Post not found</h2>
         <p>The post you're looking for doesn't exist or has been removed.</p>
-        <button class="back-home-btn" @click="navigateTo('/forum')">
+        <button class="back-home-btn" @click="navigateTo('/forum/main')">
           <i class="fas fa-home me-2"></i>Back to Forum
         </button>
       </div>
@@ -938,6 +950,61 @@ onMounted(async () => {
   font-weight: 500;
 }
 
+/* Adopt Pet Section */
+.adopt-section {
+  margin-top: 30px;
+  padding: 25px;
+  background: linear-gradient(135deg, #FFE8F0 0%, #FFF4E6 100%);
+  border-radius: 20px;
+  text-align: center;
+  border: 3px dashed #FF9B85;
+}
+
+.adopt-pet-btn {
+  background: linear-gradient(135deg, #FF9B85 0%, #FFB88C 100%);
+  color: white;
+  border: none;
+  padding: 18px 45px;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 10px 30px rgba(255, 155, 133, 0.4);
+  display: inline-flex;
+  align-items: center;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.adopt-pet-btn:hover {
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 15px 40px rgba(255, 155, 133, 0.6);
+  background: linear-gradient(135deg, #FFB88C 0%, #FF9B85 100%);
+}
+
+.adopt-pet-btn:active {
+  transform: translateY(-2px) scale(1.02);
+}
+
+.adopt-description {
+  margin-top: 15px;
+  color: #7A7265;
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 0;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 10px 30px rgba(255, 155, 133, 0.4);
+  }
+  50% {
+    box-shadow: 0 15px 40px rgba(255, 155, 133, 0.7);
+  }
+}
+
 .comments-section {
   background: white;
   border-radius: 25px;
@@ -1200,10 +1267,6 @@ onMounted(async () => {
 
 .nested-replies {
   margin-left: 40px;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  position: relative;
   padding-left: 20px;
   border-left: 2px solid rgba(255, 183, 77, 0.3);
 }
