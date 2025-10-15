@@ -56,17 +56,22 @@
           <!-- Right Side Actions -->
           <div class="d-flex align-items-center gap-3">
             <!-- User Avatar -->
-            <div class="user-avatar">
+            <div class="user-avatar d-flex justify-content-center align-items-center">
               <img 
-                src="https://i.pravatar.cc/150?img=12" 
+                v-if="avatar_url"
+                :src="avatar_url"
                 alt="User"
                 class="avatar-img"
-              >
+              />
+              <i v-else class="fas fa-user text-white"></i>
             </div>
 
             <!-- Logout Button -->
-            <button class="btn btn-logout" @click="handleLogout">
+            <button v-if="token" class="btn btn-logout" @click="handleLogout">
               <i class="fas fa-sign-out-alt me-2"></i>Logout
+            </button>
+            <button v-else class="btn btn-logout" @click="handleLogin">
+              <i class="fas fa-sign-out-alt me-2"></i>Login
             </button>
           </div>
         </div>
@@ -98,10 +103,29 @@
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router';
+import { jwtDecode } from 'jwt-decode';
+
+const router = useRouter();
+const avatar_url = ref("");
+const token = useCookie("token")
+
+onMounted(async () => {
+  if (token.value) {
+    const payload = jwtDecode(token.value);
+    avatar_url.value = payload.avatar_url;
+  }
+})
+
 const handleLogout = () => {
-  // Add your logout logic here
   console.log('Logging out...')
-  // Example: navigateTo('/login')
+  token.value = null;
+  router.push('/')
+  window.location.reload();
+}
+
+const handleLogin = async () => {
+  await navigateTo("/login");
 }
 </script>
 
