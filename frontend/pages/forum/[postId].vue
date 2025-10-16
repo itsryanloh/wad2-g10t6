@@ -18,37 +18,26 @@
           <!-- Image Carousel -->
           <div v-if="currentPost.image_urls?.length" class="carousel-container">
             <div class="main-image-wrapper">
-              <img 
-                :src="currentPost.image_urls[currentCarouselIndex]" 
-                :alt="`Image ${currentCarouselIndex + 1}`"
-                class="main-image"
-              />
-              
+              <img :src="currentPost.image_urls[currentCarouselIndex]" :alt="`Image ${currentCarouselIndex + 1}`"
+                class="main-image" />
+
               <!-- Carousel Controls -->
-              <button 
-                v-if="currentPost.image_urls.length > 1"
+              <button v-if="currentPost.image_urls.length > 1"
                 @click="currentCarouselIndex = (currentCarouselIndex - 1 + currentPost.image_urls.length) % currentPost.image_urls.length"
-                class="carousel-btn prev-btn"
-              >
+                class="carousel-btn prev-btn">
                 <i class="fas fa-chevron-left"></i>
               </button>
-              <button 
-                v-if="currentPost.image_urls.length > 1"
+              <button v-if="currentPost.image_urls.length > 1"
                 @click="currentCarouselIndex = (currentCarouselIndex + 1) % currentPost.image_urls.length"
-                class="carousel-btn next-btn"
-              >
+                class="carousel-btn next-btn">
                 <i class="fas fa-chevron-right"></i>
               </button>
             </div>
 
             <!-- Thumbnail Navigation -->
             <div v-if="currentPost.image_urls.length > 1" class="thumbnail-strip">
-              <button
-                v-for="(url, index) in currentPost.image_urls"
-                :key="index"
-                @click="currentCarouselIndex = index"
-                :class="['thumbnail-btn', { active: currentCarouselIndex === index }]"
-              >
+              <button v-for="(url, index) in currentPost.image_urls" :key="index" @click="currentCarouselIndex = index"
+                :class="['thumbnail-btn', { active: currentCarouselIndex === index }]">
                 <img :src="url" :alt="`Thumbnail ${index + 1}`" />
               </button>
             </div>
@@ -58,11 +47,8 @@
           <div class="post-header">
             <div class="author-info">
               <div class="avatar-wrapper">
-                <img 
-                  :src="currentPost.users?.avatar_url || 'https://i.pravatar.cc/150'" 
-                  :alt="currentPost.users?.name"
-                  class="author-avatar"
-                />
+                <img :src="currentPost.users?.avatar_url || 'https://i.pravatar.cc/150'" :alt="currentPost.users?.name"
+                  class="author-avatar" />
               </div>
               <div class="author-details">
                 <h3 class="author-name">{{ currentPost.users?.name || 'Anonymous' }}</h3>
@@ -90,7 +76,14 @@
             </div>
 
             <!-- Location -->
-            <div v-if="currentPost.location_name" class="location-card">
+            <div v-if="currentPost.location_name" class="location-card" @click="showMapModal = true" role="button">
+              <Teleport to=".post-details-page">
+                <div v-if="showMapModal">
+                  <PetMap :lat="currentPost.location_lat" :lng="currentPost.location_lng" :close="() => {
+                    showMapModal = false
+                  }" />
+                </div>
+              </Teleport>
               <div class="location-icon">
                 <i class="fas fa-map-marker-alt"></i>
               </div>
@@ -102,21 +95,14 @@
 
             <!-- Tags -->
             <div v-if="currentPost.tags?.length" class="tags-section">
-              <span
-                v-for="tag in currentPost.tags"
-                :key="tag"
-                class="tag-item"
-              >
+              <span v-for="tag in currentPost.tags" :key="tag" class="tag-item">
                 #{{ tag }}
               </span>
             </div>
 
             <!-- Engagement Bar -->
             <div class="engagement-bar">
-              <button 
-                @click="handleReaction" 
-                :class="['reaction-btn', { active: hasLiked }]"
-              >
+              <button @click="handleReaction" :class="['reaction-btn', { active: hasLiked }]">
                 <i :class="hasLiked ? 'fas fa-heart' : 'far fa-heart'"></i>
                 <span>{{ reactionCount }}</span>
               </button>
@@ -144,17 +130,10 @@
 
           <!-- Add Comment Form -->
           <div class="add-comment-card">
-            <textarea
-              v-model="newComment"
-              placeholder="Share your thoughts..."
-              rows="3"
-              class="comment-textarea"
-            ></textarea>
-            <button
-              @click="handleAddComment"
-              :disabled="!newComment.trim() || addingComment"
-              class="submit-comment-btn"
-            >
+            <textarea v-model="newComment" placeholder="Share your thoughts..." rows="3"
+              class="comment-textarea"></textarea>
+            <button @click="handleAddComment" :disabled="!newComment.trim() || addingComment"
+              class="submit-comment-btn">
               <i class="fas fa-paper-plane me-2"></i>
               {{ addingComment ? 'Posting...' : 'Post Comment' }}
             </button>
@@ -167,50 +146,33 @@
           </div>
 
           <div v-else-if="topLevelComments.length" class="comments-list">
-            <div
-              v-for="comment in topLevelComments"
-              :key="comment.id"
-              class="comment-thread"
-            >
+            <div v-for="comment in topLevelComments" :key="comment.id" class="comment-thread">
               <!-- Parent Comment -->
               <div class="comment-item">
-                <img 
-                  :src="comment.users?.avatar_url || 'https://i.pravatar.cc/150'" 
-                  class="comment-avatar"
-                />
+                <img :src="comment.users?.avatar_url || 'https://i.pravatar.cc/150'" class="comment-avatar" />
                 <div class="comment-content">
                   <div class="comment-header">
                     <span class="comment-author">{{ comment.users?.name || 'Anonymous' }}</span>
                     <span class="comment-date">{{ formatDate(comment.created_at) }}</span>
                   </div>
                   <p class="comment-text">{{ comment.content }}</p>
-                  
+
                   <!-- Reply Button -->
-                  <button 
-                    class="reply-btn"
-                    @click="toggleReply(comment.id)"
-                  >
+                  <button class="reply-btn" @click="toggleReply(comment.id)">
                     <i class="fas fa-reply me-1"></i>
                     Reply
                   </button>
-                  
+
                   <!-- Reply Form -->
                   <div v-if="replyingTo === comment.id" class="reply-form">
-                    <textarea
-                      v-model="replyContent"
-                      placeholder="Write a reply..."
-                      rows="2"
-                      class="reply-textarea"
-                    ></textarea>
+                    <textarea v-model="replyContent" placeholder="Write a reply..." rows="2"
+                      class="reply-textarea"></textarea>
                     <div class="reply-actions">
                       <button @click="cancelReply" class="cancel-reply-btn">
                         Cancel
                       </button>
-                      <button 
-                        @click="handleReply(comment.id)"
-                        :disabled="!replyContent.trim() || addingComment"
-                        class="submit-reply-btn"
-                      >
+                      <button @click="handleReply(comment.id)" :disabled="!replyContent.trim() || addingComment"
+                        class="submit-reply-btn">
                         <i class="fas fa-paper-plane me-1"></i>
                         {{ addingComment ? 'Posting...' : 'Reply' }}
                       </button>
@@ -218,52 +180,36 @@
                   </div>
                 </div>
               </div>
-              
+
               <!-- Nested Replies -->
               <div v-if="getReplies(comment.id).length" class="replies-container">
-                <div
-                  v-for="reply in getReplies(comment.id)"
-                  :key="reply.id"
-                  class="reply-wrapper"
-                >
+                <div v-for="reply in getReplies(comment.id)" :key="reply.id" class="reply-wrapper">
                   <div class="comment-item reply-item">
-                    <img 
-                      :src="reply.users?.avatar_url || 'https://i.pravatar.cc/150'" 
-                      class="comment-avatar"
-                    />
+                    <img :src="reply.users?.avatar_url || 'https://i.pravatar.cc/150'" class="comment-avatar" />
                     <div class="comment-content">
                       <div class="comment-header">
-                        <span class="comment-author">{{ reply.users?.name || 'Anonymous' }}</span>
+                        <span class="comment-author">{{ reply.users?.name || 'Anonymous'
+                          }}</span>
                         <span class="comment-date">{{ formatDate(reply.created_at) }}</span>
                       </div>
                       <p class="comment-text">{{ reply.content }}</p>
-                      
+
                       <!-- Reply Button on Replies -->
-                      <button 
-                        class="reply-btn"
-                        @click="toggleReply(reply.id)"
-                      >
+                      <button class="reply-btn" @click="toggleReply(reply.id)">
                         <i class="fas fa-reply me-1"></i>
                         Reply
                       </button>
-                      
+
                       <!-- Reply Form on Replies -->
                       <div v-if="replyingTo === reply.id" class="reply-form">
-                        <textarea
-                          v-model="replyContent"
-                          placeholder="Write a reply..."
-                          rows="2"
-                          class="reply-textarea"
-                        ></textarea>
+                        <textarea v-model="replyContent" placeholder="Write a reply..." rows="2"
+                          class="reply-textarea"></textarea>
                         <div class="reply-actions">
                           <button @click="cancelReply" class="cancel-reply-btn">
                             Cancel
                           </button>
-                          <button 
-                            @click="handleReply(reply.id)"
-                            :disabled="!replyContent.trim() || addingComment"
-                            class="submit-reply-btn"
-                          >
+                          <button @click="handleReply(reply.id)" :disabled="!replyContent.trim() || addingComment"
+                            class="submit-reply-btn">
                             <i class="fas fa-paper-plane me-1"></i>
                             {{ addingComment ? 'Posting...' : 'Reply' }}
                           </button>
@@ -271,50 +217,37 @@
                       </div>
                     </div>
                   </div>
-                  
+
                   <!-- Show nested replies to this reply -->
                   <div v-if="getReplies(reply.id).length" class="nested-replies">
-                    <div
-                      v-for="nestedReply in getReplies(reply.id)"
-                      :key="nestedReply.id"
-                      class="comment-item reply-item nested-reply-item"
-                    >
-                      <img 
-                        :src="nestedReply.users?.avatar_url || 'https://i.pravatar.cc/150'" 
-                        class="comment-avatar small-avatar"
-                      />
+                    <div v-for="nestedReply in getReplies(reply.id)" :key="nestedReply.id"
+                      class="comment-item reply-item nested-reply-item">
+                      <img :src="nestedReply.users?.avatar_url || 'https://i.pravatar.cc/150'"
+                        class="comment-avatar small-avatar" />
                       <div class="comment-content">
                         <div class="comment-header">
-                          <span class="comment-author">{{ nestedReply.users?.name || 'Anonymous' }}</span>
-                          <span class="comment-date">{{ formatDate(nestedReply.created_at) }}</span>
+                          <span class="comment-author">{{ nestedReply.users?.name ||
+                            'Anonymous' }}</span>
+                          <span class="comment-date">{{ formatDate(nestedReply.created_at)
+                            }}</span>
                         </div>
                         <p class="comment-text">{{ nestedReply.content }}</p>
-                        
+
                         <!-- Can also reply to nested replies -->
-                        <button 
-                          class="reply-btn small-reply-btn"
-                          @click="toggleReply(nestedReply.id)"
-                        >
+                        <button class="reply-btn small-reply-btn" @click="toggleReply(nestedReply.id)">
                           <i class="fas fa-reply me-1"></i>
                           Reply
                         </button>
-                        
+
                         <div v-if="replyingTo === nestedReply.id" class="reply-form">
-                          <textarea
-                            v-model="replyContent"
-                            placeholder="Write a reply..."
-                            rows="2"
-                            class="reply-textarea"
-                          ></textarea>
+                          <textarea v-model="replyContent" placeholder="Write a reply..." rows="2"
+                            class="reply-textarea"></textarea>
                           <div class="reply-actions">
                             <button @click="cancelReply" class="cancel-reply-btn">
                               Cancel
                             </button>
-                            <button 
-                              @click="handleReply(nestedReply.id)"
-                              :disabled="!replyContent.trim() || addingComment"
-                              class="submit-reply-btn"
-                            >
+                            <button @click="handleReply(nestedReply.id)"
+                              :disabled="!replyContent.trim() || addingComment" class="submit-reply-btn">
                               <i class="fas fa-paper-plane me-1"></i>
                               {{ addingComment ? 'Posting...' : 'Reply' }}
                             </button>
@@ -366,6 +299,7 @@ const {
   incrementViewCount
 } = useForum()
 
+const showMapModal = ref(false)
 const comments = ref([])
 const loadingComments = ref(false)
 const hasLiked = ref(false)
@@ -408,16 +342,16 @@ const cancelReply = () => {
 
 const handleReply = async (parentCommentId) => {
   if (!replyContent.value.trim()) return
-  
+
   if (!currentUserId.value) {
     alert('User not loaded. Please refresh the page.')
     return
   }
-  
+
   addingComment.value = true
   try {
     console.log('Adding reply to comment:', parentCommentId)
-    
+
     const result = await addComment(route.params.postId, {
       content: replyContent.value,
       user_id: currentUserId.value,
@@ -446,12 +380,12 @@ const formatDate = (date) => {
   const now = new Date()
   const postDate = new Date(date)
   const diffInSeconds = Math.floor((now - postDate) / 1000)
-  
+
   if (diffInSeconds < 60) return 'just now'
   if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`
   if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`
   if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`
-  
+
   return postDate.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
@@ -488,18 +422,18 @@ const loadComments = async () => {
 
 const handleAddComment = async () => {
   if (!newComment.value.trim()) return
-  
+
   if (!currentUserId.value) {
     alert('User not loaded. Please refresh the page.')
     return
   }
-  
+
   addingComment.value = true
   try {
     console.log('Adding comment to post:', route.params.postId)
     console.log('Comment content:', newComment.value)
     console.log('User ID:', currentUserId.value)
-    
+
     const result = await addComment(route.params.postId, {
       content: newComment.value,
       user_id: currentUserId.value
@@ -527,12 +461,12 @@ const handleReaction = async () => {
     alert('User not loaded. Please refresh the page.')
     return
   }
-  
+
   try {
     console.log('Toggling reaction for post:', route.params.postId)
     const result = await toggleReaction(route.params.postId, currentUserId.value, 'like')
     console.log('Reaction result:', result)
-    
+
     hasLiked.value = !hasLiked.value
     reactionCount.value += hasLiked.value ? 1 : -1
   } catch (error) {
@@ -544,14 +478,14 @@ const loadCurrentUser = async () => {
   try {
     const response = await fetch('http://localhost:3000/api/users')
     const users = await response.json()
-    
+
     // Find David Chen or use first user
-    const davidChen = users.find(user => 
+    const davidChen = users.find(user =>
       user.username === 'davidchen' || user.name.toLowerCase().includes('david chen')
     )
-    
+
     const targetUser = davidChen || users[0]
-    
+
     if (targetUser) {
       currentUserId.value = targetUser.id
       console.log('Current user loaded:', targetUser.name, targetUser.id)
@@ -565,12 +499,12 @@ const loadCurrentUser = async () => {
 
 onMounted(async () => {
   console.log('Post page mounted with ID:', route.params.postId)
-  
+
   await loadCurrentUser()
   await fetchPostById(route.params.postId)
   await loadComments()
   await incrementViewCount(route.params.postId)
-  
+
   if (currentPost.value) {
     reactionCount.value = currentPost.value.reaction_count || 0
     console.log('Post loaded:', currentPost.value)
@@ -624,6 +558,7 @@ onMounted(async () => {
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1121,6 +1056,7 @@ onMounted(async () => {
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1256,8 +1192,13 @@ onMounted(async () => {
 }
 
 @keyframes loading {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 .error-state {
@@ -1344,11 +1285,11 @@ onMounted(async () => {
     margin-left: 20px;
     padding-left: 10px;
   }
-  
+
   .replies-container {
     margin-left: 30px;
   }
-  
+
   .small-avatar {
     width: 35px;
     height: 35px;
