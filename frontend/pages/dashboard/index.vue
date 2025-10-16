@@ -91,26 +91,14 @@
             <span class="legend-count">{{ lostPetsWithLocation.length }} locations</span>
           </div>
         </div>
-        <ClientOnly>
-          <PetMap :pets="lostPetsWithLocation" />
-        </ClientOnly>
       </div>
 
       <div class="pets-section">
         <h2 class="section-title">Recent Activity</h2>
         <div class="pets-grid">
-          <div
-            v-for="pet in pets.slice(0, 6)"
-            :key="pet.id"
-            class="pet-card"
-          >
+          <div v-for="pet in pets.slice(0, 6)" :key="pet.id" class="pet-card">
             <div class="pet-image-container">
-              <img
-                v-if="pet.image_url"
-                :src="pet.image_url"
-                :alt="pet.name"
-                class="pet-image"
-              />
+              <img v-if="pet.image_url" :src="pet.image_url" :alt="pet.name" class="pet-image" />
               <div v-else class="pet-image-placeholder">
                 <i class="fas fa-paw"></i>
               </div>
@@ -155,7 +143,7 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString()
 }
 
-onMounted(() => {
+onBeforeMount(() => {
   fetchPets()
 })
 </script>
@@ -207,7 +195,9 @@ onMounted(() => {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .error-container i {
