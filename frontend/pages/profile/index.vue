@@ -16,7 +16,10 @@
                 <i v-else class="fas fa-user"></i>
               </div>
               <h4 class="user-name">{{ currentUser?.name || 'Loading...' }}</h4>
-              <p class="user-username">@{{ currentUser?.username || '' }}</p>
+              <div class="d-flex justify-content-center align-items-center">
+                <p class="user-username">@{{ currentUser?.username || '' }}</p>
+                <i class="fa-solid fa-user-check mx-2"></i>
+              </div>
             </div>
 
             <!-- Navigation Menu -->
@@ -145,7 +148,7 @@
                   />
                 </div>
 
-                <div class="row">
+                <div class="row mx-0">
                   <div class="col-md-6">
                     <div class="form-section">
                       <label class="section-label">
