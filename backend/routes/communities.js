@@ -1,9 +1,10 @@
 // @ts-check
 import express from 'express';
-import { joinCommunity } from '../callbacks/communities.js';
+import { joinCommunity, leaveCommunity } from '../callbacks/communities.js';
 
 const router = express.Router();
 
-router.post("/join", joinCommunity)
+router.post("/", joinCommunity)
+router.delete("/", leaveCommunity)
 
 export default router;
