@@ -128,20 +128,31 @@ onMounted(() => {
           <label class="form-check-label" for="exampleCheck1">Remember me</label>
         </div>
         <div
-          class="g-recaptcha text-center"
+          class="g-recaptcha d-flex justify-content-center"
           :data-sitekey="siteKey"
           data-callback="onVerify"
         ></div>
         <div id="error" class="form-text text-danger mb-2" v-text="error"></div>
         <div style="width: 100%" class="text-center">
-          <button type="submit" class="btn btn-save">Submit</button>
+          <button type="submit" class="btn btn-save w-75 fw-bold">Log in</button>
+        </div>
+        <div class="d-flex align-items-center my-4">
+          <hr class="bg-dark border-2 border-top border-secondary w-50" />
+          <div style="font-size: 12px;" class="mx-4 fw-bold">OR</div>
+          <hr class="bg-dark border-2 border-top border-secondary w-50" />
+        </div>
+        <div class="d-flex justify-content-center align-items-center btn-singpass">
+          <button type="submit" class="btn fw-bold w-75">Log in with
+          <img src="/singpass.png"/></button>
         </div>
       </form>
     </div>
   </div>
 </template>
 
-<style>
+<style scoped>
+@import url('https://fonts.googleapis.com/css?family=Poppins:bold');
+
 .btn-save {
   background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
   color: white;
@@ -160,6 +171,26 @@ onMounted(() => {
 .btn-save:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.btn-singpass button {
+  border: 1px solid #C8C9CC;
+  border-radius: 0.375rem;
+  background-color: #FFFFFF;
+  font-family: "Poppins", sans-serif;
+  transition: all 0.3s;
+}
+
+.btn-singpass button:hover {
+  border: 1px solid #C8C9CC;
+  border-radius: 0.375rem;
+  background-color: #F5F5F7;
+  transform: translateY(-2px);
+}
+
+.btn-singpass button img {
+  height: 16px;
+  transform: translateY(1px);
 }
 
 .card {
