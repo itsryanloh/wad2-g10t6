@@ -25,7 +25,7 @@ const codeState = reactive<Partial<CodeSchema>>({})
 let show_2fa_check = ref(false);
 let error = ref("");
 const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
-const token = ref(null)
+const recaptchaToken = ref(null)
 
 
 async function onCodeSubmit(_: SubmitEvent) {
@@ -55,10 +55,11 @@ async function onCodeSubmit(_: SubmitEvent) {
 
 async function onLoginSubmit(_: SubmitEvent) {
   const emptyInputField = Object.entries(state).find(([_, v]) => !v)?.[0]
-  if (!token.value) {
+  if (!recaptchaToken.value) {
     error.value = 'Please complete the reCAPTCHA first'
     return
   }
+  // verify recaptcha token in backend, needs backend endpoint
   if (emptyInputField) {
     error.value = `Please input ${emptyInputField}`
     return
@@ -95,14 +96,14 @@ onMounted(() => {
   document.head.appendChild(recaptchaScript)
 
   window.onVerify = (response: any) => {
-    token.value = response
+    recaptchaToken.value = response
   }
 })
 
 </script>
 
 <template>
-  <div class="card position-absolute top-50 start-50 translate-middle" style="width: 28rem">
+  <div class="card position-absolute top-50 start-50 translate-middle p-3" style="width: 28rem">
     <div class="card-body">
       <h5 class="card-title">Login</h5>
       <form v-if="show_2fa_check" :schema="codeSchema" :state="codeState" @submit.prevent="onCodeSubmit">
@@ -127,12 +128,14 @@ onMounted(() => {
           <label class="form-check-label" for="exampleCheck1">Remember me</label>
         </div>
         <div
-          class="g-recaptcha"
+          class="g-recaptcha text-center"
           :data-sitekey="siteKey"
           data-callback="onVerify"
         ></div>
         <div id="error" class="form-text text-danger mb-2" v-text="error"></div>
-        <button type="submit" class="btn btn-save">Submit</button>
+        <div style="width: 100%" class="text-center">
+          <button type="submit" class="btn btn-save">Submit</button>
+        </div>
       </form>
     </div>
   </div>
@@ -143,11 +146,15 @@ onMounted(() => {
   background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
   color: white;
   box-shadow: 0 5px 15px rgba(255, 152, 0, 0.3);
+  transition: all 0.3s;
+  width: 50%;
+  margin-top: 20px;
 }
 
 .btn-save:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(255, 152, 0, 0.4);
+  color: white;
 }
 
 .btn-save:disabled {
