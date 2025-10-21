@@ -7,6 +7,7 @@ const schema = z.object({
 });
 
 const base_url = import.meta.env.VITE_BASE_URL;
+const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
 type Schema = z.output<typeof schema>;
 
 const codeSchema = z.object({
@@ -109,6 +110,7 @@ async function onLoginSubmit(_: SubmitEvent) {
           <input type="checkbox" class="form-check-input" id="exampleCheck1" />
           <label class="form-check-label" for="exampleCheck1">Remember me</label>
         </div>
+        <div class="g-recaptcha" :data-sitekey="siteKey"></div>
         <div id="error" class="form-text text-danger mb-2" v-text="error"></div>
         <button type="submit" class="btn btn-save">Submit</button>
       </form>
