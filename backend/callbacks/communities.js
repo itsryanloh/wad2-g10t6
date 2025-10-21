@@ -3,8 +3,8 @@ import database from "../database.js";
 import { CommUserPair } from "../schemas/communities.js";
 
 /**
- * @param {import("express").Request} req 
- * @param {import("express").Response} res 
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
  */
 export async function joinCommunity(req, res) {
   const { data, success, error } = await CommUserPair.safeParseAsync(req.body)
@@ -19,8 +19,8 @@ export async function joinCommunity(req, res) {
 }
 
 /**
- * @param {import("express").Request} req 
- * @param {import("express").Response} res 
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
  */
 export async function leaveCommunity(req, res) {
   const { data, success, error } = await CommUserPair.safeParseAsync(req.query)
