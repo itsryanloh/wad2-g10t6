@@ -79,7 +79,7 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="main-content flex-grow-1">
+    <main class="main-content flex-grow-1 d-flex flex-column">
       <slot />
     </main>
 

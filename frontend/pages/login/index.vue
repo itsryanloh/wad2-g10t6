@@ -1,9 +1,9 @@
 <template>
-  <div class="forum-page d-flex flex-column">
+  <div class="forum-page d-flex flex-column flex-grow-1">
     <div class="hero-section">
       <div class="wave-animation"></div>
     </div>
-    <div class="d-flex align-items-center flex-grow-1">
+    <div class="align-items-center flex-grow-1">
       <LoginForm />
     </div>
   </div>

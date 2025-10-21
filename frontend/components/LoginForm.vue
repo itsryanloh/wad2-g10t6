@@ -7,7 +7,6 @@ const schema = z.object({
 });
 
 const base_url = import.meta.env.VITE_BASE_URL;
-const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
 type Schema = z.output<typeof schema>;
 
 const codeSchema = z.object({
@@ -25,6 +24,9 @@ const codeState = reactive<Partial<CodeSchema>>({})
 
 let show_2fa_check = ref(false);
 let error = ref("");
+const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+const token = ref(null)
+
 
 async function onCodeSubmit(_: SubmitEvent) {
   const verifyData = {
@@ -53,6 +55,10 @@ async function onCodeSubmit(_: SubmitEvent) {
 
 async function onLoginSubmit(_: SubmitEvent) {
   const emptyInputField = Object.entries(state).find(([_, v]) => !v)?.[0]
+  if (!token.value) {
+    error.value = 'Please complete the reCAPTCHA first'
+    return
+  }
   if (emptyInputField) {
     error.value = `Please input ${emptyInputField}`
     return
@@ -81,12 +87,22 @@ async function onLoginSubmit(_: SubmitEvent) {
   } else {
     error.value = data.error;
   }
-  console.log(data);
 }
+
+onMounted(() => {
+  let recaptchaScript = document.createElement('script')
+  recaptchaScript.setAttribute('src', 'https://www.google.com/recaptcha/api.js')
+  document.head.appendChild(recaptchaScript)
+
+  window.onVerify = (response: any) => {
+    token.value = response
+  }
+})
+
 </script>
 
 <template>
-  <div class="card mx-auto" style="width: 28rem">
+  <div class="card position-absolute top-50 start-50 translate-middle" style="width: 28rem">
     <div class="card-body">
       <h5 class="card-title">Login</h5>
       <form v-if="show_2fa_check" :schema="codeSchema" :state="codeState" @submit.prevent="onCodeSubmit">
@@ -110,7 +126,11 @@ async function onLoginSubmit(_: SubmitEvent) {
           <input type="checkbox" class="form-check-input" id="exampleCheck1" />
           <label class="form-check-label" for="exampleCheck1">Remember me</label>
         </div>
-        <div class="g-recaptcha" :data-sitekey="siteKey"></div>
+        <div
+          class="g-recaptcha"
+          :data-sitekey="siteKey"
+          data-callback="onVerify"
+        ></div>
         <div id="error" class="form-text text-danger mb-2" v-text="error"></div>
         <button type="submit" class="btn btn-save">Submit</button>
       </form>
@@ -142,7 +162,6 @@ async function onLoginSubmit(_: SubmitEvent) {
   backdrop-filter: blur(7.7px);
   -webkit-backdrop-filter: blur(7.7px);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  margin-bottom: 240px;
 }
 
 .form-control:focus {
