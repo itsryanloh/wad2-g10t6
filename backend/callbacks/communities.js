@@ -1,6 +1,6 @@
 // @ts-check
-import database from "../database.js";
 import { CommUserPair } from "../schemas/communities.js";
+import { addUserToCommunity, removeUserFromCommunity } from "../utils/communities.js";
 
 /**
  * @param {import("express").Request} req
@@ -14,8 +14,8 @@ export async function joinCommunity(req, res) {
 
   const { community_id, user_id } = data
 
-  return database.from("community_members").insert({ community_id, user_id, joined_at: new Date() })
-    .then(({ statusText }) => res.send(statusText))
+  return addUserToCommunity(user_id, community_id)
+    .then(res.send.bind(res))
 }
 
 /**
@@ -30,6 +30,6 @@ export async function leaveCommunity(req, res) {
 
   const { community_id, user_id } = data
 
-  return database.from("community_members").delete().eq('community_id', community_id).eq('user_id', user_id).select()
-    .then(({ statusText }) => res.send(statusText))
+  return removeUserFromCommunity(user_id, community_id)
+    .then(res.send.bind(res))
 }
