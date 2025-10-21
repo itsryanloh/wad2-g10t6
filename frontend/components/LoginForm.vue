@@ -132,4 +132,30 @@ async function onLoginSubmit(_: SubmitEvent) {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+.card {
+  background: rgba(255, 255, 255, 0.65);
+  border-radius: 16px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(7.7px);
+  -webkit-backdrop-filter: blur(7.7px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  margin-bottom: 240px;
+}
+
+.form-control:focus {
+  border-color: #ff9800;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(255, 152, 0, 0.6);
+}
+
+.form-check-input:focus {
+  border-color: #ff9800;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(255, 152, 0, 0.6);
+}
+
+.form-check-input:checked {
+  border-color: #ff9800;
+  background-color: #ff9800;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(255, 152, 0, 0.6);
+}
 </style>

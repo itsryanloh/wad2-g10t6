@@ -1,5 +1,5 @@
 <template>
-  <div class="app-layout">
+  <div class="app-layout d-flex flex-column">
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
       <div class="container-fluid px-4">
@@ -79,7 +79,7 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="main-content">
+    <main class="main-content flex-grow-1">
       <slot />
     </main>
 
@@ -303,5 +303,9 @@ const handleLogin = async () => {
     margin-top: 20px;
     justify-content: center;
   }
+}
+
+.app-layout {
+  min-height: 100vh;
 }
 </style>
