@@ -4,7 +4,7 @@
       <div class="wave-animation"></div>
     </div>
     <div class="align-items-center flex-grow-1 d-flex">
-      <div v-if="!formType" class="card mx-auto" style="width: 32rem">
+      <div v-if="!formType" class="card mx-auto p-3" style="width: 32rem">
         <div class="card-body">
           <h5 class="card-title text-center mb-4">Create an Account</h5>
           <p class="text-center text-muted mb-4">Choose your account type</p>
@@ -72,6 +72,7 @@ const setFormType = (type: string) => {
   backdrop-filter: blur(7.7px);
   -webkit-backdrop-filter: blur(7.7px);
   border: 1px solid rgba(255, 255, 255, 0.3);
+  margin: 50px;
 }
 
 .account-type-container {

@@ -1,5 +1,5 @@
 <template>
-  <div class="card mx-auto" style="width: 28rem">
+  <div class="card mx-auto p-3" style="width: 28rem">
     <div class="card-body">
       <h5 class="card-title">Individual Registration</h5>
       <form :schema="schema" :state="state" @submit.prevent="onSubmit">

@@ -200,6 +200,7 @@ onMounted(() => {
   backdrop-filter: blur(7.7px);
   -webkit-backdrop-filter: blur(7.7px);
   border: 1px solid rgba(255, 255, 255, 0.3);
+  margin: 50px;
 }
 
 .form-control:focus {
