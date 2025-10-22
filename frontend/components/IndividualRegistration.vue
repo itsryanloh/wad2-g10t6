@@ -133,6 +133,7 @@ async function onSubmit(_: Event) {
   background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
   color: white;
   box-shadow: 0 5px 15px rgba(255, 152, 0, 0.3);
+  transition: all 0.3s;
 }
 
 .btn-save:hover:not(:disabled) {
@@ -153,5 +154,10 @@ async function onSubmit(_: Event) {
 
 .link-secondary:hover {
   text-decoration: underline;
+}
+
+.form-control:focus {
+  border-color: #ff9800;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(255, 152, 0, 0.6);
 }
 </style>
