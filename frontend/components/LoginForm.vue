@@ -50,6 +50,7 @@ async function onCodeSubmit(_: SubmitEvent) {
     token.value = data.token;
 
     await navigateTo("/");
+    window.location.reload();
   }
 }
 
