@@ -1,6 +1,6 @@
 // @ts-check
-import { CommUserPair } from "../schemas/communities.js";
-import { addUserToCommunity, getAllCommunities, removeUserFromCommunity } from "../utils/communities.js";
+import { CommId, CommUserPair } from "../schemas/communities.js";
+import { addUserToCommunity, getAllCommunities, getCommunityById, removeUserFromCommunity } from "../utils/communities.js";
 
 /** @import {Request, Response} from "express" */
 
@@ -10,6 +10,20 @@ import { addUserToCommunity, getAllCommunities, removeUserFromCommunity } from "
  */
 export async function allCommunities(_req, res) {
   return getAllCommunities().then(wrapSupabaseResponse(res))
+}
+
+/**
+ * @param {Request} req
+ * @param {Response} res
+ */
+export async function getCommunity(req, res) {
+  const { data, success, error } = CommId.safeParse(req.params.id)
+
+  if (!success)
+    return res.status(400).send(error.issues);
+
+  return getCommunityById(data)
+    .then(wrapSupabaseResponse(res))
 }
 
 /**

@@ -7,6 +7,8 @@ export const CommUserPair = z.object({
   user_id: z.uuid().refine(id => checkExistsInTable("users", id), { error({ input }) { return `user_id ${input} not found` } })
 });
 
+export const CommId = z.uuid()
+
 /**
  * @param {"users" | "communities"} table 
  * @param {string} id
