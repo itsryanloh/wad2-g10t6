@@ -26,7 +26,7 @@
         </div>
         <div class="mb-3">
           <label for="contact_no" class="form-label">Contact Number</label>
-          <input type="tel" class="form-control" v-model="state.contact_no" id="contact_no" placeholder="+65 9123 4567" required /> </div>
+          <input type="tel" class="form-control" v-model="state.contact_no" id="contact_no" placeholder="+65 9123 4567" /> </div>
         <div class="mb-3">
           <label for="password" class="form-label">Password</label>
           <input type="password" class="form-control" v-model="state.password" id="password" required />
@@ -57,7 +57,7 @@ const schema = z.object({
   age: z.number().min(1, "Age is required"),
   gender: z.string().min(1, "Gender is required"),
   password: z.string().min(8, "Password must be at least 8 characters"),
-  contact_no: z.string().min(1, "Contact number is required"),
+  contact_no: z.string(),
   avatar_url: z.string(),
   role: z.literal("user"),
   has_2fa_enabled: z.boolean()
@@ -94,7 +94,7 @@ async function onSubmit(_: Event) {
 
   const validation = schema.safeParse(state);
   if (!validation.success) {
-    error.value = validation.error.errors[0].message;
+    error.value = validation.error.message;
     return;
   }
 

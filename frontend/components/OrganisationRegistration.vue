@@ -43,7 +43,7 @@ const schema = z.object({
   name: z.string().min(1, "Organisation name is required"),
   username: z.string().min(3, "Username must be at least 3 characters"),
   password: z.string().min(8, "Password must be at least 8 characters"),
-  contact_no: z.string().min(1, "Contact number is required"),
+  contact_no: z.string(),
   avatar_url: z.string(),
   role: z.literal("org"),
   age: z.number(),
