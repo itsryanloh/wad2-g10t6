@@ -56,7 +56,7 @@
           <!-- Right Side Actions -->
           <div class="d-flex align-items-center gap-3">
             <!-- User Avatar -->
-            <div class="user-avatar d-flex justify-content-center align-items-center">
+            <div class="user-avatar d-flex justify-content-center align-items-center my-auto">
               <img 
                 v-if="avatar_url"
                 :src="avatar_url"
