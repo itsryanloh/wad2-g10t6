@@ -1,10 +1,20 @@
 // @ts-check
 import { CommUserPair } from "../schemas/communities.js";
-import { addUserToCommunity, removeUserFromCommunity } from "../utils/communities.js";
+import { addUserToCommunity, getAllCommunities, removeUserFromCommunity } from "../utils/communities.js";
+
+/** @import {Request, Response} from "express" */
 
 /**
- * @param {import("express").Request} req
- * @param {import("express").Response} res
+ * @param {Request} _req
+ * @param {Response} res
+ */
+export async function allCommunities(_req, res) {
+  return getAllCommunities().then(wrapSupabaseResponse(res))
+}
+
+/**
+ * @param {Request} req
+ * @param {Response} res
  */
 export async function joinCommunity(req, res) {
   const { data, success, error } = await CommUserPair.safeParseAsync(req.body)
@@ -12,15 +22,13 @@ export async function joinCommunity(req, res) {
   if (!success)
     return res.status(400).send(error.issues);
 
-  const { community_id, user_id } = data
-
-  return addUserToCommunity(user_id, community_id)
-    .then(res.send.bind(res))
+  return addUserToCommunity(data)
+    .then(wrapSupabaseResponse(res))
 }
 
 /**
- * @param {import("express").Request} req
- * @param {import("express").Response} res
+ * @param {Request} req
+ * @param {Response} res
  */
 export async function leaveCommunity(req, res) {
   const { data, success, error } = await CommUserPair.safeParseAsync(req.query)
@@ -28,8 +36,17 @@ export async function leaveCommunity(req, res) {
   if (!success)
     return res.status(400).send(error.issues);
 
-  const { community_id, user_id } = data
+  return removeUserFromCommunity(data)
+    .then(wrapSupabaseResponse(res))
+}
 
-  return removeUserFromCommunity(user_id, community_id)
-    .then(res.send.bind(res))
+
+/**
+ * @param {Response} res 
+ */
+function wrapSupabaseResponse(res) {
+  /**
+   * @param {import("@supabase/supabase-js").PostgrestSingleResponse<any>} reply 
+   */
+  return reply => res.status(reply.status).send(reply.data)
 }
