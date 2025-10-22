@@ -41,10 +41,10 @@
               </a>
             </li>
             <li class="nav-item">
-              <a href="#" class="nav-link disabled">
+              <NuxtLink to="/checklist/checklistmain" class="nav-link" active-class="active">
                 <i class="fas fa-list-check me-2"></i>Checklist
                 <span class="badge bg-secondary ms-1">Soon</span>
-              </a>
+              </NuxtLink>
             </li>
             <li class="nav-item">
               <NuxtLink to="/profile" class="nav-link">
