@@ -103,12 +103,17 @@
 </template>
 
 <script setup>
+import { useHead } from '#app';
 import { useRouter } from 'vue-router';
 import { jwtDecode } from 'jwt-decode';
 
 const router = useRouter();
 const avatar_url = ref("");
 const token = useCookie("token")
+
+useHead({
+  title: 'ADORE'
+})
 
 onMounted(async () => {
   if (token.value) {
