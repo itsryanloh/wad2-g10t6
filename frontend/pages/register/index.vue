@@ -31,7 +31,7 @@
             </div>
           </div>
 
-          <div class="text-center mt-4">
+          <div class="text-center mt-4" style="font-size: 14px;">
             <span class="text-muted">Already have an account? </span>
             <NuxtLink to="/login" class="link-primary">Login here</NuxtLink>
           </div>
