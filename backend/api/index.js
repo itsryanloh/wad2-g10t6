@@ -1,10 +1,10 @@
 import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
-import forumRoutes from './routes/forum.js';
-import avatarsRouter from './routes/avatars.js';
-import usersRouter from './routes/users.js';
-import authRouter from  './routes/auth.js';
+import forumRoutes from '../routes/forum.js';
+import avatarsRouter from '../routes/avatars.js';
+import usersRouter from '../routes/users.js';
+import authRouter from  '../routes/auth.js';
 import morgan from 'morgan';
 
 dotenv.config();
