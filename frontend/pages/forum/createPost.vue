@@ -101,7 +101,13 @@
               <i class="fas fa-map-marker-alt me-2"></i>Location
             </label>
             <input v-model="form.location_name" type="text" class="form-input"
-              placeholder="e.g., Block 123 Ang Mo Kio Ave 3" @keydown="findPlace" />
+              placeholder="e.g., Block 123 Ang Mo Kio Ave 3" @keyup="findPlace" />
+            <ul>
+              <li v-for="({ SEARCHVAL, ADDRESS }) in suggestedLocations">
+                <span>{{ SEARCHVAL }}</span>
+                <span>{{ ADDRESS }}</span>
+              </li>
+            </ul>
             <small class="form-hint">Where did you spot the cat?</small>
           </div>
 
@@ -346,21 +352,11 @@ const handleSubmit = async () => {
   }
 }
 
-const { VITE_GMAPS_API_KEY } = import.meta.env
+const suggestedLocations = ref()
 
 function findPlace() {
   console.log(form.value.location_name)
-  fetch("https://places.googleapis.com/v1/places:searchText", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Goog-Api-Key": VITE_GMAPS_API_KEY,
-      "X-Goog-FieldMask": "places.name"
-    },
-    body: JSON.stringify({
-      textQuery: form.value.location_name
-    })
-  }).then(data => data.json()).then(console.log)
+  fetch(`${base_url}/maps/search?q=${form.value.location_name}`).then(data => data.json()).then(data => suggestedLocations.value = data.results)
 }
 </script>
 

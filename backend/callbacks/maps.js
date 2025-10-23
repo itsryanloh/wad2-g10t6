@@ -1,7 +1,7 @@
 // @ts-check
 
 import { LngLat } from "../schemas/maps.js";
-import { findAreaName } from "../utils/maps.js";
+import { findAreaName, searchLocation } from "../utils/maps.js";
 
 /**
  * @param {import("express").Request} req
@@ -22,4 +22,13 @@ export async function pinArea(req, res) {
   }
 
   return res.send({ data: { area } })
+}
+
+/**
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ */
+export async function findSimilarLocations(req, res) {
+  const { q } = req.query;
+  return searchLocation(`${q}`).then(res.send.bind(res))
 }

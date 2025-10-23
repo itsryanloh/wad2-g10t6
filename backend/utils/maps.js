@@ -55,26 +55,43 @@ class MultiPolygon extends AbstractBounds {
 }
 
 import { env } from "node:process"
-const { ONEMAP_API_KEY } = env
+const { ONEMAP_API_KEY, ONEMAP_EMAIL, ONEMAP_PASSWORD } = env
 
-console.log(ONEMAP_API_KEY ? "Fetching data from onemap..." : "ONEMAP_API_KEY not found, reading data from file")
+const API_KEY = ONEMAP_API_KEY ?? await fetch("https://www.onemap.gov.sg/api/auth/post/getToken", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    email: ONEMAP_EMAIL,
+    password: ONEMAP_PASSWORD
+  })
+})
+  .then(data => data.json())
+  .then(({ access_token }) => access_token)
+
+console.log(API_KEY ? "Fetching data from onemap..." : "ONEMAP_API_KEY not found, reading data from file")
 
 /**
  * @type {Promise<[AbstractBounds, string][]>}
  */
 
 // for offline mode download from https://data.gov.sg/datasets/d_4765db0e87b9c86336792efe8a1f7a66/view
+// fs.readFile("./MasterPlan2019PlanningAreaBoundaryNoSea.geojson", { encoding: "ascii" }).then(JSON.parse).then(({ features }) => features)
+//       .then(arr => arr.map(
+//               ({ properties: { Description }, geometry: { type, coordinates } }) => [polygonFactory(type, coordinates), Description.match(/<td>([^<]*)<\/td>/)[1]]))
+//
 
-const polygons = (
-  ONEMAP_API_KEY
-    ? fetch("https://www.onemap.gov.sg/api/public/popapi/getAllPlanningarea", { headers: { Authorization: ONEMAP_API_KEY } }).then(obj => obj.json()).then(({ SearchResults }) => SearchResults.map(({ geojson, pln_area_n }) => {
+const polygons = fetch("https://www.onemap.gov.sg/api/public/popapi/getAllPlanningarea", {
+  headers: {
+    Authorization: API_KEY
+  }
+}).then(obj => obj.json())
+  .then(
+    ({ SearchResults }) => SearchResults.map(({ geojson, pln_area_n }) => {
       const { type, coordinates } = JSON.parse(geojson);
-      return [polygonFactory(type, coordinates), pln_area_n]
+      return [polygonFactory(type, coordinates), pln_area_n];
     }))
-    : fs.readFile("./MasterPlan2019PlanningAreaBoundaryNoSea.geojson", { encoding: "ascii" }).then(JSON.parse).then(({ features }) => features)
-      .then(arr => arr.map(
-        ({ properties: { Description }, geometry: { type, coordinates } }) => [polygonFactory(type, coordinates), Description.match(/<td>([^<]*)<\/td>/)[1]]))
-)
   .then(
     obj => {
       console.log("Data loaded successfully")
@@ -88,6 +105,34 @@ const polygons = (
  */
 export async function findAreaName(coords) {
   return polygons.then(arr => arr.find(([poly]) => poly.inBoundary(coords))?.[1])
+}
+
+/**
+ * @param {string} searchVal
+ * @param {number} pageNum 
+ */
+export async function searchLocation(searchVal, pageNum = 1) {
+  return fetch(`https://www.onemap.gov.sg/api/common/elastic/search?${new URLSearchParams({
+    searchVal,
+    returnGeom: 'Y',
+    getAddrDetails: 'Y',
+    pageNum: pageNum.toString()
+  })}`)
+    .then(res => res.json())
+    .then(
+      /**
+       * @param {Object} param0
+       * @param {number} param0.totalNumPages
+       * @param {number} param0.pageNum
+       * @param {Record<"SEARCHVAL"|"BLK_NO"|"ROAD_NAME"|"BUILDING"|"ADDRESS"|"LATITUDE"|"LONGITUDE", string>[]} param0.results
+       */
+      ({ totalNumPages, pageNum, results }) => ({
+        nextPage: totalNumPages === pageNum ? undefined : pageNum + 1,
+        results: results.map(
+          ({ SEARCHVAL, ADDRESS, LATITUDE, LONGITUDE }) => ({ SEARCHVAL, ADDRESS, LONGITUDE, LATITUDE })
+        )
+      })
+    )
 }
 
 /**
