@@ -8,7 +8,9 @@ const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH)
 
 router.get("/", async (_, res) => {
   const { error, data } = await supabase.from("users").select("*");
-  if (error) throw new Error(error);
+  if (error) {
+    return res.status(400).send(error.message);
+  }
   res.send(data);
 });
 

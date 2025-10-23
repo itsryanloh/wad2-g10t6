@@ -242,6 +242,7 @@ const isDragging = ref(false)
 const uploading = ref(false)
 const uploadError = ref('')
 const fileInput = ref(null)
+const base_url = import.meta.env.VITE_BASE_URL;
 
 const editForm = ref({
   title: '',
@@ -315,7 +316,7 @@ const uploadFiles = async (files) => {
     })
     
     // Upload to backend data bucket
-    const response = await fetch('http://localhost:3000/api/upload-images', {
+    const response = await fetch(`${base_url}/upload-images`, {
       method: 'POST',
       body: formData
     })
