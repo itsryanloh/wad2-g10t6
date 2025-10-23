@@ -49,7 +49,7 @@ export const useForum = () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
 
-  const API_BASE = 'http://localhost:3000/api'
+  const API_BASE = import.meta.env.VITE_BASE_URL;
 
   // Fetch all posts with optional filters
   const fetchPosts = async (filters: PostFilters = {}) => {
