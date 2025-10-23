@@ -281,6 +281,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+const base_url = import.meta.env.VITE_BASE_URL;
 const route = useRoute()
 const router = useRouter()
 const token = useCookie("token")
@@ -390,7 +391,7 @@ const handleAvatarUpload = async (event) => {
     formData.append('user_id', form.value.id) // Pass user ID for filename
 
     // Upload to dedicated avatar endpoint
-    const response = await fetch('http://localhost:3000/api/avatars/upload', {
+    const response = await fetch(`${base_url}/avatars/upload`, {
       method: 'POST',
       body: formData
     })
@@ -427,7 +428,7 @@ const handleSubmit = async () => {
   try {
     console.log('Saving profile data:', form.value)
     
-    const response = await fetch(`http://localhost:3000/api/users/${form.value.id}`, {
+    const response = await fetch(`${base_url}/users/${form.value.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -489,7 +490,7 @@ const handlePasswordChange = async () => {
   }
 
   try {
-    const response = await fetch(`http://localhost:3000/api/auth/password/${form.value.id}`, {
+    const response = await fetch(`${base_url}/auth/password/${form.value.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

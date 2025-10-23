@@ -156,6 +156,8 @@ const fileInput = ref(null)
 // Get current user ID from database
 const currentUserId = ref(null)
 
+const base_url = import.meta.env.VITE_BASE_URL;
+
 onMounted(async () => {
   if (!token.value) return await navigateTo("/login");
 
@@ -280,8 +282,7 @@ const uploadFiles = async (files) => {
     files.forEach(file => {
       formData.append('images', file)
     })
-
-    const response = await fetch('http://localhost:3000/api/upload-images', {
+    const response = await fetch(`${base_url}/upload-images`, {
       method: 'POST',
       body: formData
     })

@@ -310,6 +310,7 @@ const currentCarouselIndex = ref(0)
 const replyingTo = ref(null)
 const replyContent = ref('')
 const currentUserId = ref(null)
+const base_url = import.meta.env.VITE_BASE_URL;
 
 const isAuthor = computed(() => {
   return currentPost.value?.user_id === currentUserId.value
@@ -476,7 +477,7 @@ const handleReaction = async () => {
 
 const loadCurrentUser = async () => {
   try {
-    const response = await fetch('http://localhost:3000/api/users')
+    const response = await fetch(`${base_url}/users`)
     const users = await response.json()
 
     // Find David Chen or use first user
