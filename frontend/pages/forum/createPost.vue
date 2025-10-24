@@ -100,14 +100,9 @@
             <label class="section-label">
               <i class="fas fa-map-marker-alt me-2"></i>Location
             </label>
-            <input v-model="form.location_name" type="text" class="form-input"
-              placeholder="e.g., Block 123 Ang Mo Kio Ave 3" @keyup="findPlace" />
-            <ul>
-              <li v-for="({ SEARCHVAL, ADDRESS }) in suggestedLocations">
-                <span>{{ SEARCHVAL }}</span>
-                <span>{{ ADDRESS }}</span>
-              </li>
-            </ul>
+            <UInputMenu v-model="form.location_name" type="text" class="form-input"
+              placeholder="e.g., Block 123 Ang Mo Kio Ave 3" @keyup="findPlace"
+              :items="suggestedLocations.map(({ SEARCHVAL, ADDRESS }) => `${SEARCHVAL}\n${ADDRESS}`)" />
             <small class="form-hint">Where did you spot the cat?</small>
           </div>
 
@@ -352,11 +347,11 @@ const handleSubmit = async () => {
   }
 }
 
-const suggestedLocations = ref()
+const suggestedLocations = ref([])
 
 function findPlace() {
   console.log(form.value.location_name)
-  fetch(`${base_url}/maps/search?q=${form.value.location_name}`).then(data => data.json()).then(data => suggestedLocations.value = data.results)
+  fetch(`${base_url}/maps/search?q=${form.value.location_name}`).then(data => data.json()).then(data => suggestedLocations.value = data.results ?? [])
 }
 </script>
 
