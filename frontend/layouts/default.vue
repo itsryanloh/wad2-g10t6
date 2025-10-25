@@ -1,5 +1,5 @@
 <template>
-  <div class="app-layout">
+  <div class="app-layout d-flex flex-column">
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
       <div class="container-fluid px-4">
@@ -51,7 +51,7 @@
           <!-- Right Side Actions -->
           <div class="d-flex align-items-center gap-3">
             <!-- User Avatar -->
-            <div class="user-avatar d-flex justify-content-center align-items-center">
+            <div class="user-avatar d-flex justify-content-center align-items-center my-auto">
               <img v-if="avatar_url" :src="avatar_url" alt="User" class="avatar-img" />
               <i v-else class="fas fa-user text-white"></i>
             </div>
@@ -69,7 +69,7 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="main-content">
+    <main class="main-content flex-grow-1 d-flex flex-column">
       <slot />
     </main>
 
@@ -93,12 +93,17 @@
 </template>
 
 <script setup>
+import { useHead } from '#app';
 import { useRouter } from 'vue-router';
 import { jwtDecode } from 'jwt-decode';
 
 const router = useRouter();
 const avatar_url = ref("");
 const token = useCookie("token")
+
+useHead({
+  title: 'ADORE'
+})
 
 onMounted(async () => {
   if (token.value) {
@@ -300,5 +305,9 @@ const handleLogin = async () => {
     margin-top: 20px;
     justify-content: center;
   }
+}
+
+.app-layout {
+  min-height: 100vh;
 }
 </style>

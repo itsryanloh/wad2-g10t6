@@ -16,7 +16,10 @@
                 <i v-else class="fas fa-user"></i>
               </div>
               <h4 class="user-name">{{ currentUser?.name || 'Loading...' }}</h4>
-              <p class="user-username">@{{ currentUser?.username || '' }}</p>
+              <div class="d-flex justify-content-center align-items-center">
+                <p class="user-username">@{{ currentUser?.username || '' }}</p>
+                <i class="fa-solid fa-user-check mx-2"></i>
+              </div>
             </div>
 
             <!-- Navigation Menu -->
@@ -134,8 +137,17 @@
                 </div>
 
                 <div class="form-section">
-                  <label class="section-label">
-                    <i class="fas fa-phone me-2"></i>Contact Number
+                  <label class="section-label d-flex justify-content-between">
+                    <div>
+                      <i class="fas fa-phone me-2"></i>Contact Number
+                    </div>
+                    <div class="d-flex gap-2">
+                      Enable 2FA
+                    <label class="switch">
+                      <input type="checkbox" v-model="form.has_2fa_enabled">
+                      <span class="slider round"></span>
+                    </label>
+                    </div>
                   </label>
                   <input
                     v-model="form.contact_no"
@@ -145,8 +157,8 @@
                   />
                 </div>
 
-                <div class="row">
-                  <div class="col-md-6">
+                <div class="row mx-0">
+                  <div class="col-md-6 ps-0">
                     <div class="form-section">
                       <label class="section-label">
                         <i class="fas fa-birthday-cake me-2"></i>Age
@@ -162,7 +174,7 @@
                     </div>
                   </div>
                   
-                  <div class="col-md-6">
+                  <div class="col-md-6 pe-0">
                     <div class="form-section">
                       <label class="section-label">
                         <i class="fas fa-venus-mars me-2"></i>Gender
@@ -305,7 +317,8 @@ const form = ref({
   contact_no: '',
   age: null,
   gender: '',
-  avatar_url: null
+  avatar_url: null,
+  has_2fa_enabled: false
 })
 
 const passwordForm = ref({
@@ -345,7 +358,8 @@ onMounted(async () => {
         contact_no: targetUser.contact_no || '',
         age: targetUser.age || null,
         gender: targetUser.gender || '',
-        avatar_url: targetUser.avatar_url || null
+        avatar_url: targetUser.avatar_url || null,
+        has_2fa_enabled: !!targetUser.has_2fa_enabled
       }
       
       console.log('Loaded user:', targetUser.name)
@@ -437,7 +451,8 @@ const handleSubmit = async () => {
         contact_no: form.value.contact_no?.trim() || null,
         age: form.value.age || null,
         gender: form.value.gender || null,
-        avatar_url: form.value.avatar_url || null
+        avatar_url: form.value.avatar_url || null,
+        has_2fa_enabled: !!form.value.has_2fa_enabled
       })
     })
 
@@ -457,7 +472,8 @@ const handleSubmit = async () => {
       contact_no: updatedUser.contact_no || '',
       age: updatedUser.age || null,
       gender: updatedUser.gender || '',
-      avatar_url: updatedUser.avatar_url || null
+      avatar_url: updatedUser.avatar_url || null,
+      has_2fa_enabled: !!updatedUser.has_2fa_enabled
     }
     
     console.log('Profile updated successfully:', updatedUser)
@@ -1006,5 +1022,67 @@ const handleLogout = () => {
   .btn {
     width: 100%;
   }
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 24px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #FF9800;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #FF9800;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(16px);
+  -ms-transform: translateX(16px);
+  transform: translateX(16px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 24px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
 }
 </style>

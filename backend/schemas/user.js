@@ -8,7 +8,7 @@ const User = z.object({
   password: z.string().min(8),
   contact_no: z.string(),
   avatar_url: z.string(),
-  role: z.literal(["user", "shelter"]),
+  role: z.literal(["user", "org"]),
   has_2fa_enabled: z.boolean().default(false)
 });
 
