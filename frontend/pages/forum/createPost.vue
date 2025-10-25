@@ -385,7 +385,7 @@ function findPlace() {
   searchController.value?.abort()
 
   searchController.value = new AbortController()
-  fetch(`${base_url}/maps/search?q=${form.value.location.name.trim()}`)
+  fetch(`${base_url}/maps/search?q=${form.value.location.name.trim()}`, { signal: searchController.value.signal })
     .then(data => data.json())
     .then(data => {
       suggestedLocations.value = data.results ?? []
