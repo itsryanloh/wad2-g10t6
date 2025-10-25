@@ -120,6 +120,8 @@
               </div>
             </div>
             <small class="form-hint">Where did you spot the cat?</small>
+            <PetMap :lat="form.location.lat ?? 1.296568" :lng="form.location.lng ?? 103.852119"
+              :style="{ height: '50dvh' }" />
           </div>
 
           <!-- Tags -->

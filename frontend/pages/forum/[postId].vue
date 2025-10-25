@@ -79,9 +79,12 @@
             <div v-if="currentPost.location_name" class="location-card" @click="showMapModal = true" role="button">
               <Teleport to=".post-details-page">
                 <div v-if="showMapModal">
-                  <PetMap :lat="currentPost.location_lat" :lng="currentPost.location_lng" :close="() => {
+                  <div class="position-fixed top-50 start-50 translate-middle vw-100 vh-100 popupdiv" @click.self="() => {
                     showMapModal = false
-                  }" />
+                  }">
+                    <PetMap :lat="currentPost.location_lat" :lng="currentPost.location_lng"
+                      :passedDownClass="['w-50', 'h-50', 'm-auto']" />
+                  </div>
                 </div>
               </Teleport>
               <div class="location-icon">
@@ -1295,5 +1298,10 @@ onMounted(async () => {
     width: 35px;
     height: 35px;
   }
+}
+
+.popupdiv {
+  z-index: 2000;
+  background-color: rgba(0, 0, 0, 0.5);
 }
 </style>
