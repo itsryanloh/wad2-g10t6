@@ -4,7 +4,9 @@ import cors from 'cors';
 import forumRoutes from './routes/forum.js';
 import avatarsRouter from './routes/avatars.js';
 import usersRouter from './routes/users.js';
-import authRouter from  './routes/auth.js';
+import authRouter from './routes/auth.js';
+import communitiesRouter from './routes/communities.js'
+import mapsRouter from './routes/maps.js'
 import morgan from 'morgan';
 
 dotenv.config();
@@ -21,11 +23,13 @@ app.use('/api', forumRoutes);
 app.use('/api/users', usersRouter);
 app.use('/api/avatars', avatarsRouter);
 app.use('/api/auth', authRouter);
+app.use('/api/communities', communitiesRouter)
+app.use('/api/maps', mapsRouter)
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
+  res.json({
+    status: 'ok',
     message: 'Forum API is running',
     timestamp: new Date().toISOString()
   });
@@ -48,16 +52,16 @@ app.get('/', (req, res) => {
 
 // 404 handler
 app.use((req, res) => {
-  res.status(404).json({ 
+  res.status(404).json({
     error: 'Route not found',
-    path: req.path 
+    path: req.path
   });
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Error:', err.stack);
-  res.status(500).json({ 
+  res.status(500).json({
     error: 'Something went wrong!',
     message: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
@@ -73,4 +77,4 @@ app.listen(PORT, () => {
   console.log(`🏥 Health check: http://localhost:${PORT}/health`);
   console.log(`📝 API endpoints: http://localhost:${PORT}/api/posts`);
   console.log('=================================');
-});
+}).on('error', (e) => { throw e });

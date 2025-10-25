@@ -9,3 +9,4 @@ dist/
 .env
 # Mac user stuff
 **/.DS_Store
+.env

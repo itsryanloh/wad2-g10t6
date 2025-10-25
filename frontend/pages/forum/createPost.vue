@@ -24,12 +24,8 @@
               <span class="required">*</span>
             </label>
             <div class="type-grid">
-              <div
-                v-for="type in postTypes"
-                :key="type.value"
-                @click="form.post_type = type.value"
-                :class="['type-card', { active: form.post_type === type.value }]"
-              >
+              <div v-for="type in postTypes" :key="type.value" @click="form.post_type = type.value"
+                :class="['type-card', { active: form.post_type === type.value }]">
                 <i :class="type.icon" class="type-icon"></i>
                 <div class="type-label">{{ type.label }}</div>
                 <div class="type-desc">{{ type.description }}</div>
@@ -43,14 +39,8 @@
               <i class="fas fa-heading me-2"></i>Title
               <span class="required">*</span>
             </label>
-            <input
-              v-model="form.title"
-              type="text"
-              class="form-input"
-              placeholder="Give your post a descriptive title..."
-              maxlength="255"
-              required
-            />
+            <input v-model="form.title" type="text" class="form-input"
+              placeholder="Give your post a descriptive title..." maxlength="255" required />
             <div class="char-counter">{{ form.title?.length || 0 }}/255</div>
           </div>
 
@@ -60,13 +50,9 @@
               <i class="fas fa-align-left me-2"></i>Content
               <span class="required">*</span>
             </label>
-            <textarea
-              v-model="form.content"
-              class="form-textarea"
-              placeholder="Share details about your sighting, adoption story, or question..."
-              rows="8"
-              required
-            ></textarea>
+            <textarea v-model="form.content" class="form-textarea"
+              placeholder="Share details about your sighting, adoption story, or question..." rows="8"
+              required></textarea>
             <small class="form-hint">Be as descriptive as possible</small>
           </div>
 
@@ -75,57 +61,37 @@
             <label class="section-label">
               <i class="fas fa-images me-2"></i>Images (Optional)
             </label>
-            
+
             <!-- Drag and Drop Area -->
-            <div 
-              class="upload-area"
-              :class="{ 'dragging': isDragging, 'uploading': uploading }"
-              @dragover.prevent="isDragging = true"
-              @dragleave.prevent="isDragging = false"
-              @drop.prevent="handleDrop"
-              @click="$refs.fileInput.click()"
-            >
-              <input
-                ref="fileInput"
-                type="file"
-                accept="image/*"
-                multiple
-                @change="handleFileSelect"
-                style="display: none;"
-              />
-              
+            <div class="upload-area" :class="{ 'dragging': isDragging, 'uploading': uploading }"
+              @dragover.prevent="isDragging = true" @dragleave.prevent="isDragging = false" @drop.prevent="handleDrop"
+              @click="$refs.fileInput.click()">
+              <input ref="fileInput" type="file" accept="image/*" multiple @change="handleFileSelect"
+                style="display: none;" />
+
               <div v-if="!uploading" class="upload-content">
                 <i class="fas fa-cloud-upload-alt upload-icon"></i>
                 <p class="upload-text">Drag & drop images here</p>
                 <p class="upload-subtext">or click to browse</p>
                 <small class="upload-hint">PNG, JPG, GIF up to 5MB each (Max 5 images)</small>
               </div>
-              
+
               <div v-else class="upload-loading">
                 <i class="fas fa-spinner fa-spin"></i>
                 <p>Uploading images...</p>
               </div>
             </div>
-            
+
             <!-- Image Preview -->
             <div v-if="form.image_urls?.length" class="image-preview">
-              <div
-                v-for="(url, index) in form.image_urls"
-                :key="index"
-                class="preview-item"
-              >
+              <div v-for="(url, index) in form.image_urls" :key="index" class="preview-item">
                 <img :src="url" alt="Preview" />
-                <button 
-                  type="button" 
-                  class="remove-image" 
-                  @click.stop="removeImage(index)"
-                  title="Remove image"
-                >
+                <button type="button" class="remove-image" @click.stop="removeImage(index)" title="Remove image">
                   <i class="fas fa-times"></i>
                 </button>
               </div>
             </div>
-            
+
             <small v-if="uploadError" class="upload-error">{{ uploadError }}</small>
           </div>
 
@@ -134,13 +100,28 @@
             <label class="section-label">
               <i class="fas fa-map-marker-alt me-2"></i>Location
             </label>
-            <input
-              v-model="form.location_name"
-              type="text"
-              class="form-input"
-              placeholder="e.g., Block 123 Ang Mo Kio Ave 3"
-            />
+            <div class="address-dropdown-container">
+              <div class="address-input-wrapper">
+                <input v-model="form.location.name" type="text" class="form-input address-input"
+                  placeholder="e.g., Block 123 Ang Mo Kio Ave 3" @input="findPlace" @focus="showDropdown = true"
+                  @blur="handleBlur" />
+                <i v-if="searchController" class="fas fa-spinner fa-spin search-spinner"></i>
+              </div>
+
+              <div v-if="showDropdown && suggestedLocations.length > 0" class="address-dropdown">
+                <div v-for="({ SEARCHVAL, ADDRESS }, idx) in suggestedLocations" :key="idx"
+                  class="address-dropdown-item" @click.prevent="selectLocation(idx)">
+                  <div class="address-main">
+                    <i class="fas fa-map-marker-alt address-icon" />
+                    {{ SEARCHVAL }}
+                  </div>
+                  <div class="address-detail">{{ ADDRESS }}</div>
+                </div>
+              </div>
+            </div>
             <small class="form-hint">Where did you spot the cat?</small>
+            <PetMap :lat="form.location.lat ?? 1.296568" :lng="form.location.lng ?? 103.852119"
+              :style="{ height: '50dvh' }" />
           </div>
 
           <!-- Tags -->
@@ -148,14 +129,10 @@
             <label class="section-label">
               <i class="fas fa-tags me-2"></i>Tags
             </label>
-            <input
-              v-model="tagsText"
-              type="text"
-              class="form-input"
-              placeholder="e.g., tabby, friendly, orange, young"
-            />
+            <input v-model="tagsText" type="text" class="form-input"
+              placeholder="e.g., tabby, friendly, orange, young" />
             <small class="form-hint">Comma separated tags</small>
-            
+
             <!-- Tag Preview -->
             <div v-if="form.tags?.length" class="tag-preview">
               <span v-for="tag in form.tags" :key="tag" class="tag-badge">
@@ -169,11 +146,7 @@
             <button type="button" class="btn btn-secondary-custom" @click="navigateTo('/forum/main')">
               <i class="fas fa-times me-2"></i>Cancel
             </button>
-            <button
-              type="submit"
-              class="btn btn-primary-custom"
-              :disabled="!isFormValid || submitting"
-            >
+            <button type="submit" class="btn btn-primary-custom" :disabled="!isFormValid || submitting">
               <i class="fas fa-paper-plane me-2"></i>
               {{ submitting ? 'Publishing...' : 'Publish Post' }}
             </button>
@@ -215,10 +188,10 @@ onMounted(async () => {
     // TODO: avoid fetch all (exposes all users)
     const response = await fetch(`${base_url}/users`)
     const users = await response.json()
-    
+
     // Find current user
     const targetUser = users.find(user => user.username === tokenData.username)
-    
+
     if (targetUser) {
       currentUserId.value = targetUser.id
     }
@@ -264,7 +237,11 @@ const form = ref({
   post_type: 'sighting',
   title: '',
   content: '',
-  location_name: '',
+  location: {
+    name: '',
+    lat: null,
+    lng: null,
+  },
   image_urls: [],
   tags: []
 })
@@ -280,8 +257,8 @@ watch(tagsText, (newVal) => {
 
 const isFormValid = computed(() => {
   return form.value.post_type &&
-         form.value.title?.trim() &&
-         form.value.content?.trim()
+    form.value.title?.trim() &&
+    form.value.content?.trim()
 })
 
 const handleFileSelect = async (event) => {
@@ -292,16 +269,16 @@ const handleFileSelect = async (event) => {
 
 const handleDrop = async (event) => {
   isDragging.value = false
-  const files = Array.from(event.dataTransfer.files).filter(file => 
+  const files = Array.from(event.dataTransfer.files).filter(file =>
     file.type.startsWith('image/')
   )
-  
+
   if (files.length === 0) {
     uploadError.value = 'Please drop image files only'
     setTimeout(() => uploadError.value = '', 3000)
     return
   }
-  
+
   await uploadFiles(files)
 }
 
@@ -311,7 +288,7 @@ const uploadFiles = async (files) => {
     setTimeout(() => uploadError.value = '', 3000)
     return
   }
-  
+
   const maxSize = 5 * 1024 * 1024
   const oversizedFiles = files.filter(file => file.size > maxSize)
   if (oversizedFiles.length > 0) {
@@ -319,29 +296,28 @@ const uploadFiles = async (files) => {
     setTimeout(() => uploadError.value = '', 3000)
     return
   }
-  
+
   uploadError.value = ''
   uploading.value = true
-  
+
   try {
     const formData = new FormData()
     files.forEach(file => {
       formData.append('images', file)
     })
-    
     const response = await fetch(`${base_url}/upload-images`, {
       method: 'POST',
       body: formData
     })
-    
+
     const data = await response.json()
-    
+
     if (!response.ok) {
       throw new Error(data.error || 'Upload failed')
     }
-    
+
     form.value.image_urls = [...form.value.image_urls, ...data.urls]
-    
+
   } catch (error) {
     console.error('Error uploading images:', error)
     uploadError.value = error.message || 'Failed to upload images'
@@ -357,7 +333,7 @@ const removeImage = (index) => {
 
 const handleSubmit = async () => {
   if (!isFormValid.value) return
-  
+
   if (!currentUserId.value) {
     uploadError.value = 'User not loaded. Please refresh the page.'
     return
@@ -371,7 +347,9 @@ const handleSubmit = async () => {
       title: form.value.title.trim(),
       content: form.value.content.trim(),
       post_type: form.value.post_type,
-      location_name: form.value.location_name?.trim() || null,
+      location_name: form.value.location.name?.trim() || null,
+      location_lat: form.value.location.lat,
+      location_lng: form.value.location.lng,
       image_urls: form.value.image_urls.length > 0 ? form.value.image_urls : [],
       tags: form.value.tags.length > 0 ? form.value.tags : []
     }
@@ -391,6 +369,52 @@ const handleSubmit = async () => {
   } finally {
     submitting.value = false
   }
+}
+
+const suggestedLocations = ref(/** @type {Record<"SEARCHVAL"|"ADDRESS"|"LATITUDE"|"LONGITUDE", string>[]} */([]))
+const showDropdown = ref(false)
+const searchController = ref(/** @type {AbortController?}*/(null))
+
+function findPlace() {
+  if (!form.value.location.name.trim()) {
+    suggestedLocations.value = []
+    showDropdown.value = false
+    return
+  }
+
+  searchController.value?.abort()
+
+  searchController.value = new AbortController()
+  fetch(`${base_url}/maps/search?q=${form.value.location.name.trim()}`)
+    .then(data => data.json())
+    .then(data => {
+      suggestedLocations.value = data.results ?? []
+      showDropdown.value = suggestedLocations.value.length > 0
+      searchController.value = null
+    })
+    .catch(error => {
+      console.error('Error fetching locations:', error)
+      suggestedLocations.value = []
+    })
+}
+
+/**
+ * @param {number} location 
+ */
+function selectLocation(location) {
+  const { SEARCHVAL, ADDRESS, LATITUDE, LONGITUDE } = suggestedLocations.value[location]
+  form.value.location = {
+    name: `${SEARCHVAL}, ${ADDRESS}`,
+    lat: Number(LATITUDE),
+    lng: Number(LONGITUDE)
+  }
+  showDropdown.value = false
+}
+
+function handleBlur() {
+  setTimeout(() => {
+    showDropdown.value = false
+  }, 200)
 }
 </script>
 
@@ -437,6 +461,7 @@ const handleSubmit = async () => {
     opacity: 0;
     transform: translateY(-30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -472,6 +497,7 @@ const handleSubmit = async () => {
     opacity: 0;
     transform: translateY(50px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -621,8 +647,15 @@ const handleSubmit = async () => {
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 .upload-text {
@@ -797,5 +830,110 @@ const handleSubmit = async () => {
   .btn {
     width: 100%;
   }
+}
+
+.address-dropdown-container {
+  position: relative;
+}
+
+.address-input-wrapper {
+  position: relative;
+}
+
+.address-input {
+  padding-right: 45px;
+}
+
+.search-spinner {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #FF9800;
+  font-size: 18px;
+}
+
+.address-dropdown {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 2px solid #FFB74D;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(255, 152, 0, 0.2);
+  max-height: 280px;
+  overflow-y: auto;
+  z-index: 1000;
+  animation: dropdownSlide 0.3s ease;
+}
+
+@keyframes dropdownSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.address-dropdown-item {
+  padding: 15px 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-bottom: 1px solid #FFF5E6;
+}
+
+.address-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.address-dropdown-item:hover {
+  background: linear-gradient(135deg, #FFF5E6 0%, #FFE8D6 100%);
+  padding-left: 25px;
+}
+
+.address-main {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  color: #5D4E37;
+  margin-bottom: 5px;
+  font-size: 15px;
+}
+
+.address-icon {
+  color: #FF9800;
+  margin-right: 10px;
+  font-size: 14px;
+}
+
+.address-detail {
+  color: #7A7265;
+  font-size: 13px;
+  padding-left: 24px;
+  line-height: 150%;
+}
+
+.address-dropdown::-webkit-scrollbar {
+  width: 8px;
+}
+
+.address-dropdown::-webkit-scrollbar-track {
+  background: #FFF5E6;
+  border-radius: 0 12px 12px 0;
+}
+
+.address-dropdown::-webkit-scrollbar-thumb {
+  background: #FFB74D;
+  border-radius: 10px;
+  transition: all 0.3s;
+}
+
+.address-dropdown::-webkit-scrollbar-thumb:hover {
+  background: #FF9800;
 }
 </style>

@@ -2,6 +2,8 @@ import express from 'express';
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import multer from 'multer';
+import { getCommunityIdByAreaName } from '../utils/communities.js';
+import { findAreaName } from '../utils/maps.js';
 
 //Load environment variables
 dotenv.config();
@@ -14,7 +16,7 @@ const supabase = createClient(
   process.env.SUPABASE_KEY
 );
 
-const upload = multer({ 
+const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
     fileSize: 5 * 1024 * 1024, //file limit
@@ -46,7 +48,7 @@ router.post('/upload-images', upload.array('images', 5), async (req, res) => {
 
       // Upload to Supabase Storage
       const { data, error } = await supabase.storage
-        .from('postImages') 
+        .from('postImages')
         .upload(filepath, file.buffer, {
           contentType: file.mimetype,
           cacheControl: '3600',
@@ -66,9 +68,9 @@ router.post('/upload-images', upload.array('images', 5), async (req, res) => {
       uploadedUrls.push(publicUrl);
     }
 
-    res.status(200).json({ 
+    res.status(200).json({
       message: 'Files uploaded successfully',
-      urls: uploadedUrls 
+      urls: uploadedUrls
     });
 
   } catch (error) {
@@ -177,7 +179,8 @@ router.post('/posts', async (req, res) => {
         location_lat,
         location_lng,
         image_urls: image_urls || [],
-        tags: tags || []
+        tags: tags || [],
+        community_id: (await findAreaName([location_lng, location_lat]).then(getCommunityIdByAreaName)).data?.id
       }])
       .select(`
         *,
