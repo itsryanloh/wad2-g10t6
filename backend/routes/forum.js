@@ -197,6 +197,94 @@ router.post('/posts', async (req, res) => {
   }
 });
 
+router.get('/posts/:id/reactions', async (req, res) => {
+  try {
+    const { type } = req.query;
+
+    if (!type) {
+      return res.status(400).json({ error: 'Missing reaction type parameter' });
+    }
+
+    const { count, error } = await supabase
+      .from('post_reactions')
+      .select('*', { count: 'exact', head: true })
+      .eq('post_id', req.params.id)
+      .eq('reaction_type', type);
+
+    if (error) throw error;
+
+    res.json({ count: count || 0, reaction_type: type });
+  } catch (error) {
+    console.error('Error fetching reaction count:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET user's reactions for a post
+router.get('/posts/:id/reactions/user/:userId', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('post_reactions')
+      .select('reaction_type')
+      .eq('post_id', req.params.id)
+      .eq('user_id', req.params.userId);
+
+    if (error) throw error;
+
+    res.json(data || []);
+  } catch (error) {
+    console.error('Error fetching user reactions:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// TOGGLE reaction on post
+router.post('/posts/:id/reactions', async (req, res) => {
+  try {
+    const { user_id, reaction_type = 'like' } = req.body;
+
+    if (!user_id) {
+      return res.status(400).json({ error: 'Missing user_id' });
+    }
+
+    const { data: existing } = await supabase
+      .from('post_reactions')
+      .select('*')
+      .eq('post_id', req.params.id)
+      .eq('user_id', user_id)
+      .eq('reaction_type', reaction_type)
+      .single();
+
+    if (existing) {
+      const { error } = await supabase
+        .from('post_reactions')
+        .delete()
+        .eq('id', existing.id);
+
+      if (error) throw error;
+
+      res.json({ action: 'removed', reaction_type });
+    } else {
+      const { data, error } = await supabase
+        .from('post_reactions')
+        .insert([{
+          post_id: req.params.id,
+          user_id,
+          reaction_type
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      res.json({ action: 'added', reaction_type, data });
+    }
+  } catch (error) {
+    console.error('Error toggling reaction:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // UPDATE post
 router.put('/posts/:id', async (req, res) => {
   try {
@@ -306,63 +394,27 @@ router.post('/posts/:id/comments', async (req, res) => {
   }
 });
 
-// TOGGLE reaction on post
-router.post('/posts/:id/reactions', async (req, res) => {
-  try {
-    const { user_id, reaction_type = 'like' } = req.body;
-
-    if (!user_id) {
-      return res.status(400).json({ error: 'Missing user_id' });
-    }
-
-    const { data: existing } = await supabase
-      .from('post_reactions')
-      .select('*')
-      .eq('post_id', req.params.id)
-      .eq('user_id', user_id)
-      .eq('reaction_type', reaction_type)
-      .single();
-
-    if (existing) {
-      const { error } = await supabase
-        .from('post_reactions')
-        .delete()
-        .eq('id', existing.id);
-
-      if (error) throw error;
-
-      res.json({ action: 'removed', reaction_type });
-    } else {
-      const { data, error } = await supabase
-        .from('post_reactions')
-        .insert([{
-          post_id: req.params.id,
-          user_id,
-          reaction_type
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      res.json({ action: 'added', reaction_type, data });
-    }
-  } catch (error) {
-    console.error('Error toggling reaction:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
 // INCREMENT view count
 router.post('/posts/:id/view', async (req, res) => {
   try {
-    const { error } = await supabase.rpc('increment_post_views', {
-      post_id: req.params.id
-    });
+    const { data, error } = await supabase
+      .from('posts')
+      .select('view_count')
+      .eq('id', req.params.id)
+      .single();
 
     if (error) throw error;
 
-    res.json({ message: 'View counted' });
+    const currentCount = data?.view_count || 0;
+    
+    const { error: updateError } = await supabase
+      .from('posts')
+      .update({ view_count: currentCount + 1 })
+      .eq('id', req.params.id);
+
+    if (updateError) throw updateError;
+
+    res.json({ message: 'View counted', new_count: currentCount + 1 });
   } catch (error) {
     console.error('Error incrementing view:', error);
     res.status(500).json({ error: error.message });

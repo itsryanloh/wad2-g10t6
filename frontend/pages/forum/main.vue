@@ -247,7 +247,7 @@ onMounted(async () => {
 /* Hero Section */
 .hero-section {
   background: linear-gradient(135deg, #FFB74D 0%, #FFA726 50%, #FF9800 100%);
-  padding: 60px 0 100px;
+  padding: 40px 0 60px;
   position: relative;
   overflow: hidden;
   box-shadow: 0 10px 40px rgba(255, 183, 77, 0.3);

@@ -17,6 +17,7 @@ CREATE TABLE users (
 CREATE TABLE posts (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  community_id UUID REFERENCES communities(id) ON DELETE SET NULL,
   title VARCHAR(255) NOT NULL,
   content TEXT NOT NULL,
   post_type VARCHAR(50) NOT NULL CHECK (post_type IN ('adoption', 'sighting', 'lost', 'found', 'discussion', 'update')),
@@ -50,6 +51,26 @@ CREATE TABLE post_reactions (
   UNIQUE(post_id, user_id, reaction_type)
 );
 
+CREATE TABLE communities (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name VARCHAR(100) NOT NULL UNIQUE,
+  description TEXT,
+  location_name VARCHAR(255) NOT NULL, 
+  member_count INTEGER DEFAULT 0,
+  post_count INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE community_members (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  community_id UUID NOT NULL REFERENCES communities(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(community_id, user_id)
+);
+
+
 -- CREATE INDEXES
 -- ==============
 
@@ -62,6 +83,10 @@ CREATE INDEX idx_comments_post_id ON comments(post_id);
 CREATE INDEX idx_comments_user_id ON comments(user_id);
 CREATE INDEX idx_post_reactions_post_id ON post_reactions(post_id);
 CREATE INDEX idx_post_reactions_user_id ON post_reactions(user_id);
+CREATE INDEX idx_communities_location ON communities(location_name);
+CREATE INDEX idx_community_members_user ON community_members(user_id);
+CREATE INDEX idx_community_members_community ON community_members(community_id);
+CREATE INDEX idx_posts_community ON posts(community_id);
 
 
 -- ROW LEVEL SECURITY
@@ -71,6 +96,8 @@ ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE post_reactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE communities ENABLE ROW LEVEL SECURITY;
+ALTER TABLE community_members ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Anyone can view users" ON users FOR SELECT USING (true);
 CREATE POLICY "Users can create profile" ON users FOR INSERT WITH CHECK (true);
@@ -98,6 +125,13 @@ CREATE POLICY "Users can add reactions" ON post_reactions FOR INSERT WITH CHECK 
 CREATE POLICY "Users can remove own reactions" ON post_reactions FOR DELETE 
   USING (user_id = (current_setting('request.jwt.claims', true)::json->>'user_id')::uuid);
 
+CREATE POLICY "Anyone can view communities" ON communities FOR SELECT USING (true);
+CREATE POLICY "Users can create communities" ON communities FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Anyone can view memberships" ON community_members FOR SELECT USING (true);
+CREATE POLICY "Users can join communities" ON community_members FOR INSERT WITH CHECK (true);
+CREATE POLICY "Users can leave communities" ON community_members FOR DELETE 
+  USING (user_id = (current_setting('request.jwt.claims', true)::json->>'user_id')::uuid);
 
 -- AUTO-UPDATE TRIGGERS
 -- ====================
@@ -126,6 +160,46 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+CREATE OR REPLACE FUNCTION update_community_member_count()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    UPDATE communities SET member_count = member_count + 1 WHERE id = NEW.community_id;
+  ELSIF TG_OP = 'DELETE' THEN
+    UPDATE communities SET member_count = member_count - 1 WHERE id = OLD.community_id;
+  END IF;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_update_member_count
+AFTER INSERT OR DELETE ON community_members
+FOR EACH ROW EXECUTE FUNCTION update_community_member_count();
+
+CREATE OR REPLACE FUNCTION update_community_post_count()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'INSERT' AND NEW.community_id IS NOT NULL THEN
+    UPDATE communities SET post_count = post_count + 1 WHERE id = NEW.community_id;
+  ELSIF TG_OP = 'DELETE' AND OLD.community_id IS NOT NULL THEN
+    UPDATE communities SET post_count = post_count - 1 WHERE id = OLD.community_id;
+  ELSIF TG_OP = 'UPDATE' THEN
+    IF OLD.community_id IS NOT NULL AND NEW.community_id IS NULL THEN
+      UPDATE communities SET post_count = post_count - 1 WHERE id = OLD.community_id;
+    ELSIF OLD.community_id IS NULL AND NEW.community_id IS NOT NULL THEN
+      UPDATE communities SET post_count = post_count + 1 WHERE id = NEW.community_id;
+    ELSIF OLD.community_id IS NOT NULL AND NEW.community_id IS NOT NULL AND OLD.community_id != NEW.community_id THEN
+      UPDATE communities SET post_count = post_count - 1 WHERE id = OLD.community_id;
+      UPDATE communities SET post_count = post_count + 1 WHERE id = NEW.community_id;
+    END IF;
+  END IF;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_update_post_count
+AFTER INSERT OR UPDATE OR DELETE ON posts
+FOR EACH ROW EXECUTE FUNCTION update_community_post_count();
 
 -- TEST DATA
 -- =========
@@ -246,3 +320,13 @@ INSERT INTO post_reactions (post_id, user_id, reaction_type) VALUES
   (SELECT id FROM users WHERE username = 'davidchen'),
   'like'
 );
+
+INSERT INTO communities (name, description, location_name) VALUES
+('Tampines Cat Community', 'For cat lovers and rescuers in Tampines area', 'Tampines'),
+('Bishan Cat Network', 'Bishan residents helping local stray cats', 'Bishan'),
+('Clementi Feline Friends', 'Community cats and adoption in Clementi', 'Clementi'),
+('Ang Mo Kio Cats', 'AMK cat sightings, adoptions, and TNR', 'Ang Mo Kio'),
+('Jurong Cat Guardians', 'West side cat community', 'Jurong'),
+('Bedok Paw Patrol', 'East coast cat lovers unite', 'Bedok'),
+('Woodlands Cat Care', 'North region cat welfare', 'Woodlands'),
+('Punggol Pet Lovers', 'Punggol cat community and adoptions', 'Punggol');
