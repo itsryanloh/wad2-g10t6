@@ -180,7 +180,7 @@ router.post('/posts', async (req, res) => {
         location_lng,
         image_urls: image_urls || [],
         tags: tags || [],
-        community_id: (await findAreaName([location_lng, location_lat]).then(getCommunityIdByAreaName)).data.id
+        community_id: (await findAreaName([location_lng, location_lat]).then(getCommunityIdByAreaName)).data?.id
       }])
       .select(`
         *,

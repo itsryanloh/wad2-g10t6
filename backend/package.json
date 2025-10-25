@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js",
+    "start": "dotenvx run -- node server.js",
     "dev": "dotenvx run -- nodemon -x \"deno\" -A server.js"
   },
   "type": "module",
@@ -12,6 +12,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@dotenvx/dotenvx": "^1.51.0",
     "@supabase/supabase-js": "^2.58.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
@@ -24,8 +25,5 @@
     "point-in-polygon-hao": "^1.2.4",
     "twilio": "^5.10.1",
     "zod": "^4.1.11"
-  },
-  "devDependencies": {
-    "@dotenvx/dotenvx": "^1.51.0"
   }
 }
