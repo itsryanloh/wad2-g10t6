@@ -44,14 +44,8 @@
                 <i class="fas fa-heading me-2"></i>Title
                 <span class="required">*</span>
               </label>
-              <input
-                v-model="editForm.title"
-                type="text"
-                class="form-input"
-                placeholder="Give your post a descriptive title..."
-                maxlength="255"
-                required
-              />
+              <input v-model="editForm.title" type="text" class="form-input"
+                placeholder="Give your post a descriptive title..." maxlength="255" required />
               <div class="char-counter">{{ editForm.title?.length || 0 }}/255</div>
             </div>
 
@@ -61,85 +55,50 @@
                 <i class="fas fa-align-left me-2"></i>Content
                 <span class="required">*</span>
               </label>
-              <textarea
-                v-model="editForm.content"
-                class="form-textarea"
-                placeholder="Share details about your post..."
-                rows="10"
-                required
-              ></textarea>
+              <textarea v-model="editForm.content" class="form-textarea" placeholder="Share details about your post..."
+                rows="10" required></textarea>
               <small class="form-hint">Be as descriptive as possible</small>
             </div>
 
             <!-- Location -->
-            <div class="form-section">
-              <label class="section-label">
-                <i class="fas fa-map-marker-alt me-2"></i>Location (Optional)
-              </label>
-              <input
-                v-model="editForm.location_name"
-                type="text"
-                class="form-input"
-                placeholder="e.g., Block 123 Ang Mo Kio Ave 3"
-              />
-            </div>
+            <LocationSearch v-model="editForm.location" />
 
             <!-- Images Section -->
             <div class="form-section">
               <label class="section-label">
                 <i class="fas fa-images me-2"></i>Images (Optional)
               </label>
-              
+
               <!-- Upload Area -->
-              <div 
-                class="upload-area"
-                :class="{ dragging: isDragging, uploading: uploading }"
-                @click="() => fileInput?.click()"
-                @drop.prevent="handleDrop"
-                @dragover.prevent="isDragging = true"
-                @dragleave.prevent="isDragging = false"
-              >
-                <input
-                  ref="fileInput"
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  @change="handleFileSelect"
-                  style="display: none;"
-                />
-                
+              <div class="upload-area" :class="{ dragging: isDragging, uploading: uploading }"
+                @click="() => fileInput?.click()" @drop.prevent="handleDrop" @dragover.prevent="isDragging = true"
+                @dragleave.prevent="isDragging = false">
+                <input ref="fileInput" type="file" accept="image/*" multiple @change="handleFileSelect"
+                  style="display: none;" />
+
                 <div v-if="!uploading" class="upload-content">
                   <i class="fas fa-cloud-upload-alt upload-icon"></i>
                   <p class="upload-text">Drag & drop images here</p>
                   <p class="upload-subtext">or click to browse</p>
                   <small class="upload-hint">PNG, JPG, GIF up to 5MB each (Max 5 images total)</small>
                 </div>
-                
+
                 <div v-else class="upload-loading">
                   <i class="fas fa-spinner fa-spin"></i>
                   <p>Uploading images...</p>
                 </div>
               </div>
-              
+
               <!-- Image Preview with Remove -->
               <div v-if="editForm.image_urls?.length" class="image-preview">
-                <div
-                  v-for="(url, index) in editForm.image_urls"
-                  :key="index"
-                  class="preview-item"
-                >
+                <div v-for="(url, index) in editForm.image_urls" :key="index" class="preview-item">
                   <img :src="url" alt="Preview" @error="(e) => e.target.style.display = 'none'" />
-                  <button 
-                    type="button" 
-                    class="remove-image" 
-                    @click.stop="removeImage(index)"
-                    title="Remove image"
-                  >
+                  <button type="button" class="remove-image" @click.stop="removeImage(index)" title="Remove image">
                     <i class="fas fa-times"></i>
                   </button>
                 </div>
               </div>
-              
+
               <small v-if="uploadError" class="upload-error">{{ uploadError }}</small>
               <small v-else class="form-hint">
                 {{ editForm.image_urls?.length || 0 }}/5 images added
@@ -151,41 +110,25 @@
               <label class="section-label">
                 <i class="fas fa-tags me-2"></i>Tags (Optional)
               </label>
-              <input
-                v-model="tagsText"
-                type="text"
-                class="form-input"
-                placeholder="e.g., tabby, friendly, orange"
-              />
+              <input v-model="tagsText" type="text" class="form-input" placeholder="e.g., tabby, friendly, orange" />
               <small class="form-hint">Comma separated tags</small>
-              
+
               <!-- Tags Preview -->
               <div v-if="editForm.tags?.length" class="tags-preview">
-                <span
-                  v-for="tag in editForm.tags"
-                  :key="tag"
-                  class="tag-preview-item"
-                >
+                <span v-for="tag in editForm.tags" :key="tag" class="tag-preview-item">
                   #{{ tag }}
                 </span>
               </div>
             </div>
 
             <!-- Mark as Resolved -->
-            <div 
-              v-if="['lost', 'found', 'adoption'].includes(currentPost.post_type)"
-              class="form-section"
-            >
+            <div v-if="['lost', 'found', 'adoption'].includes(currentPost.post_type)" class="form-section">
               <label class="section-label">
                 <i class="fas fa-check-circle me-2"></i>Status
               </label>
               <div class="toggle-wrapper">
                 <label class="toggle-container">
-                  <input 
-                    type="checkbox" 
-                    v-model="editForm.is_resolved"
-                    class="toggle-input"
-                  />
+                  <input type="checkbox" v-model="editForm.is_resolved" class="toggle-input" />
                   <span class="toggle-slider"></span>
                 </label>
                 <span class="toggle-label">Mark this post as resolved</span>
@@ -194,18 +137,10 @@
 
             <!-- Action Buttons -->
             <div class="action-buttons">
-              <button
-                type="button"
-                class="btn-cancel"
-                @click="navigateTo(`/profile/myPost`)"
-              >
+              <button type="button" class="btn-cancel" @click="navigateTo(`/profile/myPost`)">
                 Cancel
               </button>
-              <button
-                type="submit"
-                class="btn-save"
-                :disabled="!isFormValid || updating"
-              >
+              <button type="submit" class="btn-save" :disabled="!isFormValid || updating">
                 <i class="fas fa-check me-2"></i>
                 {{ updating ? 'Saving...' : 'Save Changes' }}
               </button>
@@ -233,6 +168,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useForum } from '~/composables/useForum'
+import LocationSearch from '~/components/LocationSearch.vue'
 
 const route = useRoute()
 const { currentPost, loading, fetchPostById, updatePost } = useForum()
@@ -247,7 +183,11 @@ const base_url = import.meta.env.VITE_BASE_URL;
 const editForm = ref({
   title: '',
   content: '',
-  location_name: '',
+  location: {
+    name: '',
+    lat: 0,
+    lng: 0,
+  },
   image_urls: [],
   tags: [],
   is_resolved: false
@@ -287,15 +227,15 @@ const handleFileSelect = async (event) => {
 // Handle drag and drop
 const handleDrop = async (event) => {
   isDragging.value = false
-  const files = Array.from(event.dataTransfer.files).filter(file => 
+  const files = Array.from(event.dataTransfer.files).filter(file =>
     file.type.startsWith('image/')
   )
-  
+
   if (files.length === 0) {
     uploadError.value = 'Please drop image files only'
     return
   }
-  
+
   await uploadFiles(files)
 }
 
@@ -305,31 +245,31 @@ const uploadFiles = async (files) => {
     uploadError.value = 'Maximum 5 images allowed'
     return
   }
-  
+
   uploadError.value = ''
   uploading.value = true
-  
+
   try {
     const formData = new FormData()
     files.forEach(file => {
       formData.append('images', file)
     })
-    
+
     // Upload to backend data bucket
     const response = await fetch(`${base_url}/upload-images`, {
       method: 'POST',
       body: formData
     })
-    
+
     const data = await response.json()
-    
+
     if (!response.ok) {
       throw new Error(data.error || 'Upload failed')
     }
-    
+
     // Add uploaded URLs to form
     editForm.value.image_urls = [...(editForm.value.image_urls || []), ...data.urls]
-    
+
   } catch (error) {
     console.error('Error uploading images:', error)
     uploadError.value = error.message || 'Failed to upload images'
@@ -364,11 +304,16 @@ const handleSubmit = async () => {
     console.log('Number of images:', editForm.value.image_urls?.length)
     console.log('Image URLs:', editForm.value.image_urls)
     console.log('Tags:', editForm.value.tags)
-    
-    const result = await updatePost(postId, editForm.value)
-    
+
+    const result = await updatePost(postId, {
+      ...editForm.value,
+      location_lat: editForm.value.location.lat,
+      location_lng: editForm.value.location.lng,
+      location_name: editForm.value.location.name
+    })
+
     console.log('Update result:', result)
-    
+
     await navigateTo(`/forum/${postId}`)
   } catch (error) {
     console.error('Error updating post:', error)
@@ -380,29 +325,33 @@ const handleSubmit = async () => {
 
 onMounted(async () => {
   const postId = route.query.postId
-  
+
   console.log('EditPost mounted with postId:', postId)
-  
+
   if (!postId) {
     console.error('No postId found in query parameters')
     await navigateTo('/forum')
     return
   }
-  
+
   await fetchPostById(postId)
 
   if (currentPost.value) {
     editForm.value = {
       title: currentPost.value.title,
       content: currentPost.value.content,
-      location_name: currentPost.value.location_name || '',
+      location: {
+        name: currentPost.value.location_name,
+        lat: currentPost.value.location_lat,
+        lng: currentPost.value.location_lng
+      },
       image_urls: currentPost.value.image_urls || [],
       tags: currentPost.value.tags || [],
       is_resolved: currentPost.value.is_resolved || false
     }
 
     tagsText.value = currentPost.value.tags?.join(', ') || ''
-    
+
     console.log('Form populated with:', editForm.value)
   }
 })
@@ -451,6 +400,7 @@ onMounted(async () => {
     opacity: 0;
     transform: translateY(-30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -484,6 +434,7 @@ onMounted(async () => {
     opacity: 0;
     transform: translateY(50px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -646,8 +597,15 @@ onMounted(async () => {
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 .upload-text {
@@ -711,6 +669,7 @@ onMounted(async () => {
     opacity: 0;
     transform: scale(0.9);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -806,11 +765,11 @@ onMounted(async () => {
   border-radius: 50%;
 }
 
-.toggle-input:checked + .toggle-slider {
+.toggle-input:checked+.toggle-slider {
   background: linear-gradient(135deg, #A8E6CF 0%, #88D8F7 100%);
 }
 
-.toggle-input:checked + .toggle-slider:before {
+.toggle-input:checked+.toggle-slider:before {
   transform: translateX(26px);
 }
 
@@ -877,8 +836,13 @@ onMounted(async () => {
 }
 
 @keyframes loading {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 .error-state {
