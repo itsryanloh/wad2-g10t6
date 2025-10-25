@@ -1,6 +1,4 @@
 // @ts-check
-import assert from "node:assert"
-import fs from "node:fs/promises"
 import inside from "point-in-polygon-hao"
 
 /** @typedef {[number, number, 0] | [number, number]} LatLng */
@@ -55,9 +53,9 @@ class MultiPolygon extends AbstractBounds {
 }
 
 import { env } from "node:process"
-const { ONEMAP_API_KEY, ONEMAP_EMAIL, ONEMAP_PASSWORD } = env
+const { ONEMAP_EMAIL, ONEMAP_PASSWORD } = env
 
-const API_KEY = ONEMAP_API_KEY ?? await fetch("https://www.onemap.gov.sg/api/auth/post/getToken", {
+const ONEMAP_API_KEY = await fetch("https://www.onemap.gov.sg/api/auth/post/getToken", {
   method: "POST",
   headers: {
     "Content-Type": "application/json"
@@ -70,11 +68,7 @@ const API_KEY = ONEMAP_API_KEY ?? await fetch("https://www.onemap.gov.sg/api/aut
   .then(data => data.json())
   .then(({ access_token }) => access_token)
 
-console.log(API_KEY ? "Fetching data from onemap..." : "ONEMAP_API_KEY not found, reading data from file")
-
-/**
- * @type {Promise<[AbstractBounds, string][]>}
- */
+console.log("Fetching data from onemap...")
 
 // for offline mode download from https://data.gov.sg/datasets/d_4765db0e87b9c86336792efe8a1f7a66/view
 // fs.readFile("./MasterPlan2019PlanningAreaBoundaryNoSea.geojson", { encoding: "ascii" }).then(JSON.parse).then(({ features }) => features)
@@ -82,9 +76,12 @@ console.log(API_KEY ? "Fetching data from onemap..." : "ONEMAP_API_KEY not found
 //               ({ properties: { Description }, geometry: { type, coordinates } }) => [polygonFactory(type, coordinates), Description.match(/<td>([^<]*)<\/td>/)[1]]))
 //
 
+/**
+ * @type {Promise<[AbstractBounds, string][]>}
+ */
 const polygons = fetch("https://www.onemap.gov.sg/api/public/popapi/getAllPlanningarea", {
   headers: {
-    Authorization: API_KEY
+    Authorization: ONEMAP_API_KEY
   }
 }).then(obj => obj.json())
   .then(
@@ -109,7 +106,7 @@ export async function findAreaName(coords) {
 
 /**
  * @param {string} searchVal
- * @param {number} pageNum 
+ * @param {number} pageNum
  */
 export async function searchLocation(searchVal, pageNum = 1) {
   return fetch(`https://www.onemap.gov.sg/api/common/elastic/search?${new URLSearchParams({
@@ -136,8 +133,8 @@ export async function searchLocation(searchVal, pageNum = 1) {
 }
 
 /**
- * @param {"Polygon" | "MultiPolygon"} type 
- * @param {any} coordinates 
+ * @param {"Polygon" | "MultiPolygon"} type
+ * @param {any} coordinates
  * @returns {AbstractBounds}
  */
 function polygonFactory(type, coordinates) {
