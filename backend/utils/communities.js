@@ -31,3 +31,10 @@ export async function addUserToCommunity({ user_id, community_id }) {
 export async function removeUserFromCommunity({ user_id, community_id }) {
   return community_members().delete().eq('community_id', community_id).eq('user_id', user_id);
 }
+
+/**
+ * @param {string} areaName
+ */
+export async function getCommunityIdByAreaName(areaName) {
+  return communities().select("id").ilike('location_name', areaName).limit(1).maybeSingle();
+}

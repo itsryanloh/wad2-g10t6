@@ -127,7 +127,7 @@ export async function searchLocation(searchVal, pageNum = 1) {
        * @param {Record<"SEARCHVAL"|"BLK_NO"|"ROAD_NAME"|"BUILDING"|"ADDRESS"|"LATITUDE"|"LONGITUDE", string>[]} param0.results
        */
       ({ totalNumPages, pageNum, results }) => ({
-        nextPage: totalNumPages === pageNum ? undefined : pageNum + 1,
+        nextPage: totalNumPages < pageNum ? undefined : pageNum + 1,
         results: results.map(
           ({ SEARCHVAL, ADDRESS, LATITUDE, LONGITUDE }) => ({ SEARCHVAL, ADDRESS, LONGITUDE, LATITUDE })
         )
