@@ -32,17 +32,15 @@
             <li class="nav-item">
               <NuxtLink to="/dashboard" class="nav-link" active-class="active">
                 <i class="fas fa-map-marked-alt me-2"></i>Map
-                <span class="badge bg-secondary ms-1">Soon</span>
               </NuxtLink>
             </li>
             <li class="nav-item">
               <NuxtLink to="/checklist/checklistmain" class="nav-link" active-class="active">
                 <i class="fas fa-list-check me-2"></i>Checklist
-                <span class="badge bg-secondary ms-1">Soon</span>
               </NuxtLink>
             </li>
             <li class="nav-item">
-              <NuxtLink to="/profile" class="nav-link">
+              <NuxtLink to="/profile" class="nav-link" active-class="active">
                 <i class="fas fa-user me-2"></i>Profile
               </NuxtLink>
             </li>

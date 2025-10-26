@@ -271,11 +271,11 @@ definePageMeta({
   gap: 15px;
 }
 
-.feature-item:hover {
+/* .feature-item:hover {
   transform: translateX(10px);
   box-shadow: 0 10px 25px rgba(255, 155, 133, 0.2);
   border-color: #FF9B85;
-}
+} */
 
 .feature-icon {
   width: 60px;
@@ -290,10 +290,10 @@ definePageMeta({
   transition: all 0.3s ease;
 }
 
-.feature-item:hover .feature-icon {
+/* .feature-item:hover .feature-icon {
   transform: scale(1.1) rotate(10deg);
   box-shadow: 0 12px 30px rgba(255, 155, 133, 0.4);
-}
+} */
 
 .feature-icon i {
   font-size: 1.8rem;

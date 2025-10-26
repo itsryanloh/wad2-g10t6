@@ -57,13 +57,6 @@ router.post("/login", async (req, res) => {
   }
 })
 
-// router.post("/send-code", async (req, res) => {
-//   const { phone } = req.body;
-//   await client.verify.v2.services(process.env.TWILIO_VERIFY_SID)
-//     .verifications.create({ to: phone, channel: "sms" });
-//   res.json({ message: "Code sent" });
-// })
-
 router.post("/verify-code", async (req, res) => {
   const { error: parseError } = codeSchema.safeParse(req.body);
   if (parseError) return res.status(400).send(JSON.parse(parseError.message));

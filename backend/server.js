@@ -19,7 +19,7 @@ app.use(express.json());
 app.use(morgan('combined'));
 
 // Use Routes
-app.use('/api', forumRoutes);
+app.use('/api/forum', forumRoutes);
 app.use('/api/users', usersRouter);
 app.use('/api/avatars', avatarsRouter);
 app.use('/api/auth', authRouter);
