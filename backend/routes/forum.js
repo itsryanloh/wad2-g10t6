@@ -288,12 +288,16 @@ router.post('/posts/:id/reactions', async (req, res) => {
 // UPDATE post
 router.put('/posts/:id', async (req, res) => {
   try {
-    const { title, content, location_name, is_resolved, image_urls, tags } = req.body;
+    const { title, content, location_name, location_lat, location_lng, is_resolved, image_urls, tags } = req.body;
 
-    const updates = {};
+    const updates = {
+      community_id: (await findAreaName([location_lng, location_lat]).then(getCommunityIdByAreaName)).data?.id
+    };
     if (title !== undefined) updates.title = title;
     if (content !== undefined) updates.content = content;
     if (location_name !== undefined) updates.location_name = location_name;
+    if (location_lat !== undefined) updates.location_lat = location_lat;
+    if (location_lng !== undefined) updates.location_lng = location_lng;
     if (is_resolved !== undefined) updates.is_resolved = is_resolved;
     if (image_urls !== undefined) updates.image_urls = image_urls;
     if (tags !== undefined) updates.tags = tags;
