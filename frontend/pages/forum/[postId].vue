@@ -419,7 +419,7 @@ const fetchPost = async () => {
     loading.value = true
     const postId = route.params.postId
 
-    const response = await fetch(`${API_BASE}/posts/${postId}`)
+    const response = await fetch(`${API_BASE}/forum/posts/${postId}`)
     
     if (!response.ok) throw new Error('Failed to fetch post')
 
@@ -447,7 +447,7 @@ const fetchReactionCounts = async () => {
     
     for (const type of reactionTypes) {
       const response = await fetch(
-        `${API_BASE}/posts/${postId}/reactions?type=${type}`
+        `${API_BASE}/forum/posts/${postId}/reactions?type=${type}`
       )
       
       if (response.ok) {
@@ -468,7 +468,7 @@ const checkUserReactions = async () => {
     const postId = route.params.postId
     
     const response = await fetch(
-      `${API_BASE}/posts/${postId}/reactions/user/${user.id}`
+      `${API_BASE}/forum/posts/${postId}/reactions/user/${user.id}`
     )
     
     if (!response.ok) return
@@ -506,7 +506,7 @@ const handleReaction = async (reactionType) => {
     const postId = route.params.postId
     const hasReacted = userReactions.value[reactionType]
 
-    const response = await fetch(`${API_BASE}/posts/${postId}/reactions`, {
+    const response = await fetch(`${API_BASE}/forum/posts/${postId}/reactions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -537,7 +537,7 @@ const handleReaction = async (reactionType) => {
 const incrementViewCount = async () => {
   try {
     const postId = route.params.postId
-    await fetch(`${API_BASE}/posts/${postId}/view`, {
+    await fetch(`${API_BASE}/forum/posts/${postId}/view`, {
       method: 'POST'
     })
   } catch (error) {
@@ -550,7 +550,7 @@ const fetchComments = async () => {
     loadingComments.value = true
     const postId = route.params.postId
 
-    const response = await fetch(`${API_BASE}/posts/${postId}/comments`)
+    const response = await fetch(`${API_BASE}/forum/posts/${postId}/comments`)
     
     if (!response.ok) throw new Error('Failed to fetch comments')
 
@@ -577,7 +577,7 @@ const handleAddComment = async () => {
 
     const postId = route.params.postId
 
-    const response = await fetch(`${API_BASE}/posts/${postId}/comments`, {
+    const response = await fetch(`${API_BASE}/forum/posts/${postId}/comments`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -631,7 +631,7 @@ const handleReply = async (parentCommentId) => {
 
     const postId = route.params.postId
 
-    const response = await fetch(`${API_BASE}/posts/${postId}/comments`, {
+    const response = await fetch(`${API_BASE}/forum/posts/${postId}/comments`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

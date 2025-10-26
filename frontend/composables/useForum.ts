@@ -49,7 +49,12 @@ export const useForum = () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
 
-  const API_BASE = import.meta.env.VITE_BASE_URL;
+  // Get API base URL from environment variable
+  const API_BASE = import.meta.env.VITE_BASE_URL || 'http://localhost:3000/api'
+
+  // ============================================
+  // POST FUNCTIONS
+  // ============================================
 
   // Fetch all posts with optional filters
   const fetchPosts = async (filters: PostFilters = {}) => {
@@ -62,7 +67,7 @@ export const useForum = () => {
       if (filters.search) params.append('search', filters.search)
       if (filters.tags) params.append('tags', filters.tags.join(','))
       
-      const url = `${API_BASE}/posts?${params.toString()}`
+      const url = `${API_BASE}/forum/posts?${params.toString()}`
       const response = await fetch(url)
       
       if (!response.ok) throw new Error('Failed to fetch posts')
@@ -86,7 +91,7 @@ export const useForum = () => {
     error.value = null
     
     try {
-      const response = await fetch(`${API_BASE}/posts/${postId}`)
+      const response = await fetch(`${API_BASE}/forum/posts/${postId}`)
       
       if (!response.ok) throw new Error('Post not found')
       
@@ -108,25 +113,20 @@ export const useForum = () => {
     loading.value = true
     error.value = null
     
-    try 
-    {
-      const response = await fetch(`${API_BASE}/posts`, {
+    try {
+      const response = await fetch(`${API_BASE}/forum/posts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(postData)
       })
       
-      // Check if response is ok
       if (!response.ok) {
         const errorData = await response.json()
         throw new Error(errorData.error || 'Failed to create post')
       }
       
       const data = await response.json()
-      
-      // Add to beginning of posts array
       posts.value.unshift(data)
-      
       return data
     } catch (e) {
       const errorMessage = e instanceof Error ? e.message : 'An error occurred'
@@ -144,7 +144,7 @@ export const useForum = () => {
     error.value = null
     
     try {
-      const response = await fetch(`${API_BASE}/posts/${postId}`, {
+      const response = await fetch(`${API_BASE}/forum/posts/${postId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
@@ -176,14 +176,13 @@ export const useForum = () => {
     error.value = null
     
     try {
-      const response = await fetch(`${API_BASE}/posts/${postId}`, {
+      const response = await fetch(`${API_BASE}/forum/posts/${postId}`, {
         method: 'DELETE'
       })
       
       if (!response.ok) throw new Error('Failed to delete post')
       
       posts.value = posts.value.filter(p => p.id !== postId)
-      
       return true
     } catch (e) {
       const errorMessage = e instanceof Error ? e.message : 'An error occurred'
@@ -195,10 +194,10 @@ export const useForum = () => {
     }
   }
 
-  // Fetch comments for a post
+  //Fetch comments for a post
   const fetchComments = async (postId: string): Promise<Comment[]> => {
     try {
-      const response = await fetch(`${API_BASE}/posts/${postId}/comments`)
+      const response = await fetch(`${API_BASE}/forum/posts/${postId}/comments`)
       
       if (!response.ok) throw new Error('Failed to fetch comments')
       
@@ -209,10 +208,10 @@ export const useForum = () => {
     }
   }
 
-  // Add comment to post
+  //Add comment to post
   const addComment = async (postId: string, commentData: any): Promise<Comment | null> => {
     try {
-      const response = await fetch(`${API_BASE}/posts/${postId}/comments`, {
+      const response = await fetch(`${API_BASE}/forum/posts/${postId}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(commentData)
@@ -227,10 +226,10 @@ export const useForum = () => {
     }
   }
 
-  // Toggle reaction on post
+  //Toggle reaction on post
   const toggleReaction = async (postId: string, userId: string, reactionType: string = 'like'): Promise<any> => {
     try {
-      const response = await fetch(`${API_BASE}/posts/${postId}/reactions`, {
+      const response = await fetch(`${API_BASE}/forum/posts/${postId}/reactions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: userId, reaction_type: reactionType })
@@ -245,20 +244,23 @@ export const useForum = () => {
     }
   }
 
-  // Increment view count
+  //Increment view count
   const incrementViewCount = async (postId: string): Promise<void> => {
     try {
-      await fetch(`${API_BASE}/posts/${postId}/view`, { method: 'POST' })
+      await fetch(`${API_BASE}/forum/posts/${postId}/view`, { method: 'POST' })
     } catch (e) {
       console.error('Error incrementing view:', e)
     }
   }
 
   return {
+    //State
     posts,
     currentPost,
     loading,
     error,
+    
+    //Post functions
     fetchPosts,
     fetchPostById,
     createPost,
