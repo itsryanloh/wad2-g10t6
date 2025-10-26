@@ -240,7 +240,7 @@ const router = useRouter()
 const token = useCookie("token")
 const { posts, loading, fetchPosts, deletePost } = useForum()
 
-// Get current user ID from database
+//Get current user ID from database
 const currentUser = ref(null)
 const currentUserId = ref(null)
 const loadingUser = ref(true)
@@ -251,13 +251,13 @@ const deleting = ref(false)
 const showSuccess = ref(false)
 const successMessage = ref('')
 
-// Filter posts by current user
+//Filter posts by current user
 const userPosts = computed(() => {
   if (!currentUserId.value) return []
   return posts.value.filter(post => post.user_id === currentUserId.value)
 })
 
-// Calculate stats
+//Calculate stats
 const totalReactions = computed(() => {
   return userPosts.value.reduce((sum, post) => sum + (post.reaction_count || 0), 0)
 })
@@ -278,11 +278,11 @@ onMounted(async () => {
     const tokenResponse = await fetch(`${base_url}/auth/me`, { headers: { Authorization: `Bearer ${token.value}` } });
     const tokenData = await tokenResponse.json();
 
-    // Fetch current user ID from database
+    //Fetch current user ID from database
     const userResponse = await fetch(`${base_url}/users`)
     const users = await userResponse.json()
     
-    // Find current user
+    //Find current user
     const targetUser = users.find(user => user.username === tokenData.username)
     
     if (targetUser) {
@@ -293,7 +293,7 @@ onMounted(async () => {
     
     loadingUser.value = false
     
-    // Fetch all posts
+    //Fetch all posts
     await fetchPosts()
   } catch (error) {
     console.error('Error fetching data:', error)
@@ -356,7 +356,6 @@ const handleLogout = () => {
 </script>
 
 <style scoped>
-/* Use all styles from profile index.vue for consistency */
 .profile-page {
   background: linear-gradient(135deg, #FFF5E6 0%, #FFE8D6 100%);
   min-height: 100vh;
@@ -370,7 +369,7 @@ const handleLogout = () => {
   margin: 0;
 }
 
-/* Sidebar Styles (Same as profile index) */
+/* Sidebar Styles */
 .sidebar {
   background: white;
   min-height: 100vh;

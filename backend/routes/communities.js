@@ -13,21 +13,21 @@ import {
 const router = express.Router();
 
 //List/Create routes
-router.get("/", allCommunities); //Get all communities (with optional ?location= filter)
-router.post("/", createCommunity); //Create new community
+router.get("/", allCommunities); 
+router.post("/", createCommunity); 
 
 //User-specific route
-router.get("/users/:userId", getUserCommunities); //Get user's communities
+router.get("/users/:userId", getUserCommunities); 
 
 //Single community routes
-router.get("/:id", getCommunity); //Get single community
+router.get("/:id", getCommunity); 
 
 //Membership routes
-router.post("/:id/join", joinCommunity); //Join community
-router.delete("/:id/leave", leaveCommunity); //Leave community
-router.get("/:id/membership/:userId", checkMembership); //Check if user is member
+router.post("/:id/join", joinCommunity); 
+router.delete("/:id/leave", leaveCommunity);
+router.get("/:id/membership/:userId", checkMembership); 
 
 //Content routes
-router.get("/:id/posts", getCommunityPosts); //Get community posts
+router.get("/:id/posts", getCommunityPosts); 
 
 export default router;

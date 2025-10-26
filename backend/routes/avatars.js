@@ -12,14 +12,14 @@ const supabase = createClient(
   process.env.SUPABASE_KEY
 );
 
-// Configure multer for avatar uploads
+//Configure multer for avatar uploads
 const upload = multer({ 
   storage: multer.memoryStorage(),
   limits: {
     fileSize: 2 * 1024 * 1024, // 2MB limit for avatars
   },
   fileFilter: (req, file, cb) => {
-    // Only accept image files
+    //Only accept image files
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
     } else {
@@ -28,20 +28,20 @@ const upload = multer({
   }
 });
 
-// UPLOAD avatar endpoint
+//UPLOAD avatar endpoint
 router.post('/upload', upload.single('avatar'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    // Generate unique filename with user ID if provided
+    //Generate unique filename with user ID if provided
     const userId = req.body.user_id || 'unknown';
     const timestamp = Date.now();
     const randomStr = Math.random().toString(36).substring(7);
     const filename = `${userId}-${timestamp}-${randomStr}-${req.file.originalname}`;
 
-    // Upload to Supabase Storage userAvatars bucket
+    //Upload to Supabase Storage userAvatars bucket
     const { data, error } = await supabase.storage
       .from('userAvatars')
       .upload(filename, req.file.buffer, {
@@ -55,7 +55,7 @@ router.post('/upload', upload.single('avatar'), async (req, res) => {
       throw error;
     }
 
-    // Get public URL
+    //Get public URL
     const { data: { publicUrl } } = supabase.storage
       .from('userAvatars')
       .getPublicUrl(filename);
@@ -72,7 +72,7 @@ router.post('/upload', upload.single('avatar'), async (req, res) => {
   }
 });
 
-// DELETE avatar endpoint
+//DELETE avatar endpoint
 router.delete('/delete', async (req, res) => {
   try {
     const { filename } = req.body;

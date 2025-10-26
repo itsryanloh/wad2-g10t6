@@ -348,10 +348,10 @@ const router = useRouter()
 const config = useRuntimeConfig()
 const { getCurrentUser } = useAuth()
 
-// API Base URL
+//API Base URL
 const API_BASE = config.public.apiBase || 'http://localhost:3000/api'
 
-// State
+//State
 const currentPost = ref(null)
 const comments = ref([])
 const loading = ref(true)
@@ -363,7 +363,7 @@ const replyingTo = ref(null)
 const replyContent = ref('')
 const showMapModal = ref(false)
 
-// Reaction state - now tracking multiple reaction types
+//Reaction state
 const userReactions = ref({
   heart: false,
   like: false,
@@ -375,7 +375,6 @@ const reactionCounts = ref({
   helpful: 0
 })
 
-// Computed
 const topLevelComments = computed(() => {
   return comments.value.filter(comment => !comment.parent_comment_id)
 })
@@ -384,7 +383,6 @@ const getReplies = (parentId) => {
   return comments.value.filter(comment => comment.parent_comment_id === parentId)
 }
 
-// Methods
 const navigateTo = (path) => {
   router.push(path)
 }
@@ -429,7 +427,7 @@ const fetchPost = async () => {
     const data = await response.json()
     currentPost.value = data
     
-    // Fetch all reaction counts
+    //Fetch all reaction counts
     await fetchReactionCounts()
     await checkUserReactions()
     await incrementViewCount()
@@ -445,7 +443,7 @@ const fetchReactionCounts = async () => {
   try {
     const postId = route.params.postId
     
-    // Fetch counts for each reaction type
+    //Fetch counts for each reaction type
     const reactionTypes = ['heart', 'like', 'helpful']
     
     for (const type of reactionTypes) {
@@ -478,14 +476,14 @@ const checkUserReactions = async () => {
 
     const data = await response.json()
 
-    // Reset all reactions first
+    //Reset all reactions first
     userReactions.value = {
       heart: false,
       like: false,
       helpful: false
     }
 
-    // Set reactions that user has made
+    //Set reactions that user has made
     if (data && Array.isArray(data)) {
       data.forEach(reaction => {
         if (reaction.reaction_type) {
@@ -668,22 +666,21 @@ const handleAdoptClick = async () => {
       return
     }
 
-    // Show confirmation alert
+    //Show confirmation alert
     alert(`Thank you for your interest in adopting! You will now be redirected to the Adoption Checklist to help you prepare.
     Poster Contact: ${currentPost.value.users?.name}`)
     
     // Redirect to checklist page
     router.push('/checklist/checklistmain')
     
-    // Future enhancement: Integrate Twilio SMS notification
-    // sendSMSNotification(currentPost.value.user_id, user.id)
+    //Future enhancement: Integrate Twilio SMS notification
+    //sendSMSNotification(currentPost.value.user_id, user.id)
   } catch (error) {
     console.error('Error handling adoption interest:', error)
     alert('Failed to process your request. Please try again.')
   }
 }
 
-// Lifecycle
 onMounted(() => {
   fetchPost()
   fetchComments()

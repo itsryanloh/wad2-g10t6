@@ -1,82 +1,65 @@
 <template>
   <div class="community-sidebar">
+    <!-- Header with Background -->
     <div class="sidebar-header">
       <h3 class="sidebar-title">
-        <i class="fas fa-users me-2"></i>
-        My Communities
+        <i class="fas fa-users me-2"></i>My Communities
       </h3>
     </div>
-    
+
     <!-- Loading State -->
-    <div v-if="loading" class="loading-state">
-      <i class="fas fa-spinner fa-spin"></i>
-      <span>Loading communities...</span>
+    <div v-if="loading" class="loading-container">
+      <div class="spinner-small"></div>
+      <p class="loading-text">Loading...</p>
     </div>
-    
-    <!-- Empty State -->
-    <div v-else-if="userCommunities.length === 0" class="empty-state">
-      <div class="empty-icon">
-        <i class="fas fa-users"></i>
-      </div>
-      <p class="empty-text">You haven't joined any communities yet!</p>
-      <button @click="$emit('browse-communities')" class="btn-browse">
-        <i class="fas fa-compass me-2"></i>
-        Browse Communities
-      </button>
-    </div>
-    
+
     <!-- Communities List -->
     <div v-else class="communities-list">
       <!-- All Posts Option -->
-      <div
-        @click="$emit('select-community', null)"
-        :class="['community-item', { active: selectedId === null }]"
+      <div 
+        @click="selectCommunity(null)"
+        :class="['community-item', 'all-posts', { active: !selectedId }]"
       >
-        <div class="community-icon all-posts">
+        <div class="community-icon">
           <i class="fas fa-globe"></i>
         </div>
         <div class="community-info">
-          <div class="community-name">All Posts</div>
-          <div class="community-desc">View all posts</div>
+          <span class="community-name">All Posts</span>
+          <span class="community-desc">View all posts</span>
         </div>
       </div>
 
-      <div class="divider"></div>
-
       <!-- User's Communities -->
-      <div
-        v-for="membership in userCommunities"
+      <div 
+        v-for="membership in userCommunities" 
         :key="membership.id"
-        @click="$emit('select-community', membership.communities)"
-        :class="['community-item', { active: selectedId === membership.communities.id }]"
+        @click="selectCommunity(membership.communities)"
+        :class="['community-item', { active: selectedId === membership.communities?.id }]"
       >
         <div class="community-icon">
           <i class="fas fa-map-marker-alt"></i>
         </div>
         <div class="community-info">
-          <div class="community-name">{{ membership.communities.name }}</div>
+          <span class="community-name">{{ membership.communities?.name || 'Unknown' }}</span>
           <div class="community-stats">
-            <span><i class="fas fa-users"></i> {{ membership.communities.member_count }}</span>
-            <span><i class="fas fa-newspaper"></i> {{ membership.communities.post_count }}</span>
+            <span><i class="fas fa-users"></i> {{ membership.communities?.member_count || 0 }}</span>
+            <span><i class="fas fa-newspaper"></i> {{ membership.communities?.post_count || 0 }}</span>
           </div>
         </div>
       </div>
+
+      <!-- Empty State -->
+      <div v-if="!loading && userCommunities.length === 0" class="empty-communities">
+        <i class="fas fa-inbox"></i>
+        <p>No communities yet</p>
+        <small>Join or create a community!</small>
+      </div>
     </div>
-    
-    <!-- Browse More Button -->
-    <button 
-      v-if="userCommunities.length > 0"
-      @click="$emit('browse-communities')" 
-      class="btn-find-more"
-    >
-      <i class="fas fa-plus me-2"></i>
-      Find More Communities
-    </button>
   </div>
 </template>
 
 <script setup>
-defineProps({
+const props = defineProps({
   userCommunities: {
     type: Array,
     default: () => []
@@ -86,151 +69,144 @@ defineProps({
     default: false
   },
   selectedId: {
-    type: String,
+    type: [Number, String, null],
     default: null
   }
 })
 
-defineEmits(['select-community', 'browse-communities'])
+const emit = defineEmits(['select-community'])
+
+const selectCommunity = (community) => {
+  emit('select-community', community)
+}
 </script>
 
 <style scoped>
 .community-sidebar {
   background: white;
   border-radius: 20px;
-  padding: 0;
-  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
   overflow: hidden;
-  height: fit-content;
-  position: sticky;
-  top: 20px;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
 }
 
+/* Sidebar */
 .sidebar-header {
-  background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+  background: linear-gradient(135deg, #FFB74D 0%, #FFA726 50%, #FF9800 100%);
   padding: 20px;
-  color: white;
+  margin: 0;
+  border: none;
 }
 
 .sidebar-title {
+  margin: 0;
   font-size: 1.3rem;
   font-weight: 700;
-  margin: 0;
+  color: white;
   display: flex;
   align-items: center;
+  text-shadow: 1px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.loading-state {
-  padding: 40px 20px;
+.sidebar-title i {
+  color: white;
+  filter: drop-shadow(1px 2px 2px rgba(0, 0, 0, 0.2));
+}
+
+/* Loading State */
+.loading-container {
   text-align: center;
+  padding: 30px 20px;
+}
+
+.spinner-small {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 15px;
+  border: 3px solid #FFE0B2;
+  border-top-color: #FF9800;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
   color: #7A7265;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* Communities List */
+.communities-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  align-items: center;
+  gap: 12px;
+  padding: 20px;
 }
 
-.loading-state i {
-  font-size: 2rem;
-  color: #FF9800;
-}
-
-.empty-state {
-  padding: 40px 20px;
-  text-align: center;
-}
-
-.empty-icon {
-  width: 80px;
-  height: 80px;
-  margin: 0 auto 20px;
-  background: linear-gradient(135deg, #FFB74D 0%, #FF9800 100%);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2.5rem;
-  color: white;
-}
-
-.empty-text {
-  color: #7A7265;
-  margin-bottom: 20px;
-  font-size: 1rem;
-}
-
-.btn-browse {
-  background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
-  color: white;
-  border: none;
-  padding: 12px 25px;
-  border-radius: 50px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-  font-size: 0.95rem;
-}
-
-.btn-browse:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 20px rgba(255, 152, 0, 0.4);
-}
-
-.communities-list {
-  padding: 15px;
-  max-height: 500px;
-  overflow-y: auto;
-}
-
-.communities-list::-webkit-scrollbar {
-  width: 6px;
-}
-
-.communities-list::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 10px;
-}
-
-.communities-list::-webkit-scrollbar-thumb {
-  background: #FFB74D;
-  border-radius: 10px;
-}
-
-.communities-list::-webkit-scrollbar-thumb:hover {
-  background: #FF9800;
-}
-
-.divider {
-  height: 2px;
-  background: linear-gradient(90deg, transparent, #FFE8D6, transparent);
-  margin: 10px 0;
-}
-
+/* Community Item */
 .community-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px;
-  border-radius: 12px;
+  padding: 15px;
+  border-radius: 15px;
   cursor: pointer;
   transition: all 0.3s;
-  border: 2px solid transparent;
-  margin-bottom: 8px;
+  background: #FFFBF5;
+  border: 2px solid #FFE0B2; 
+  box-shadow: 0 2px 8px rgba(255, 152, 0, 0.08);
 }
 
 .community-item:hover {
-  background: rgba(255, 152, 0, 0.08);
-  border-color: #FFB74D;
+  background: #FFF8F0;
+  border-color: #FFCC80; 
   transform: translateX(5px);
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.15); 
 }
 
 .community-item.active {
   background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
-  color: white;
-  border-color: #FF9800;
-  box-shadow: 0 5px 15px rgba(255, 152, 0, 0.3);
+  border-color: #F57C00; 
+  box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
 }
 
+.community-item.active .community-name,
+.community-item.active .community-desc,
+.community-item.active .community-stats {
+  color: white !important;
+}
+
+.community-item.active .community-icon {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.community-item.active .community-stats i {
+  color: white;
+}
+
+.community-item.all-posts {
+  background: linear-gradient(135deg, #FFE0B2 0%, #FFCC80 100%);
+  border: 2px solid #FFB74D; 
+  box-shadow: 0 3px 10px rgba(255, 183, 77, 0.2); 
+  margin-bottom: 8px; 
+}
+
+.community-item.all-posts:hover {
+  background: linear-gradient(135deg, #FFCC80 0%, #FFB74D 100%);
+  border-color: #FF9800;
+  box-shadow: 0 4px 15px rgba(255, 152, 0, 0.25);
+}
+
+.community-item.all-posts.active {
+  background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+  border-color: #F57C00;
+}
+
+/* Community Icon */
 .community-icon {
   width: 45px;
   height: 45px;
@@ -242,32 +218,22 @@ defineEmits(['select-community', 'browse-communities'])
   color: white;
   font-size: 1.2rem;
   flex-shrink: 0;
-  transition: all 0.3s;
+  box-shadow: 0 2px 6px rgba(255, 152, 0, 0.3); 
 }
 
-.community-icon.all-posts {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.community-item.active .community-icon {
-  background: white;
-  color: #FF9800;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-}
-
-.community-item.active .community-icon.all-posts {
-  color: #667eea;
-}
-
+/* Community Info */
 .community-info {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 }
 
 .community-name {
-  font-weight: 700;
-  font-size: 0.95rem;
-  margin-bottom: 4px;
+  font-weight: 600;
+  color: #5D4E37;
+  font-size: 1rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -275,50 +241,78 @@ defineEmits(['select-community', 'browse-communities'])
 
 .community-desc {
   font-size: 0.85rem;
-  opacity: 0.8;
+  color: #7A7265;
 }
 
 .community-stats {
   display: flex;
   gap: 12px;
   font-size: 0.85rem;
-  opacity: 0.9;
+  color: #999;
 }
 
 .community-stats span {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
 }
 
-.community-item.active .community-stats,
-.community-item.active .community-desc {
-  opacity: 1;
+.community-stats i {
+  color: #FF9800;
+  font-size: 0.75rem;
 }
 
-.btn-find-more {
-  width: 100%;
-  padding: 15px;
-  background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
-  color: white;
-  border: none;
-  border-radius: 0;
+/* Empty State */
+.empty-communities {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.empty-communities i {
+  font-size: 3rem;
+  color: #FFB74D;
+  margin-bottom: 15px;
+  opacity: 0.5;
+}
+
+.empty-communities p {
+  color: #5D4E37;
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-  font-size: 0.95rem;
-  border-top: 2px solid rgba(255, 255, 255, 0.2);
+  margin: 0 0 5px 0;
 }
 
-.btn-find-more:hover {
-  background: linear-gradient(135deg, #F57C00 0%, #E65100 100%);
-  box-shadow: 0 -5px 20px rgba(255, 152, 0, 0.3);
+.empty-communities small {
+  color: #7A7265;
+  font-size: 0.85rem;
 }
 
 /* Responsive */
-@media (max-width: 991px) {
-  .community-sidebar {
-    margin-bottom: 20px;
+@media (max-width: 768px) {
+  .sidebar-header {
+    padding: 15px;
+  }
+
+  .sidebar-title {
+    font-size: 1.1rem;
+  }
+
+  .communities-list {
+    padding: 15px;
+    gap: 10px;
+  }
+
+  .community-item {
+    padding: 12px;
+  }
+
+  .community-item.all-posts {
+    margin-bottom: 6px;
+  }
+
+  .community-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.1rem;
   }
 }
 </style>

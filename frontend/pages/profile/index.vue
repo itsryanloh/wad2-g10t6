@@ -306,7 +306,7 @@ const showPasswordModal = ref(false)
 const showSuccess = ref(false)
 const avatarInput = ref(null)
 
-// Get current user - fetch from first user in database
+//Get current user
 const currentUser = ref(null)
 const currentUserId = ref(null)
 
@@ -376,14 +376,14 @@ const handleAvatarUpload = async (event) => {
   const file = event.target.files[0]
   if (!file) return
 
-  // Validate file type
+  //Validate file type
   if (!file.type.startsWith('image/')) {
     uploadError.value = 'Please upload an image file'
     setTimeout(() => uploadError.value = '', 3000)
     return
   }
 
-  // Validate file size (2MB for avatars)
+  //Validate file size (2MB for avatars)
   if (file.size > 2 * 1024 * 1024) {
     uploadError.value = 'Avatar image must be less than 2MB'
     setTimeout(() => uploadError.value = '', 3000)
@@ -395,10 +395,10 @@ const handleAvatarUpload = async (event) => {
 
   try {
     const formData = new FormData()
-    formData.append('avatar', file) // Changed from 'images' to 'avatar'
-    formData.append('user_id', form.value.id) // Pass user ID for filename
+    formData.append('avatar', file) 
+    formData.append('user_id', form.value.id) 
 
-    // Upload to dedicated avatar endpoint
+    //Upload to dedicated avatar endpoint
     const response = await fetch(`${base_url}/avatars/upload`, {
       method: 'POST',
       body: formData
@@ -410,7 +410,7 @@ const handleAvatarUpload = async (event) => {
       throw new Error(data.error || 'Upload failed')
     }
 
-    // Update avatar URL
+    //Update avatar URL
     form.value.avatar_url = data.url
     
     console.log('Avatar uploaded successfully:', data.url)
@@ -420,7 +420,7 @@ const handleAvatarUpload = async (event) => {
     setTimeout(() => uploadError.value = '', 5000)
   } finally {
     uploadingAvatar.value = false
-    // Reset file input
+    //Reset file input
     if (avatarInput.value) {
       avatarInput.value.value = ''
     }
@@ -457,7 +457,7 @@ const handleSubmit = async () => {
 
     const updatedUser = await response.json()
     
-    // Update local state with saved data
+    //Update local state with saved data
     currentUser.value = updatedUser
     form.value = {
       id: updatedUser.id,

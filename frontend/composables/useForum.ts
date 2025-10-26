@@ -52,10 +52,7 @@ export const useForum = () => {
   // Get API base URL from environment variable
   const API_BASE = import.meta.env.VITE_BASE_URL || 'http://localhost:3000/api'
 
-  // ============================================
   // POST FUNCTIONS
-  // ============================================
-
   // Fetch all posts with optional filters
   const fetchPosts = async (filters: PostFilters = {}) => {
     loading.value = true
@@ -85,7 +82,7 @@ export const useForum = () => {
     }
   }
 
-  // Fetch single post by ID
+  //Fetch single post by ID
   const fetchPostById = async (postId: string): Promise<Post | null> => {
     loading.value = true
     error.value = null
@@ -108,7 +105,7 @@ export const useForum = () => {
     }
   }
 
-  // Create new post
+  //Create new post
   const createPost = async (postData: any): Promise<Post | null> => {
     loading.value = true
     error.value = null
@@ -138,7 +135,7 @@ export const useForum = () => {
     }
   }
   
-  // Update post
+  //Update post
   const updatePost = async (postId: string, updates: any): Promise<Post | null> => {
     loading.value = true
     error.value = null
@@ -170,7 +167,7 @@ export const useForum = () => {
     }
   }
 
-  // Delete post
+  //Delete post
   const deletePost = async (postId: string): Promise<boolean> => {
     loading.value = true
     error.value = null
