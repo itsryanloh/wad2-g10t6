@@ -282,14 +282,15 @@
     />
 
     <!-- Floating Action Button -->
-    <button 
-      class="fab" 
-      @click="navigateTo('/forum/createPost')" 
-      title="Create New Post"
-      v-show="true"
-    >
-      <i class="fas fa-plus"></i>
-    </button>
+    <Teleport to="body">
+      <button 
+        class="fab-fixed" 
+        @click="navigateTo('/forum/createPost')" 
+        title="Create New Post"
+      >
+        <i class="fas fa-plus"></i>
+      </button>
+    </Teleport>
   </div>
 </template>
 
@@ -681,6 +682,7 @@ onMounted(async () => {
 /* Search Card */
 .search-card {
   background: white;
+  width: 90%;
   border-radius: 20px;
   padding: 25px;
   box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
@@ -789,17 +791,39 @@ onMounted(async () => {
 }
 
 .post-card {
-  background: white;
+  background: linear-gradient(135deg, #FFFBF5 0%, #FFF8F0 100%);
+  width: 90%;
+  height: auto;
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s;
+  box-shadow: 0 5px 20px rgba(255, 152, 0, 0.12);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   cursor: pointer;
+  border: 2px solid rgba(255, 183, 77, 0.2);
+  position: relative;
+}
+
+.post-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #FF9800 0%, #FFB74D 50%, #FF9800 100%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.post-card:hover::before {
+  opacity: 1;
 }
 
 .post-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  transform: translateY(-8px) scale(1.01);
+  box-shadow: 0 15px 40px rgba(255, 152, 0, 0.25);
+  border-color: #FFB74D;
+  background: linear-gradient(135deg, #FFFFFF 0%, #FFFBF5 100%);
 }
 
 .post-header {
@@ -807,7 +831,8 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   padding: 20px;
-  border-bottom: 1px solid #f5f5f5;
+  border-bottom: 2px solid rgba(255, 232, 214, 0.5);
+  background: rgba(255, 245, 230, 0.3);
 }
 
 .user-info {
@@ -826,6 +851,8 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   color: white;
+  border: 3px solid rgba(255, 183, 77, 0.2);
+  box-shadow: 0 3px 10px rgba(255, 152, 0, 0.2);
 }
 
 .user-avatar img {
@@ -887,9 +914,10 @@ onMounted(async () => {
 .post-image-wrapper {
   position: relative;
   width: 100%;
-  height: 300px;
+  height: 600px;
   overflow: hidden;
-  background: #f5f5f5;
+  background: linear-gradient(135deg, #FFF5E6 0%, #FFE8D6 100%);
+  border-bottom: 2px solid rgba(255, 232, 214, 0.5);
 }
 
 .post-image {
@@ -907,16 +935,20 @@ onMounted(async () => {
   position: absolute;
   top: 15px;
   right: 15px;
-  background: rgba(0, 0, 0, 0.7);
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.95) 0%, rgba(245, 124, 0, 0.95) 100%);
   color: white;
-  padding: 6px 12px;
+  padding: 6px 14px;
   border-radius: 20px;
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 700;
+  box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 .post-content {
   padding: 20px;
+  background: linear-gradient(to bottom, transparent 0%, rgba(255, 245, 230, 0.2) 100%);
 }
 
 .post-title {
@@ -956,8 +988,8 @@ onMounted(async () => {
 
 .tag-badge {
   padding: 5px 12px;
-  background: #f5f5f5;
-  color: #7A7265;
+  background: linear-gradient(135deg, #FFB74D 0%, #FF9800 100%);
+  color: white;
   border-radius: 15px;
   font-size: 0.85rem;
   font-weight: 500;
@@ -990,7 +1022,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #7A7265;
+  color:  #f0950b;
   font-size: 0.9rem;
   font-weight: 500;
 }
@@ -1073,32 +1105,43 @@ onMounted(async () => {
 }
 
 /* FAB Button */
-.fab {
-  position: fixed !important;
-  bottom: 30px !important;
-  right: 30px !important;
-  width: 65px !important;
-  height: 65px !important;
-  border-radius: 50% !important;
-  background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%) !important;
-  color: white !important;
-  border: none !important;
-  font-size: 1.5rem !important;
-  cursor: pointer !important;
-  box-shadow: 0 8px 25px rgba(255, 152, 0, 0.4) !important;
-  transition: all 0.3s !important;
-  z-index: 999999 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  pointer-events: auto !important;
-  visibility: visible !important;
-  opacity: 1 !important;
+.fab-fixed {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+  color: white;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  box-shadow: 0 8px 30px rgba(255, 152, 0, 0.4);
+  transition: all 0.3s ease;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.fab:hover {
-  transform: translateY(-5px) rotate(90deg) !important;
-  box-shadow: 0 12px 35px rgba(255, 152, 0, 0.5) !important;
+.fab-fixed:hover {
+  transform: scale(1.1) rotate(90deg);
+  box-shadow: 0 12px 40px rgba(255, 152, 0, 0.6);
+}
+
+.fab-fixed:active {
+  transform: scale(1.05);
+}
+
+@media (max-width: 768px) {
+  .fab-fixed {
+    bottom: 20px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    font-size: 1.3rem;
+  }
 }
 
 /* Browse Communities Modal */
@@ -1350,14 +1393,6 @@ onMounted(async () => {
 
   .post-card {
     margin-bottom: 20px;
-  }
-
-  .fab {
-    bottom: 20px !important;
-    right: 20px !important;
-    width: 55px !important;
-    height: 55px !important;
-    font-size: 1.3rem !important;
   }
 
   .modal-content {

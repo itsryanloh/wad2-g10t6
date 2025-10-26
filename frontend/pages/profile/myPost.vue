@@ -1,8 +1,13 @@
 <template>
   <div class="profile-page">
-    <div class="container-fluid">
+    <div v-if="loadingUser || loading" class="loading-fullpage">
+      <i class="fas fa-spinner fa-spin"></i>
+      <p>Loading your posts...</p>
+    </div>
+
+    <div v-else class="container-fluid">
       <div class="row">
-        <!-- Left Sidebar Navigation (Same as profile index) -->
+        <!-- Left Sidebar Navigation -->
         <div class="col-md-3 col-lg-2 sidebar">
           <div class="sidebar-content">
             <!-- User Profile Summary -->
@@ -15,7 +20,7 @@
                 />
                 <i v-else class="fas fa-user"></i>
               </div>
-              <h4 class="user-name">{{ currentUser?.name || 'Loading...' }}</h4>
+              <h4 class="user-name">{{ currentUser?.name || 'User' }}</h4>
               <p class="user-username">@{{ currentUser?.username || '' }}</p>
             </div>
 
@@ -98,105 +103,108 @@
               </div>
             </div>
 
-            <!-- Loading State -->
-            <div v-if="loading || loadingUser" class="posts-grid">
-              <div v-for="i in 4" :key="i" class="skeleton-card"></div>
-            </div>
-
-            <!-- Empty State -->
-            <div v-else-if="userPosts.length === 0" class="empty-state">
+            <!-- Posts Grid -->
+            <div v-if="userPosts.length === 0" class="empty-state">
               <i class="fas fa-inbox"></i>
               <h3>No posts yet</h3>
-              <p>Start sharing your cat stories with the community!</p>
-              <button class="btn-primary" @click="navigateTo('/forum/createPost')">
-                <i class="fas fa-plus me-2"></i>Create Your First Post
+              <p>Start sharing with the community!</p>
+              <button class="btn btn-primary-custom" @click="navigateTo('/forum/createPost')">
+                <i class="fas fa-plus me-2"></i>Create First Post
               </button>
             </div>
 
-            <!-- Posts Grid -->
             <div v-else class="posts-grid">
-              <div v-for="post in userPosts" :key="post.id" class="post-card">
+              <div
+                v-for="post in userPosts"
+                :key="post.id"
+                class="post-card"
+              >
+                <!-- Post Header -->
+                <div class="post-header">
+                  <div class="post-type-badge" :class="post.post_type">
+                    {{ post.post_type }}
+                  </div>
+                  <div class="post-actions">
+                    <button 
+                      class="btn-icon btn-edit" 
+                      @click="handleEdit(post.id)"
+                      title="Edit post"
+                    >
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button 
+                      class="btn-icon btn-delete" 
+                      @click="confirmDelete(post)"
+                      title="Delete post"
+                    >
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                </div>
+
                 <!-- Post Image -->
-                <div class="post-image">
+                <div v-if="post.image_urls?.length" class="post-image-wrapper" @click="navigateTo(`/forum/${post.id}`)">
                   <img
-                    v-if="post.image_urls && post.image_urls[0]"
                     :src="post.image_urls[0]"
                     :alt="post.title"
+                    class="post-image"
                   />
-                  <div v-else class="post-placeholder">
-                    <i class="fas fa-image"></i>
+                  <div v-if="post.image_urls.length > 1" class="image-count-badge">
+                    <i class="fas fa-images me-1"></i>
+                    {{ post.image_urls.length }}
                   </div>
-                  
-                  <!-- Post Type Badge -->
-                  <span :class="['post-badge', `badge-${post.post_type}`]">
-                    {{ post.post_type }}
-                  </span>
-
-                  <!-- Resolved Badge -->
-                  <span v-if="post.is_resolved" class="resolved-badge">
-                    <i class="fas fa-check-circle"></i>
-                  </span>
                 </div>
 
                 <!-- Post Content -->
-                <div class="post-body">
+                <div class="post-content" @click="navigateTo(`/forum/${post.id}`)">
                   <h3 class="post-title">{{ post.title }}</h3>
-                  <p class="post-excerpt">{{ truncateText(post.content, 80) }}</p>
+                  <p class="post-text">{{ truncateText(post.content, 150) }}</p>
 
-                  <!-- Post Meta -->
-                  <div class="post-meta">
-                    <span class="meta-item">
-                      <i class="far fa-calendar"></i>
-                      {{ formatDate(post.created_at) }}
+                  <div v-if="post.location_name" class="location-tag">
+                    <i class="fas fa-map-marker-alt me-1"></i>
+                    {{ post.location_name }}
+                  </div>
+
+                  <div v-if="post.tags?.length" class="tags-container">
+                    <span v-for="tag in post.tags.slice(0, 3)" :key="tag" class="tag-badge">
+                      #{{ tag }}
                     </span>
-                    <span class="meta-item">
-                      <i class="far fa-eye"></i>
-                      {{ post.view_count || 0 }}
+                    <span v-if="post.tags.length > 3" class="more-tags">
+                      +{{ post.tags.length - 3 }} more
                     </span>
-                    <span class="meta-item">
-                      <i class="far fa-comment"></i>
-                      {{ post.comment_count || 0 }}
-                    </span>
-                    <span class="meta-item">
-                      <i class="far fa-heart"></i>
+                  </div>
+                </div>
+
+                <!-- Post Footer -->
+                <div class="post-footer">
+                  <div class="stat-group">
+                    <span class="stat">
+                      <i class="fas fa-heart"></i>
                       {{ post.reaction_count || 0 }}
                     </span>
+                    <span class="stat">
+                      <i class="fas fa-comment"></i>
+                      {{ post.comment_count || 0 }}
+                    </span>
+                    <span class="stat">
+                      <i class="fas fa-eye"></i>
+                      {{ post.view_count || 0 }}
+                    </span>
                   </div>
-
-                  <!-- Action Buttons -->
-                  <div class="post-actions">
-                    <button 
-                      class="btn-action btn-view" 
-                      @click="navigateTo(`/forum/${post.id}`)"
-                    >
-                      <i class="fas fa-eye me-1"></i>View
-                    </button>
-                    <button 
-                      class="btn-action btn-edit" 
-                      @click="navigateTo(`/forum/editPost?postId=${post.id}`)"
-                    >
-                      <i class="fas fa-edit me-1"></i>Edit
-                    </button>
-                    <button 
-                      class="btn-action btn-delete" 
-                      @click="confirmDelete(post)"
-                    >
-                      <i class="fas fa-trash me-1"></i>Delete
-                    </button>
-                  </div>
+                  <span class="post-date">{{ formatDate(post.created_at) }}</span>
                 </div>
               </div>
             </div>
 
             <!-- Delete Confirmation Modal -->
             <div v-if="showDeleteModal" class="modal-overlay" @click="showDeleteModal = false">
-              <div class="modal-content delete-modal" @click.stop>
-                <div class="modal-icon">
+              <div class="modal-content modal-delete" @click.stop>
+                <div class="modal-icon-delete">
                   <i class="fas fa-exclamation-triangle"></i>
                 </div>
-                <h3 class="modal-title">Delete Post?</h3>
-                <p class="modal-text">
-                  Are you sure you want to delete "<strong>{{ postToDelete?.title }}</strong>"? 
+                <h3 class="modal-title-delete">Delete Post?</h3>
+                <p class="modal-text-delete">
+                  Are you sure you want to delete "{{ postToDelete?.title }}"?
                   This action cannot be undone.
                 </p>
                 <div class="modal-actions">
@@ -240,7 +248,6 @@ const router = useRouter()
 const token = useCookie("token")
 const { posts, loading, fetchPosts, deletePost } = useForum()
 
-//Get current user ID from database
 const currentUser = ref(null)
 const currentUserId = ref(null)
 const loadingUser = ref(true)
@@ -251,13 +258,11 @@ const deleting = ref(false)
 const showSuccess = ref(false)
 const successMessage = ref('')
 
-//Filter posts by current user
 const userPosts = computed(() => {
   if (!currentUserId.value) return []
   return posts.value.filter(post => post.user_id === currentUserId.value)
 })
 
-//Calculate stats
 const totalReactions = computed(() => {
   return userPosts.value.reduce((sum, post) => sum + (post.reaction_count || 0), 0)
 })
@@ -278,11 +283,9 @@ onMounted(async () => {
     const tokenResponse = await fetch(`${base_url}/auth/me`, { headers: { Authorization: `Bearer ${token.value}` } });
     const tokenData = await tokenResponse.json();
 
-    //Fetch current user ID from database
     const userResponse = await fetch(`${base_url}/users`)
     const users = await userResponse.json()
     
-    //Find current user
     const targetUser = users.find(user => user.username === tokenData.username)
     
     if (targetUser) {
@@ -291,28 +294,34 @@ onMounted(async () => {
       console.log('Loaded user for My Posts:', targetUser.name)
     }
     
-    loadingUser.value = false
-    
-    //Fetch all posts
     await fetchPosts()
   } catch (error) {
     console.error('Error fetching data:', error)
+  } finally {
     loadingUser.value = false
   }
 })
 
 const truncateText = (text, length) => {
   if (!text) return ''
-  return text.length > length ? `${text.substring(0, length)}...` : text
+  return text.length > length ? text.substring(0, length) + '...' : text
 }
 
 const formatDate = (dateString) => {
   const date = new Date(dateString)
-  return date.toLocaleDateString('en-SG', { 
-    day: 'numeric', 
-    month: 'short', 
-    year: 'numeric' 
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
   })
+}
+
+const navigateTo = (path) => {
+  router.push(path)
+}
+
+const handleEdit = (postId) => {
+  router.push(`/forum/editPost?postId=${postId}`)  
 }
 
 const confirmDelete = (post) => {
@@ -327,31 +336,28 @@ const handleDelete = async () => {
 
   try {
     const success = await deletePost(postToDelete.value.id)
-
+    
     if (success) {
-      showDeleteModal.value = false
-      postToDelete.value = null
-      
       successMessage.value = 'Post deleted successfully'
       showSuccess.value = true
       setTimeout(() => showSuccess.value = false, 3000)
       
-      console.log('Post deleted successfully')
-    } else {
-      throw new Error('Delete failed')
+      await fetchPosts()
     }
   } catch (error) {
     console.error('Error deleting post:', error)
-    successMessage.value = 'Failed to delete post. Please try again.'
-    showSuccess.value = true
-    setTimeout(() => showSuccess.value = false, 3000)
+    alert('Failed to delete post')
   } finally {
     deleting.value = false
+    showDeleteModal.value = false
+    postToDelete.value = null
   }
 }
 
 const handleLogout = () => {
-  router.push('/forum/main')
+  token.value = null
+  router.push('/')
+  window.location.reload()
 }
 </script>
 
@@ -359,6 +365,27 @@ const handleLogout = () => {
 .profile-page {
   background: linear-gradient(135deg, #FFF5E6 0%, #FFE8D6 100%);
   min-height: 100vh;
+}
+
+.loading-fullpage {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.loading-fullpage i {
+  font-size: 4rem;
+  color: #FF9800;
+  margin-bottom: 20px;
+}
+
+.loading-fullpage p {
+  color: #7A7265;
+  font-size: 1.2rem;
+  margin: 0;
 }
 
 .container-fluid {
@@ -427,6 +454,7 @@ const handleLogout = () => {
   margin: 0;
 }
 
+/* Navigation */
 .sidebar-nav {
   display: flex;
   flex-direction: column;
@@ -477,7 +505,6 @@ const handleLogout = () => {
 .logout-btn:hover {
   background: rgba(255, 107, 107, 0.1);
   border-color: #FF6B6B;
-  color: #FF6B6B;
   transform: translateX(5px);
 }
 
@@ -494,7 +521,7 @@ const handleLogout = () => {
 .page-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 30px;
 }
 
@@ -502,15 +529,16 @@ const handleLogout = () => {
   font-size: 2rem;
   font-weight: 800;
   color: #5D4E37;
-  margin-bottom: 5px;
+  margin-bottom: 10px;
 }
 
 .page-subtitle {
   color: #7A7265;
-  font-size: 1rem;
+  font-size: 1.1rem;
+  margin: 0;
 }
 
-/* Stats Row */
+/* Stats Cards */
 .stats-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -520,17 +548,18 @@ const handleLogout = () => {
 
 .stat-card {
   background: white;
-  border-radius: 15px;
   padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: center;
   gap: 15px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-  transition: transform 0.3s;
+  transition: all 0.3s;
 }
 
 .stat-card:hover {
-  transform: translateY(-3px);
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
 }
 
 .stat-icon {
@@ -542,29 +571,36 @@ const handleLogout = () => {
   justify-content: center;
   color: white;
   font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.stat-info {
+  flex: 1;
 }
 
 .stat-value {
-  font-size: 1.8rem;
+  font-size: 2rem;
   font-weight: 800;
   color: #5D4E37;
+  line-height: 1;
+  margin-bottom: 5px;
 }
 
 .stat-label {
   color: #7A7265;
   font-size: 0.9rem;
+  font-weight: 600;
 }
 
 /* Posts Grid */
 .posts-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 25px;
 }
 
 .post-card {
   background: white;
-  border-radius: 15px;
+  border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
   transition: all 0.3s;
@@ -575,158 +611,207 @@ const handleLogout = () => {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
 }
 
-.post-image {
-  position: relative;
-  width: 100%;
-  height: 200px;
-  overflow: hidden;
-  background: linear-gradient(135deg, #FFF5E6 0%, #FFE8D6 100%);
-}
-
-.post-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.post-placeholder {
-  width: 100%;
-  height: 100%;
+.post-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  color: #FFB74D;
-  font-size: 3rem;
-}
-
-.post-badge {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: white;
-}
-
-.badge-adoption { background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); }
-.badge-sighting { background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); }
-.badge-lost { background: linear-gradient(135deg, #FF6B6B 0%, #EE5A52 100%); }
-.badge-found { background: linear-gradient(135deg, #51CF66 0%, #37B24D 100%); }
-.badge-discussion { background: linear-gradient(135deg, #4DABF7 0%, #339AF0 100%); }
-
-.resolved-badge {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: rgba(76, 175, 80, 0.95);
-  color: white;
-  padding: 5px 10px;
-  border-radius: 8px;
-  font-size: 0.7rem;
-  font-weight: 600;
-}
-
-.post-body {
   padding: 20px;
+  border-bottom: 1px solid #f5f5f5;
 }
 
-.post-title {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #5D4E37;
-  margin: 0 0 10px;
-  line-height: 1.4;
-}
-
-.post-excerpt {
-  color: #7A7265;
-  font-size: 0.9rem;
-  margin-bottom: 15px;
-  line-height: 1.5;
-}
-
-.post-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  margin-bottom: 15px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid #FFE8D6;
-}
-
-.meta-item {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  color: #7A7265;
+.post-type-badge {
+  padding: 6px 16px;
+  border-radius: 50px;
   font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: capitalize;
 }
 
-.meta-item i {
-  color: #FFB74D;
+.post-type-badge.adoption {
+  background: linear-gradient(135deg, #E91E63 0%, #C2185B 100%);
+  color: white;
+}
+
+.post-type-badge.sighting {
+  background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+  color: white;
+}
+
+.post-type-badge.lost {
+  background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+  color: white;
+}
+
+.post-type-badge.found {
+  background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
+  color: white;
+}
+
+.post-type-badge.discussion {
+  background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%);
+  color: white;
 }
 
 .post-actions {
   display: flex;
-  gap: 8px;
+  gap: 10px;
 }
 
-.btn-action {
-  flex: 1;
-  padding: 8px 12px;
+.btn-icon {
+  width: 40px;
+  height: 40px;
   border: none;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  border-radius: 50%;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.3s;
+  font-size: 0.9rem;
 }
 
-.btn-view {
+.btn-edit {
   background: rgba(33, 150, 243, 0.1);
   color: #2196F3;
 }
 
-.btn-view:hover {
+.btn-edit:hover {
   background: #2196F3;
   color: white;
-}
-
-.btn-edit {
-  background: rgba(255, 152, 0, 0.1);
-  color: #FF9800;
-}
-
-.btn-edit:hover {
-  background: #FF9800;
-  color: white;
+  transform: scale(1.1);
 }
 
 .btn-delete {
-  background: rgba(255, 107, 107, 0.1);
-  color: #FF6B6B;
+  background: rgba(244, 67, 54, 0.1);
+  color: #F44336;
 }
 
 .btn-delete:hover {
-  background: #FF6B6B;
+  background: #F44336;
   color: white;
+  transform: scale(1.1);
 }
 
-/* Skeleton Loading */
-.skeleton-card {
-  height: 400px;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: loading 1.5s infinite;
+.post-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  overflow: hidden;
+  background: #f5f5f5;
+  cursor: pointer;
+}
+
+.post-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.post-card:hover .post-image {
+  transform: scale(1.05);
+}
+
+.image-count-badge {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.post-content {
+  padding: 20px;
+  cursor: pointer;
+}
+
+.post-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #5D4E37;
+  margin: 0 0 12px 0;
+  line-height: 1.4;
+}
+
+.post-text {
+  color: #7A7265;
+  margin: 0 0 15px 0;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.location-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, #FFE0B2 0%, #FFCC80 100%);
+  color: #E65100;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.tags-container {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.tag-badge {
+  padding: 5px 12px;
+  background: #f5f5f5;
+  color: #7A7265;
   border-radius: 15px;
+  font-size: 0.85rem;
+  font-weight: 500;
 }
 
-@keyframes loading {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+.more-tags {
+  padding: 5px 12px;
+  background: linear-gradient(135deg, #FFB74D 0%, #FF9800 100%);
+  color: white;
+  border-radius: 15px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.post-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-top: 1px solid #f5f5f5;
+  background: #FFFBF5;
+}
+
+.stat-group {
+  display: flex;
+  gap: 20px;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #7A7265;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.stat i {
+  color: #FF9800;
+}
+
+.post-date {
+  color: #999;
+  font-size: 0.85rem;
 }
 
 /* Empty State */
@@ -739,13 +824,13 @@ const handleLogout = () => {
 }
 
 .empty-state i {
-  font-size: 5rem;
+  font-size: 4rem;
   color: #FFB74D;
   margin-bottom: 20px;
+  opacity: 0.5;
 }
 
 .empty-state h3 {
-  font-size: 1.8rem;
   color: #5D4E37;
   margin-bottom: 10px;
 }
@@ -755,21 +840,22 @@ const handleLogout = () => {
   margin-bottom: 30px;
 }
 
-.btn-primary {
+.btn-primary-custom {
+  padding: 15px 40px;
   background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
   color: white;
   border: none;
-  padding: 12px 30px;
-  border-radius: 10px;
-  font-weight: 600;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 1.1rem;
   cursor: pointer;
   transition: all 0.3s;
-  box-shadow: 0 5px 15px rgba(255, 152, 0, 0.3);
+  box-shadow: 0 5px 20px rgba(255, 152, 0, 0.3);
 }
 
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(255, 152, 0, 0.4);
+.btn-primary-custom:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(255, 152, 0, 0.4);
 }
 
 /* Delete Modal */
@@ -779,7 +865,7 @@ const handleLogout = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -787,68 +873,57 @@ const handleLogout = () => {
   animation: fadeIn 0.3s;
 }
 
-.delete-modal {
+.modal-content {
   background: white;
   border-radius: 20px;
   padding: 40px;
-  max-width: 450px;
+  max-width: 500px;
   width: 90%;
+  animation: slideUp 0.3s;
   text-align: center;
-  animation: scaleIn 0.3s;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.modal-delete {
+  text-align: center;
 }
 
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.modal-icon {
+.modal-icon-delete {
   width: 80px;
   height: 80px;
   margin: 0 auto 20px;
-  background: linear-gradient(135deg, #FF6B6B 0%, #EE5A52 100%);
+  background: rgba(244, 67, 54, 0.1);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: #F44336;
   font-size: 2.5rem;
 }
 
-.modal-title {
-  font-size: 1.8rem;
+.modal-title-delete {
   color: #5D4E37;
-  margin-bottom: 15px;
+  margin: 0 0 15px 0;
+  font-size: 1.5rem;
+  font-weight: 700;
 }
 
-.modal-text {
+.modal-text-delete {
   color: #7A7265;
-  font-size: 1rem;
+  margin: 0 0 30px 0;
   line-height: 1.6;
-  margin-bottom: 30px;
 }
 
 .modal-actions {
   display: flex;
   gap: 15px;
+  justify-content: center;
 }
 
 .btn {
-  flex: 1;
-  padding: 12px 25px;
+  padding: 12px 30px;
   border-radius: 10px;
   font-weight: 600;
+  font-size: 15px;
   cursor: pointer;
   border: none;
   transition: all 0.3s;
@@ -864,17 +939,18 @@ const handleLogout = () => {
 }
 
 .btn-delete-confirm {
-  background: linear-gradient(135deg, #FF6B6B 0%, #EE5A52 100%);
+  background: linear-gradient(135deg, #F44336 0%, #D32F2F 100%);
   color: white;
-  box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+  box-shadow: 0 5px 15px rgba(244, 67, 54, 0.3);
 }
 
 .btn-delete-confirm:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
+  box-shadow: 0 8px 20px rgba(244, 67, 54, 0.4);
 }
 
-.btn:disabled {
+.btn-delete-confirm:disabled,
+.btn-cancel:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
@@ -892,6 +968,22 @@ const handleLogout = () => {
   font-weight: 600;
   animation: slideInRight 0.3s;
   z-index: 1001;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes slideInRight {
@@ -917,19 +1009,21 @@ const handleLogout = () => {
   }
 
   .stats-row {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .posts-grid {
     grid-template-columns: 1fr;
   }
 
-  .post-actions {
+  .page-header {
     flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
   }
 
   .modal-actions {
     flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
   }
 }
 </style>

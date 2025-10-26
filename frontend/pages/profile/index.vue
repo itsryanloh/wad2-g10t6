@@ -1,6 +1,11 @@
 <template>
   <div class="profile-page">
-    <div class="container-fluid">
+    <div v-if="loading" class="loading-fullpage">
+      <i class="fas fa-spinner fa-spin"></i>
+      <p>Loading your profile...</p>
+    </div>
+
+    <div v-else class="container-fluid">
       <div class="row">
         <!-- Left Sidebar Navigation -->
         <div class="col-md-3 col-lg-2 sidebar">
@@ -15,7 +20,7 @@
                 />
                 <i v-else class="fas fa-user"></i>
               </div>
-              <h4 class="user-name">{{ currentUser?.name || 'Loading...' }}</h4>
+              <h4 class="user-name">{{ currentUser?.name || 'User' }}</h4>
               <div class="d-flex justify-content-center align-items-center">
                 <p class="user-username">@{{ currentUser?.username || '' }}</p>
                 <i class="fa-solid fa-user-check mx-2"></i>
@@ -62,14 +67,8 @@
               <p class="page-subtitle">Manage your account information</p>
             </div>
 
-            <!-- Loading State -->
-            <div v-if="loading" class="loading-card">
-              <i class="fas fa-spinner fa-spin"></i>
-              <p>Loading your profile...</p>
-            </div>
-
             <!-- Settings Form Card -->
-            <div v-else class="settings-card">
+            <div class="settings-card">
               <form @submit.prevent="handleSubmit">
                 <!-- Avatar Upload Section -->
                 <div class="form-section">
@@ -306,7 +305,6 @@ const showPasswordModal = ref(false)
 const showSuccess = ref(false)
 const avatarInput = ref(null)
 
-//Get current user
 const currentUser = ref(null)
 const currentUserId = ref(null)
 
@@ -330,10 +328,12 @@ const passwordForm = ref({
 const passwordError = ref('')
 
 onMounted(async () => {
-  if (!token.value) return await navigateTo("/login");
+  if (!token.value) {
+    await navigateTo("/login");
+    return;
+  }
 
   try {
-    //Get username from token
     const tokenResponse = await fetch(`${base_url}/auth/me`, { 
       headers: { Authorization: `Bearer ${token.value}` } 
     });
@@ -346,7 +346,6 @@ onMounted(async () => {
       currentUser.value = targetUser;
       currentUserId.value = targetUser.id;
       
-      //Populate form with user data from database
       form.value = {
         id: targetUser.id,
         name: targetUser.name || '',
@@ -362,7 +361,7 @@ onMounted(async () => {
     }
   } catch (error) {
     console.error('Error fetching user:', error);
-    uploadError.value = 'Failed to load user data. Please check database connection.';
+    uploadError.value = 'Failed to load user data.';
   } finally {
     loading.value = false;
   }
@@ -376,14 +375,12 @@ const handleAvatarUpload = async (event) => {
   const file = event.target.files[0]
   if (!file) return
 
-  //Validate file type
   if (!file.type.startsWith('image/')) {
     uploadError.value = 'Please upload an image file'
     setTimeout(() => uploadError.value = '', 3000)
     return
   }
 
-  //Validate file size (2MB for avatars)
   if (file.size > 2 * 1024 * 1024) {
     uploadError.value = 'Avatar image must be less than 2MB'
     setTimeout(() => uploadError.value = '', 3000)
@@ -398,7 +395,6 @@ const handleAvatarUpload = async (event) => {
     formData.append('avatar', file) 
     formData.append('user_id', form.value.id) 
 
-    //Upload to dedicated avatar endpoint
     const response = await fetch(`${base_url}/avatars/upload`, {
       method: 'POST',
       body: formData
@@ -410,7 +406,6 @@ const handleAvatarUpload = async (event) => {
       throw new Error(data.error || 'Upload failed')
     }
 
-    //Update avatar URL
     form.value.avatar_url = data.url
     
     console.log('Avatar uploaded successfully:', data.url)
@@ -420,7 +415,6 @@ const handleAvatarUpload = async (event) => {
     setTimeout(() => uploadError.value = '', 5000)
   } finally {
     uploadingAvatar.value = false
-    //Reset file input
     if (avatarInput.value) {
       avatarInput.value.value = ''
     }
@@ -457,7 +451,6 @@ const handleSubmit = async () => {
 
     const updatedUser = await response.json()
     
-    //Update local state with saved data
     currentUser.value = updatedUser
     form.value = {
       id: updatedUser.id,
@@ -533,10 +526,30 @@ const handleLogout = () => {
 </script>
 
 <style scoped>
-/* Include all the CSS from settings.vue + sidebar styles */
 .profile-page {
   background: linear-gradient(135deg, #FFF5E6 0%, #FFE8D6 100%);
   min-height: 100vh;
+}
+
+.loading-fullpage {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.loading-fullpage i {
+  font-size: 4rem;
+  color: #FF9800;
+  margin-bottom: 20px;
+}
+
+.loading-fullpage p {
+  color: #7A7265;
+  font-size: 1.2rem;
+  margin: 0;
 }
 
 .container-fluid {
@@ -686,25 +699,7 @@ const handleLogout = () => {
   font-size: 1.1rem;
 }
 
-.loading-card {
-  background: white;
-  border-radius: 20px;
-  padding: 60px 40px;
-  text-align: center;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-}
-
-.loading-card i {
-  font-size: 3rem;
-  color: #FF9800;
-  margin-bottom: 20px;
-}
-
-.loading-card p {
-  color: #7A7265;
-  font-size: 1.1rem;
-}
-
+/* Settings Card */
 .settings-card {
   background: white;
   border-radius: 20px;
@@ -719,7 +714,7 @@ const handleLogout = () => {
 .section-label {
   display: flex;
   align-items: center;
-  font-weight: 700;
+  font-weight: 600;
   color: #5D4E37;
   margin-bottom: 10px;
   font-size: 1rem;
@@ -732,11 +727,12 @@ const handleLogout = () => {
 
 .form-input {
   width: 100%;
-  padding: 12px 18px;
-  border: 2px solid #FFB74D;
+  padding: 12px 16px;
+  border: 2px solid #E8DCC4;
   border-radius: 10px;
-  font-size: 15px;
+  font-size: 1rem;
   transition: all 0.3s;
+  background: #FFFBF5;
 }
 
 .form-input:focus {
@@ -747,16 +743,20 @@ const handleLogout = () => {
 
 .form-hint {
   display: block;
-  color: #7A7265;
+  color: #999;
   font-size: 0.85rem;
-  margin-top: 5px;
+  margin-top: 6px;
 }
 
 /* Avatar Upload */
 .avatar-upload-section {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 25px;
+  padding: 20px;
+  background: rgba(255, 183, 77, 0.05);
+  border-radius: 12px;
+  border: 2px solid #FFE8D6;
 }
 
 .avatar-preview {
@@ -768,7 +768,9 @@ const handleLogout = () => {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border: 3px solid #FFE8D6;
+  border: 4px solid white;
+  box-shadow: 0 5px 20px rgba(255, 152, 0, 0.2);
+  flex-shrink: 0;
 }
 
 .avatar-preview img {
@@ -795,11 +797,12 @@ const handleLogout = () => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
+  box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
 }
 
 .btn-upload:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(255, 152, 0, 0.3);
+  box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
 }
 
 .btn-upload:disabled {
@@ -1025,14 +1028,12 @@ const handleLogout = () => {
   height: 24px;
 }
 
-/* Hide default HTML checkbox */
 .switch input {
   opacity: 0;
   width: 0;
   height: 0;
 }
 
-/* The slider */
 .slider {
   position: absolute;
   cursor: pointer;
@@ -1041,7 +1042,6 @@ const handleLogout = () => {
   right: 0;
   bottom: 0;
   background-color: #ccc;
-  -webkit-transition: .4s;
   transition: .4s;
 }
 
@@ -1053,7 +1053,6 @@ const handleLogout = () => {
   left: 4px;
   bottom: 4px;
   background-color: white;
-  -webkit-transition: .4s;
   transition: .4s;
 }
 
@@ -1066,12 +1065,9 @@ input:focus + .slider {
 }
 
 input:checked + .slider:before {
-  -webkit-transform: translateX(16px);
-  -ms-transform: translateX(16px);
   transform: translateX(16px);
 }
 
-/* Rounded sliders */
 .slider.round {
   border-radius: 24px;
 }
