@@ -25,6 +25,24 @@ router.get("/:id", async (req, res) => {
   res.send(data);
 });
 
+router.get("/username/:username", async (req, res) => {
+  const username = req.params.username
+  
+  const { error, data } = await supabase
+    .from("users")
+    .select("*")
+    .eq("username", username)
+    .single()
+  
+  if (error) {
+    return res.status(400).send(error.message)
+  } else if (!data) {
+    return res.status(404).send(`User with username ${username} not found`)
+  }
+  
+  res.send(data)
+})
+
 router.post("/", async (req, res) => {
   const user = req.body;
   const { error: parseError } = User.safeParse(user);

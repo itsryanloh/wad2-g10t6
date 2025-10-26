@@ -329,28 +329,24 @@ const passwordForm = ref({
 
 const passwordError = ref('')
 
-// Fetch user data on mount - using David Chen's data
 onMounted(async () => {
   if (!token.value) return await navigateTo("/login");
 
   try {
-    const base_url = import.meta.env.VITE_BASE_URL;
-    const tokenResponse = await fetch(`${base_url}/auth/me`, { headers: { Authorization: `Bearer ${token.value}` } });
+    //Get username from token
+    const tokenResponse = await fetch(`${base_url}/auth/me`, { 
+      headers: { Authorization: `Bearer ${token.value}` } 
+    });
     const tokenData = await tokenResponse.json();
 
-    // Fetch all users from database
-    // TODO: avoid fetch all (exposes all users)
-    const response = await fetch(`${base_url}/users`)
-    const users = await response.json()
-    
-    // Find current user
-    const targetUser = users.find(user => user.username === tokenData.username)
+    const response = await fetch(`${base_url}/users/username/${tokenData.username}`);
+    const targetUser = await response.json();
     
     if (targetUser) {
-      currentUser.value = targetUser
-      currentUserId.value = targetUser.id
+      currentUser.value = targetUser;
+      currentUserId.value = targetUser.id;
       
-      // Populate form with user data from database
+      //Populate form with user data from database
       form.value = {
         id: targetUser.id,
         name: targetUser.name || '',
@@ -360,17 +356,15 @@ onMounted(async () => {
         gender: targetUser.gender || '',
         avatar_url: targetUser.avatar_url || null,
         has_2fa_enabled: !!targetUser.has_2fa_enabled
-      }
+      };
       
-      console.log('Loaded user:', targetUser.name)
-    } else {
-      throw new Error('No users found in database')
+      console.log('Loaded user:', targetUser.name);
     }
   } catch (error) {
-    console.error('Error fetching user:', error)
-    uploadError.value = 'Failed to load user data. Please check database connection.'
+    console.error('Error fetching user:', error);
+    uploadError.value = 'Failed to load user data. Please check database connection.';
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 })
 

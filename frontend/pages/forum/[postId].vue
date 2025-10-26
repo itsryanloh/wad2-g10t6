@@ -320,14 +320,25 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import PetMap from '@/components/PetMap.vue'
+import { useAuth } from '~/composables/useAuth'
 
-// Add Font Awesome to page head
 useHead({
   link: [
     {
       rel: 'stylesheet',
-      href: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
-      crossorigin: 'anonymous'
+      href: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css',
+      integrity: 'sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==',
+      crossorigin: 'anonymous',
+      referrerpolicy: 'no-referrer'
+    }
+  ],
+  script: [
+    {
+      src: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js',
+      integrity: 'sha512-GWzVrcGlo0TxTRvz9ttioyYJ+Wwk9Ck0G81D+eO63BaqHaJ3YZX9wuqjwgfcV/MrB2PhaVX9DkYVhbFpStnqpQ==',
+      crossorigin: 'anonymous',
+      referrerpolicy: 'no-referrer',
+      defer: true
     }
   ]
 })
@@ -335,6 +346,7 @@ useHead({
 const route = useRoute()
 const router = useRouter()
 const config = useRuntimeConfig()
+const { getCurrentUser } = useAuth()
 
 // API Base URL
 const API_BASE = config.public.apiBase || 'http://localhost:3000/api'
@@ -350,15 +362,6 @@ const addingComment = ref(false)
 const replyingTo = ref(null)
 const replyContent = ref('')
 const showMapModal = ref(false)
-
-// Get current user from localStorage or session
-const getCurrentUser = () => {
-  if (process.client) {
-    const userStr = localStorage.getItem('user') || sessionStorage.getItem('user')
-    return userStr ? JSON.parse(userStr) : null
-  }
-  return null
-}
 
 // Reaction state - now tracking multiple reaction types
 const userReactions = ref({
@@ -462,7 +465,7 @@ const fetchReactionCounts = async () => {
 
 const checkUserReactions = async () => {
   try {
-    const user = getCurrentUser()
+    const user = await getCurrentUser()
     if (!user) return
 
     const postId = route.params.postId
@@ -497,7 +500,7 @@ const checkUserReactions = async () => {
 
 const handleReaction = async (reactionType) => {
   try {
-    const user = getCurrentUser()
+    const user = await getCurrentUser()
     if (!user) {
       alert('Please sign in to react to posts')
       return
@@ -568,7 +571,7 @@ const handleAddComment = async () => {
 
   try {
     addingComment.value = true
-    const user = getCurrentUser()
+    const user = await getCurrentUser()
 
     if (!user) {
       alert('Please sign in to comment')
@@ -622,8 +625,7 @@ const handleReply = async (parentCommentId) => {
 
   try {
     addingComment.value = true
-    const user = getCurrentUser()
-
+    const user = await getCurrentUser()
     if (!user) {
       alert('Please sign in to reply')
       return
@@ -659,7 +661,7 @@ const handleReply = async (parentCommentId) => {
 
 const handleAdoptClick = async () => {
   try {
-    const user = getCurrentUser()
+    const user = await getCurrentUser()
     
     if (!user) {
       alert('Please sign in to express interest in adoption')

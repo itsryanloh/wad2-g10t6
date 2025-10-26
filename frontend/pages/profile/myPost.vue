@@ -279,7 +279,6 @@ onMounted(async () => {
     const tokenData = await tokenResponse.json();
 
     // Fetch current user ID from database
-    // TODO: avoid fetch all (exposes all users)
     const userResponse = await fetch(`${base_url}/users`)
     const users = await userResponse.json()
     

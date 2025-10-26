@@ -89,8 +89,8 @@ router.get('/posts', async (req, res) => {
       .select(`
         *,
         users (id, name, username, avatar_url),
-        comments (count),
-        post_reactions (count)
+        comments (id),
+        post_reactions (id)
       `)
       .order('created_at', { ascending: false })
       .limit(limit);
