@@ -24,12 +24,8 @@
               <span class="required">*</span>
             </label>
             <div class="type-grid">
-              <div
-                v-for="type in postTypes"
-                :key="type.value"
-                @click="form.post_type = type.value"
-                :class="['type-card', { active: form.post_type === type.value }]"
-              >
+              <div v-for="type in postTypes" :key="type.value" @click="form.post_type = type.value"
+                :class="['type-card', { active: form.post_type === type.value }]">
                 <i :class="type.icon" class="type-icon"></i>
                 <div class="type-label">{{ type.label }}</div>
                 <div class="type-desc">{{ type.description }}</div>
@@ -43,14 +39,8 @@
               <i class="fas fa-heading me-2"></i>Title
               <span class="required">*</span>
             </label>
-            <input
-              v-model="form.title"
-              type="text"
-              class="form-input"
-              placeholder="Give your post a descriptive title..."
-              maxlength="255"
-              required
-            />
+            <input v-model="form.title" type="text" class="form-input"
+              placeholder="Give your post a descriptive title..." maxlength="255" required />
             <div class="char-counter">{{ form.title?.length || 0 }}/255</div>
           </div>
 
@@ -60,13 +50,9 @@
               <i class="fas fa-align-left me-2"></i>Content
               <span class="required">*</span>
             </label>
-            <textarea
-              v-model="form.content"
-              class="form-textarea"
-              placeholder="Share details about your sighting, adoption story, or question..."
-              rows="8"
-              required
-            ></textarea>
+            <textarea v-model="form.content" class="form-textarea"
+              placeholder="Share details about your sighting, adoption story, or question..." rows="8"
+              required></textarea>
             <small class="form-hint">Be as descriptive as possible</small>
           </div>
 
@@ -75,87 +61,52 @@
             <label class="section-label">
               <i class="fas fa-images me-2"></i>Images (Optional)
             </label>
-            
+
             <!-- Drag and Drop Area -->
-            <div 
-              class="upload-area"
-              :class="{ 'dragging': isDragging, 'uploading': uploading }"
-              @dragover.prevent="isDragging = true"
-              @dragleave.prevent="isDragging = false"
-              @drop.prevent="handleDrop"
-              @click="$refs.fileInput.click()"
-            >
-              <input
-                ref="fileInput"
-                type="file"
-                accept="image/*"
-                multiple
-                @change="handleFileSelect"
-                style="display: none;"
-              />
-              
+            <div class="upload-area" :class="{ 'dragging': isDragging, 'uploading': uploading }"
+              @dragover.prevent="isDragging = true" @dragleave.prevent="isDragging = false" @drop.prevent="handleDrop"
+              @click="$refs.fileInput.click()">
+              <input ref="fileInput" type="file" accept="image/*" multiple @change="handleFileSelect"
+                style="display: none;" />
+
               <div v-if="!uploading" class="upload-content">
                 <i class="fas fa-cloud-upload-alt upload-icon"></i>
                 <p class="upload-text">Drag & drop images here</p>
                 <p class="upload-subtext">or click to browse</p>
                 <small class="upload-hint">PNG, JPG, GIF up to 5MB each (Max 5 images)</small>
               </div>
-              
+
               <div v-else class="upload-loading">
                 <i class="fas fa-spinner fa-spin"></i>
                 <p>Uploading images...</p>
               </div>
             </div>
-            
+
             <!-- Image Preview -->
             <div v-if="form.image_urls?.length" class="image-preview">
-              <div
-                v-for="(url, index) in form.image_urls"
-                :key="index"
-                class="preview-item"
-              >
+              <div v-for="(url, index) in form.image_urls" :key="index" class="preview-item">
                 <img :src="url" alt="Preview" />
-                <button 
-                  type="button" 
-                  class="remove-image" 
-                  @click.stop="removeImage(index)"
-                  title="Remove image"
-                >
+                <button type="button" class="remove-image" @click.stop="removeImage(index)" title="Remove image">
                   <i class="fas fa-times"></i>
                 </button>
               </div>
             </div>
-            
+
             <small v-if="uploadError" class="upload-error">{{ uploadError }}</small>
           </div>
 
           <!-- Location -->
-          <div class="form-section">
-            <label class="section-label">
-              <i class="fas fa-map-marker-alt me-2"></i>Location
-            </label>
-            <input
-              v-model="form.location_name"
-              type="text"
-              class="form-input"
-              placeholder="e.g., Block 123 Ang Mo Kio Ave 3"
-            />
-            <small class="form-hint">Where did you spot the cat?</small>
-          </div>
+          <LocationSearch v-model="form.location" />
 
           <!-- Tags -->
           <div class="form-section">
             <label class="section-label">
               <i class="fas fa-tags me-2"></i>Tags
             </label>
-            <input
-              v-model="tagsText"
-              type="text"
-              class="form-input"
-              placeholder="e.g., tabby, friendly, orange, young"
-            />
+            <input v-model="tagsText" type="text" class="form-input"
+              placeholder="e.g., tabby, friendly, orange, young" />
             <small class="form-hint">Comma separated tags</small>
-            
+
             <!-- Tag Preview -->
             <div v-if="form.tags?.length" class="tag-preview">
               <span v-for="tag in form.tags" :key="tag" class="tag-badge">
@@ -169,11 +120,7 @@
             <button type="button" class="btn btn-secondary-custom" @click="navigateTo('/forum/main')">
               <i class="fas fa-times me-2"></i>Cancel
             </button>
-            <button
-              type="submit"
-              class="btn btn-primary-custom"
-              :disabled="!isFormValid || submitting"
-            >
+            <button type="submit" class="btn btn-primary-custom" :disabled="!isFormValid || submitting">
               <i class="fas fa-paper-plane me-2"></i>
               {{ submitting ? 'Publishing...' : 'Publish Post' }}
             </button>
@@ -188,6 +135,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useForum } from '~/composables/useForum'
 import { useRouter } from 'vue-router'
+import LocationSearch from '~/components/LocationSearch.vue'
 
 const { createPost } = useForum()
 const token = useCookie("token")
@@ -202,6 +150,8 @@ const fileInput = ref(null)
 // Get current user ID from database
 const currentUserId = ref(null)
 
+const base_url = import.meta.env.VITE_BASE_URL;
+
 onMounted(async () => {
   if (!token.value) return await navigateTo("/login");
 
@@ -213,10 +163,10 @@ onMounted(async () => {
     // TODO: avoid fetch all (exposes all users)
     const response = await fetch(`${base_url}/users`)
     const users = await response.json()
-    
+
     // Find current user
     const targetUser = users.find(user => user.username === tokenData.username)
-    
+
     if (targetUser) {
       currentUserId.value = targetUser.id
     }
@@ -258,11 +208,16 @@ const postTypes = [
   }
 ]
 
+
 const form = ref({
   post_type: 'sighting',
   title: '',
   content: '',
-  location_name: '',
+  location: {
+    name: '',
+    lat: 0,
+    lng: 0,
+  },
   image_urls: [],
   tags: []
 })
@@ -278,8 +233,8 @@ watch(tagsText, (newVal) => {
 
 const isFormValid = computed(() => {
   return form.value.post_type &&
-         form.value.title?.trim() &&
-         form.value.content?.trim()
+    form.value.title?.trim() &&
+    form.value.content?.trim()
 })
 
 const handleFileSelect = async (event) => {
@@ -290,16 +245,16 @@ const handleFileSelect = async (event) => {
 
 const handleDrop = async (event) => {
   isDragging.value = false
-  const files = Array.from(event.dataTransfer.files).filter(file => 
+  const files = Array.from(event.dataTransfer.files).filter(file =>
     file.type.startsWith('image/')
   )
-  
+
   if (files.length === 0) {
     uploadError.value = 'Please drop image files only'
     setTimeout(() => uploadError.value = '', 3000)
     return
   }
-  
+
   await uploadFiles(files)
 }
 
@@ -309,7 +264,7 @@ const uploadFiles = async (files) => {
     setTimeout(() => uploadError.value = '', 3000)
     return
   }
-  
+
   const maxSize = 5 * 1024 * 1024
   const oversizedFiles = files.filter(file => file.size > maxSize)
   if (oversizedFiles.length > 0) {
@@ -317,29 +272,28 @@ const uploadFiles = async (files) => {
     setTimeout(() => uploadError.value = '', 3000)
     return
   }
-  
+
   uploadError.value = ''
   uploading.value = true
-  
+
   try {
     const formData = new FormData()
     files.forEach(file => {
       formData.append('images', file)
     })
-    
-    const response = await fetch('http://localhost:3000/api/upload-images', {
+    const response = await fetch(`${base_url}/upload-images`, {
       method: 'POST',
       body: formData
     })
-    
+
     const data = await response.json()
-    
+
     if (!response.ok) {
       throw new Error(data.error || 'Upload failed')
     }
-    
+
     form.value.image_urls = [...form.value.image_urls, ...data.urls]
-    
+
   } catch (error) {
     console.error('Error uploading images:', error)
     uploadError.value = error.message || 'Failed to upload images'
@@ -355,7 +309,7 @@ const removeImage = (index) => {
 
 const handleSubmit = async () => {
   if (!isFormValid.value) return
-  
+
   if (!currentUserId.value) {
     uploadError.value = 'User not loaded. Please refresh the page.'
     return
@@ -369,7 +323,9 @@ const handleSubmit = async () => {
       title: form.value.title.trim(),
       content: form.value.content.trim(),
       post_type: form.value.post_type,
-      location_name: form.value.location_name?.trim() || null,
+      location_name: form.value.location.name?.trim() || null,
+      location_lat: form.value.location.lat,
+      location_lng: form.value.location.lng,
       image_urls: form.value.image_urls.length > 0 ? form.value.image_urls : [],
       tags: form.value.tags.length > 0 ? form.value.tags : []
     }
@@ -435,6 +391,7 @@ const handleSubmit = async () => {
     opacity: 0;
     transform: translateY(-30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -470,6 +427,7 @@ const handleSubmit = async () => {
     opacity: 0;
     transform: translateY(50px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -619,8 +577,15 @@ const handleSubmit = async () => {
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 .upload-text {

@@ -1,33 +1,29 @@
 <template>
-  <div>
-    <div class="video-background">
-      <video autoplay loop muted playsinline class="background-video">
-        <source src="https://lcphtbqstutbhgxbcfpo.supabase.co/storage/v1/object/public/postImages/videos/cat-running-highres.mp4" type="video/mp4" />
-        Your browser does not support the video tag.
-      </video>
-      <div class="video-overlay"></div>
+  <div class="forum-page d-flex flex-column flex-grow-1">
+    <div class="hero-section position-absolute w-100">
+      <div class="wave-animation"></div>
     </div>
-    <div class="flex">
-      <div class="card mx-auto" style="width: 32rem">
+    <div class="align-items-center flex-grow-1 d-flex">
+      <div v-if="!formType" class="card mx-auto p-3" style="width: 32rem">
         <div class="card-body">
           <h5 class="card-title text-center mb-4">Create an Account</h5>
           <p class="text-center text-muted mb-4">Choose your account type</p>
 
           <div class="account-type-container">
-            <div class="account-type-card" @click="navigateToIndividual">
+            <div class="account-type-card" @click="setFormType('individual')">
               <div class="account-type-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 16 16">
-                  <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z"/>
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 640 640"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.-->
+                  <path d="M320 312C386.3 312 440 258.3 440 192C440 125.7 386.3 72 320 72C253.7 72 200 125.7 200 192C200 258.3 253.7 312 320 312zM290.3 368C191.8 368 112 447.8 112 546.3C112 562.7 125.3 576 141.7 576L498.3 576C514.7 576 528 562.7 528 546.3C528 447.8 448.2 368 349.7 368L290.3 368z"/>
                 </svg>
               </div>
               <h6 class="account-type-title">Individual</h6>
               <p class="account-type-description">For cat lovers, adopters, and community members</p>
             </div>
 
-            <div class="account-type-card" @click="navigateToOrganisation">
+            <div class="account-type-card" @click="setFormType('organisation')">
               <div class="account-type-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 16 16">
-                  <path d="M0 3.5A1.5 1.5 0 0 1 1.5 2h9A1.5 1.5 0 0 1 12 3.5V5h1.02a1.5 1.5 0 0 1 1.17.563l1.481 1.85a1.5 1.5 0 0 1 .329.938V10.5a1.5 1.5 0 0 1-1.5 1.5H14a2 2 0 1 1-4 0H5a2 2 0 1 1-3.998-.085A1.5 1.5 0 0 1 0 10.5zm1.294 7.456A2 2 0 0 1 4.732 11h5.536a2 2 0 0 1 .732-.732V3.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5v7a.5.5 0 0 0 .294.456M12 10a2 2 0 0 1 1.732 1h.768a.5.5 0 0 0 .5-.5V8.35a.5.5 0 0 0-.11-.312l-1.48-1.85A.5.5 0 0 0 13.02 6H12zm-9 1a1 1 0 1 0 0 2 1 1 0 0 0 0-2m9 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2"/>
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 640 640"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.-->
+                  <path d="M333.4 66.9C329.2 65 324.7 64 320 64C315.3 64 310.8 65 306.6 66.9L118.3 146.8C96.3 156.1 79.9 177.8 80 204C80.5 303.2 121.3 484.7 293.6 567.2C310.3 575.2 329.7 575.2 346.4 567.2C518.8 484.7 559.6 303.2 560 204C560.1 177.8 543.7 156.1 521.7 146.8L333.4 66.9zM224 218.4C224 212.6 228.7 208 234.4 208L234.6 208C238 208 241.1 209.6 243.1 212.3L283.1 265.6C286.1 269.6 290.9 272 295.9 272L343.9 272C348.9 272 353.7 269.6 356.7 265.6L396.7 212.3C398.7 209.6 401.9 208 405.2 208L405.4 208C411.2 208 415.8 212.7 415.8 218.4L416 336C416 389 373 432 320 432C267 432 224 389 224 336L224 218.4zM280 352C288.8 352 296 344.8 296 336C296 327.2 288.8 320 280 320C271.2 320 264 327.2 264 336C264 344.8 271.2 352 280 352zM376 336C376 327.2 368.8 320 360 320C351.2 320 344 327.2 344 336C344 344.8 351.2 352 360 352C368.8 352 376 344.8 376 336z"/>
                 </svg>
               </div>
               <h6 class="account-type-title">Organisation</h6>
@@ -35,57 +31,48 @@
             </div>
           </div>
 
-          <div class="text-center mt-4">
+          <div class="text-center mt-4" style="font-size: 14px;">
             <span class="text-muted">Already have an account? </span>
             <NuxtLink to="/login" class="link-primary">Login here</NuxtLink>
           </div>
         </div>
       </div>
+      <IndividualRegistration v-else-if="formType === 'individual'" @set-form-type="setFormType"/>
+      <OrganisationRegistration  v-else-if="formType === 'organisation'" @set-form-type="setFormType"/>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-const navigateToIndividual = () => {
-  navigateTo('/register/individual');
+import IndividualRegistration from  "~/components/IndividualRegistration.vue";
+import OrganisationRegistration from  "~/components/OrganisationRegistration.vue";
+
+const formType = ref("")
+const setFormType = (type: string) => {
+  formType.value = type;
 };
 
-const navigateToOrganisation = () => {
-  navigateTo('/register/organisation');
-};
 </script>
 
 <style scoped>
-.video-background {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: calc(100% + 200px);
-  z-index: 0;
-  pointer-events: none;
+.forum-page {
+  height: 100%;
+  min-height: 0;
+  padding-bottom: 0;
 }
 
-.background-video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
+.hero-section {
+  box-shadow: unset;
 }
 
-.video-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(
-    ellipse at center,
-    rgba(0, 0, 0, 0) 0%,
-    rgba(0, 0, 0, 0.1) 50%,
-    rgba(0, 0, 0, 0.4) 100%
-  );
-  backdrop-filter: none;
+.card {
+  background: rgba(255, 255, 255, 0.40);
+  border-radius: 16px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(7.7px);
+  -webkit-backdrop-filter: blur(7.7px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  margin: 50px;
 }
 
 .account-type-container {
@@ -102,7 +89,7 @@ const navigateToOrganisation = () => {
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: white;
+  background: rgba(255, 255, 255, 0.30);
 }
 
 .account-type-card:hover {

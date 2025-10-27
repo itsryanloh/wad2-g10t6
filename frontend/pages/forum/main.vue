@@ -237,7 +237,7 @@ onMounted(async () => {
 })
 </script>
 
-<style scoped>
+<style>
 .forum-page {
   background: linear-gradient(135deg, #FFF5E6 0%, #FFE8D6 50%, #FFF0E0 100%);
   min-height: 100vh;

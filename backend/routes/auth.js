@@ -81,7 +81,7 @@ router.post("/verify-code", async (req, res) => {
       .verificationChecks.create({ to: user.contact_no, code });
     
     if (check.status === "approved") {
-      const token = jwt.sign({ username: user.username, name: user.name }, process.env.TOKEN_SECRET, { expiresIn: "1h" });
+      const token = jwt.sign({ username: user.username, name: user.name, avatar_url: user.avatar_url }, process.env.TOKEN_SECRET, { expiresIn: "1h" });
       res.json({ message: "Login successful.", token });
     } else {
       res.status(401).json({ error: "Login failed. Incorrect code." });

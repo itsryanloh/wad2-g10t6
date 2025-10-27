@@ -1,5 +1,5 @@
 <template>
-  <div class="app-layout">
+  <div class="app-layout d-flex flex-column">
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
       <div class="container-fluid px-4">
@@ -12,12 +12,7 @@
         </NuxtLink>
 
         <!-- Mobile Toggle -->
-        <button 
-          class="navbar-toggler" 
-          type="button" 
-          data-bs-toggle="collapse" 
-          data-bs-target="#navbarContent"
-        >
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
           <span class="navbar-toggler-icon"></span>
         </button>
 
@@ -35,10 +30,10 @@
               </NuxtLink>
             </li>
             <li class="nav-item">
-              <a href="#" class="nav-link disabled">
+              <NuxtLink to="/dashboard" class="nav-link" active-class="active">
                 <i class="fas fa-map-marked-alt me-2"></i>Map
                 <span class="badge bg-secondary ms-1">Soon</span>
-              </a>
+              </NuxtLink>
             </li>
             <li class="nav-item">
               <NuxtLink to="/checklist/checklistmain" class="nav-link" active-class="active">
@@ -56,13 +51,8 @@
           <!-- Right Side Actions -->
           <div class="d-flex align-items-center gap-3">
             <!-- User Avatar -->
-            <div class="user-avatar d-flex justify-content-center align-items-center">
-              <img 
-                v-if="avatar_url"
-                :src="avatar_url"
-                alt="User"
-                class="avatar-img"
-              />
+            <div class="user-avatar d-flex justify-content-center align-items-center my-auto">
+              <img v-if="avatar_url" :src="avatar_url" alt="User" class="avatar-img" />
               <i v-else class="fas fa-user text-white"></i>
             </div>
 
@@ -79,7 +69,7 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="main-content">
+    <main class="main-content flex-grow-1 d-flex flex-column">
       <slot />
     </main>
 
@@ -103,12 +93,17 @@
 </template>
 
 <script setup>
+import { useHead } from '#app';
 import { useRouter } from 'vue-router';
 import { jwtDecode } from 'jwt-decode';
 
 const router = useRouter();
 const avatar_url = ref("");
 const token = useCookie("token")
+
+useHead({
+  title: 'ADORE'
+})
 
 onMounted(async () => {
   if (token.value) {
@@ -169,8 +164,15 @@ const handleLogin = async () => {
 }
 
 @keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 .nav-link {
@@ -293,15 +295,19 @@ const handleLogin = async () => {
     margin-top: 20px;
     gap: 10px;
   }
-  
+
   .nav-link {
     padding: 12px 20px !important;
     margin: 5px 0;
   }
-  
+
   .d-flex.align-items-center {
     margin-top: 20px;
     justify-content: center;
   }
+}
+
+.app-layout {
+  min-height: 100vh;
 }
 </style>
