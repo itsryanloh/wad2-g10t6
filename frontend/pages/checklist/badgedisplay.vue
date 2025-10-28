@@ -1,7 +1,7 @@
 <template>
   <div class="badges-section">
-    <h3>Your Adoption Badges 🏆</h3>
     
+    <!-- Badges Grid (stays as original) -->
     <div class="badges-container">
       <div 
         v-for="badge in allBadges" 
@@ -20,16 +20,27 @@
       </div>
     </div>
 
-    <!-- Next Badge Progress -->
-    <div v-if="nextBadge" class="next-badge">
-      <div class="next-badge-header">Next Badge:</div>
+    <!-- Next Badge Progress with Carousel -->
+    <div v-if="unearnedBadges.length > 0" class="next-badge">
+      <div class="next-badge-header">Upcoming Badges:</div>
       <div class="next-badge-info">
-        <div class="next-badge-icon">{{ nextBadge.emoji }}</div>
-        <div class="next-badge-details">
-          <div class="next-badge-name">{{ nextBadge.name }}</div>
-          <div class="next-badge-remaining">
-            {{ nextBadge.remaining }} more task{{ nextBadge.remaining === 1 ? '' : 's' }} to go! 🐾
+        <!-- Carousel for badge icon and name -->
+        <div class="badge-carousel">
+          <div class="badge-carousel-track" :style="{ transform: `translateX(-${currentSlide * 100}%)` }">
+            <div 
+              v-for="badge in unearnedBadges" 
+              :key="badge.id"
+              class="badge-carousel-slide"
+            >
+              <div class="next-badge-icon">{{ badge.emoji }}</div>
+              <div class="next-badge-name">{{ badge.name }}</div>
+            </div>
           </div>
+        </div>
+        
+        <!-- Static task count -->
+        <div class="next-badge-remaining">
+          {{ unearnedBadges.length }} more badge{{ unearnedBadges.length === 1 ? '' : 's' }} to go! 🐾
         </div>
       </div>
     </div>
@@ -44,7 +55,9 @@
 </template>
 
 <script setup>
-defineProps({
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+
+const props = defineProps({
   allBadges: {
     type: Array,
     required: true
@@ -54,24 +67,58 @@ defineProps({
     default: null
   }
 });
+
+const currentSlide = ref(0)
+let autoplayInterval = null
+
+const unearnedBadges = computed(() => {
+  return props.allBadges.filter(badge => !badge.earned)
+})
+
+const goToSlide = (index) => {
+  currentSlide.value = index
+  resetAutoplay()
+}
+
+const nextSlide = () => {
+  if (unearnedBadges.value.length > 0) {
+    currentSlide.value = (currentSlide.value + 1) % unearnedBadges.value.length
+  }
+}
+
+const startAutoplay = () => {
+  if (unearnedBadges.value.length > 1) {
+    autoplayInterval = setInterval(nextSlide, 3000) // Change slide every 3 seconds
+  }
+}
+
+const stopAutoplay = () => {
+  if (autoplayInterval) {
+    clearInterval(autoplayInterval)
+    autoplayInterval = null
+  }
+}
+
+const resetAutoplay = () => {
+  stopAutoplay()
+  startAutoplay()
+}
+
+onMounted(() => {
+  startAutoplay()
+})
+
+onBeforeUnmount(() => {
+  stopAutoplay()
+})
 </script>
 
 <style scoped>
 .badges-section {
-  margin-top: 40px;
-  padding-top: 30px;
-  border-top: 2px solid #FFD9B3;
+  padding-top: 20px;
 }
 
-.badges-section h3 {
-  text-align: center;
-  color: #FF8243;
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 25px;
-  font-family: Georgia, serif;
-}
-
+/* Badges Grid (original) */
 .badges-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
@@ -168,7 +215,7 @@ defineProps({
   }
 }
 
-/* Next Badge */
+/* Next Badge Section */
 .next-badge {
   background: linear-gradient(135deg, #FFF5E6, #FFE8D6);
   padding: 20px;
@@ -179,11 +226,30 @@ defineProps({
 .next-badge-header {
   font-weight: bold;
   color: #D97539;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
   font-size: 16px;
 }
 
 .next-badge-info {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Badge Carousel in Next Badge Section */
+.badge-carousel {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+}
+
+.badge-carousel-track {
+  display: flex;
+  transition: transform 0.5s ease-in-out;
+}
+
+.badge-carousel-slide {
+  min-width: 100%;
   display: flex;
   align-items: center;
   gap: 15px;
@@ -192,23 +258,48 @@ defineProps({
 .next-badge-icon {
   font-size: 2.5em;
   filter: grayscale(50%);
-}
-
-.next-badge-details {
-  flex: 1;
+  flex-shrink: 0;
 }
 
 .next-badge-name {
   font-weight: bold;
   color: #FF8243;
-  margin-bottom: 5px;
   font-size: 16px;
+  flex: 1;
 }
 
 .next-badge-remaining {
   color: #D97539;
   font-size: 14px;
   font-weight: 600;
+  text-align: center;
+}
+
+/* Carousel Indicators */
+.carousel-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 15px;
+}
+
+.indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #FFD9B3;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.indicator:hover {
+  background: #FFB380;
+}
+
+.indicator.active {
+  background: #FF8243;
+  width: 24px;
+  border-radius: 4px;
 }
 
 /* All Earned */

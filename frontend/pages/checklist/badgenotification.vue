@@ -40,16 +40,28 @@ const pawTrail = ref([]);
 let pawIdCounter = 0;
 
 async function show(badge) {
-  currentBadge.value = badge;
-  visible.value = true;
-  
-  // Create paw trail
-  createPawTrail();
-  
-  // Hide after 3.5 seconds
-  setTimeout(() => {
-    visible.value = false;
-  }, 3500);
+  return new Promise((resolve) => {
+    currentBadge.value = badge;
+    visible.value = true;
+    
+    // Create paw trail
+    createPawTrail();
+    
+    // Total duration: 2800ms notification + 300ms fade out
+    const NOTIFICATION_DURATION = 2800;
+    const FADE_OUT_DURATION = 300;
+    
+    // Hide notification after set duration
+    setTimeout(() => {
+      visible.value = false;
+      
+      // Wait for fade out animation to complete, then resolve
+      setTimeout(() => {
+        resolve();
+      }, FADE_OUT_DURATION);
+      
+    }, NOTIFICATION_DURATION);
+  });
 }
 
 function createPawTrail() {
@@ -59,7 +71,7 @@ function createPawTrail() {
     setTimeout(() => {
       pawTrail.value.push({ id: pawIdCounter++ });
       
-      // Remove after animation
+      // Remove after animation (2 seconds)
       setTimeout(() => {
         pawTrail.value.shift();
       }, 2000);
@@ -123,7 +135,7 @@ defineExpose({ show });
   font-size: 1em;
 }
 
-/* Transition */
+/* Transition - consistent timing */
 .notification-enter-active {
   transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
