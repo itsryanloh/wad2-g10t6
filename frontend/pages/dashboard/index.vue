@@ -17,67 +17,8 @@
 
     <div v-else class="dashboard-content">
       <div class="stats-grid">
-        <div class="stat-card total">
-          <div class="stat-icon">
-            <i class="fas fa-paw"></i>
-          </div>
-          <div class="stat-content">
-            <h3 class="stat-value">{{ statistics.total }}</h3>
-            <p class="stat-label">Total Pets</p>
-          </div>
-        </div>
-
-        <div class="stat-card lost">
-          <div class="stat-icon">
-            <i class="fas fa-search"></i>
-          </div>
-          <div class="stat-content">
-            <h3 class="stat-value">{{ statistics.lost }}</h3>
-            <p class="stat-label">Lost Pets</p>
-            <p class="stat-percentage">{{ statistics.lostRate }}% of total</p>
-          </div>
-        </div>
-
-        <div class="stat-card found">
-          <div class="stat-icon">
-            <i class="fas fa-check-circle"></i>
-          </div>
-          <div class="stat-content">
-            <h3 class="stat-value">{{ statistics.found }}</h3>
-            <p class="stat-label">Found Pets</p>
-          </div>
-        </div>
-
-        <div class="stat-card adopted">
-          <div class="stat-icon">
-            <i class="fas fa-heart"></i>
-          </div>
-          <div class="stat-content">
-            <h3 class="stat-value">{{ statistics.adopted }}</h3>
-            <p class="stat-label">Adopted Pets</p>
-          </div>
-        </div>
-
-        <div class="stat-card available">
-          <div class="stat-icon">
-            <i class="fas fa-home"></i>
-          </div>
-          <div class="stat-content">
-            <h3 class="stat-value">{{ statistics.available }}</h3>
-            <p class="stat-label">Available for Adoption</p>
-          </div>
-        </div>
-
-        <div class="stat-card adoption-rate">
-          <div class="stat-icon">
-            <i class="fas fa-chart-line"></i>
-          </div>
-          <div class="stat-content">
-            <h3 class="stat-value">{{ statistics.adoptionRate }}%</h3>
-            <p class="stat-label">Adoption Rate</p>
-            <p class="stat-info">Based on total pets</p>
-          </div>
-        </div>
+        <DashboardCard v-for="({ label, value, iconClass, colorGradient }, idx) in cards" :label :value :icon-class
+          :color-gradient :key="idx" />
       </div>
 
       <div class="map-section">
@@ -128,13 +69,54 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import type { ComponentInstance } from 'vue'
+import DashboardCard from '~/components/DashboardCard.vue'
 const { statistics, pets, lostPetsWithLocation, loading, error, fetchPets } = usePetDashboard()
 
-const formatDate = (dateString) => {
+const cards = ref<ComponentInstance<typeof DashboardCard>['$props'][]>([
+  {
+    label: "Total Pets",
+    value: `0`,
+    iconClass: "fa-paw",
+    colorGradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+  },
+  {
+    label: "Lost Pets",
+    value: `0`,
+    iconClass: "fa-search",
+    colorGradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
+  },
+  {
+    label: "Found Pets",
+    value: `0`,
+    iconClass: "fa-check-circle",
+    colorGradient: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"
+  },
+  {
+    label: "Adopted Pets",
+    value: `0`,
+    iconClass: "fa-heart",
+    colorGradient: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)"
+  },
+  {
+    label: "Available for Adoption",
+    value: `0`,
+    iconClass: "fa-home",
+    colorGradient: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)"
+  },
+  {
+    label: "Adoption Rate",
+    value: `0%`,
+    iconClass: "fa-chart-line",
+    colorGradient: "linear-gradient(135deg, #30cfd0 0%, #330867 100%)"
+  }
+])
+
+const formatDate = (dateString: string) => {
   const date = new Date(dateString)
   const now = new Date()
-  const diff = now - date
+  const diff = now.valueOf() - date.valueOf()
   const days = Math.floor(diff / (1000 * 60 * 60 * 24))
 
   if (days === 0) return 'Today'
@@ -218,84 +200,13 @@ onBeforeMount(() => {
   margin-bottom: 48px;
 }
 
-.stat-card {
-  background: white;
-  border-radius: 16px;
-  padding: 24px;
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-}
-
-.stat-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
 .stat-icon i {
   font-size: 24px;
   color: white;
 }
 
-.total .stat-icon {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.lost .stat-icon {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-}
-
-.found .stat-icon {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-}
-
-.adopted .stat-icon {
-  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-}
-
-.available .stat-icon {
-  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-}
-
 .adoption-rate .stat-icon {
   background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
-}
-
-.stat-content {
-  flex: 1;
-}
-
-.stat-value {
-  font-size: 36px;
-  font-weight: 700;
-  color: #1f2937;
-  margin-bottom: 4px;
-  line-height: 1;
-}
-
-.stat-label {
-  font-size: 14px;
-  color: #6b7280;
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-
-.stat-percentage,
-.stat-info {
-  font-size: 12px;
-  color: #9ca3af;
 }
 
 .map-section {
