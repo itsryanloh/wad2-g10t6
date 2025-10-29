@@ -31,8 +31,7 @@
             </li>
             <li class="nav-item">
               <NuxtLink to="/dashboard" class="nav-link" active-class="active">
-                <i class="fas fa-map-marked-alt me-2"></i>Map
-                <span class="badge bg-secondary ms-1">Soon</span>
+                <i class="fas fa-map-marked-alt me-2"></i>Dashboard
               </NuxtLink>
             </li>
             <li class="nav-item">
