@@ -15,51 +15,54 @@
       <p>{{ error }}</p>
     </div>
 
-    <div v-else class="dashboard-content">
-      <div class="stats-grid">
-        <DashboardCard v-for="({ label, value, iconClass, colorGradient }, idx) in cards" :label :value :icon-class
-          :color-gradient :key="idx" />
-      </div>
-
-      <div class="map-section">
-        <div class="map-header">
-          <h2 class="map-title">Lost Pets Locations</h2>
-          <div class="map-legend">
-            <span class="legend-item">
-              <span class="legend-marker"></span>
-              Lost Pet Location
-            </span>
-            <span class="legend-count">{{ lostPetsWithLocation.length }} locations</span>
+    <div v-else>
+      <div class="container w-100">
+        <div class="row mb-4 g-4">
+          <div v-for="({ label, value, iconClass, colorGradient }, idx) in cards" class="col-12 col-md-6 col-lg-4">
+            <DashboardCard :label :value :icon-class :color-gradient :key="idx" />
           </div>
         </div>
-      </div>
 
-      <div class="pets-section">
-        <h2 class="section-title">Recent Activity</h2>
-        <div class="pets-grid">
-          <div v-for="pet in pets.slice(0, 6)" :key="pet.id" class="pet-card">
-            <div class="pet-image-container">
-              <img v-if="pet.image_url" :src="pet.image_url" :alt="pet.name" class="pet-image" />
-              <div v-else class="pet-image-placeholder">
-                <i class="fas fa-paw"></i>
-              </div>
-              <span :class="['pet-status', `status-${pet.status}`]">
-                {{ pet.status }}
+        <div class="map-section col-12 g-4">
+          <div class="map-header">
+            <h2 class="map-title">Lost Pets Locations</h2>
+            <div class="map-legend">
+              <span class="legend-item">
+                <span class="legend-marker"></span>
+                Lost Pet Location
               </span>
+              <span class="legend-count">{{ lostPetsWithLocation.length }} locations</span>
             </div>
-            <div class="pet-details">
-              <h3 class="pet-name">{{ pet.name }}</h3>
-              <p class="pet-breed">{{ pet.breed || pet.species }}</p>
-              <p class="pet-description">{{ pet.description.slice(0, 80) }}...</p>
-              <div class="pet-meta">
-                <span v-if="pet.location_name" class="pet-location">
-                  <i class="fas fa-map-marker-alt"></i>
-                  {{ pet.location_name }}
+          </div>
+        </div>
+
+        <div class="pets-section col-12">
+          <h2 class="section-title">Recent Activity</h2>
+          <div class="pets-grid">
+            <div v-for="pet in pets.slice(0, 6)" :key="pet.id" class="pet-card">
+              <div class="pet-image-container">
+                <img v-if="pet.image_url" :src="pet.image_url" :alt="pet.name" class="pet-image" />
+                <div v-else class="pet-image-placeholder">
+                  <i class="fas fa-paw"></i>
+                </div>
+                <span :class="['pet-status', `status-${pet.status}`]">
+                  {{ pet.status }}
                 </span>
-                <span class="pet-date">
-                  <i class="fas fa-clock"></i>
-                  {{ formatDate(pet.reported_date) }}
-                </span>
+              </div>
+              <div class="pet-details">
+                <h3 class="pet-name">{{ pet.name }}</h3>
+                <p class="pet-breed">{{ pet.breed || pet.species }}</p>
+                <p class="pet-description">{{ pet.description.slice(0, 80) }}...</p>
+                <div class="pet-meta">
+                  <span v-if="pet.location_name" class="pet-location">
+                    <i class="fas fa-map-marker-alt"></i>
+                    {{ pet.location_name }}
+                  </span>
+                  <span class="pet-date">
+                    <i class="fas fa-clock"></i>
+                    {{ formatDate(pet.reported_date) }}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -186,27 +189,6 @@ onBeforeMount(() => {
   font-size: 48px;
   color: #ef4444;
   margin-bottom: 16px;
-}
-
-.dashboard-content {
-  max-width: 1400px;
-  margin: 0 auto;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 24px;
-  margin-bottom: 48px;
-}
-
-.stat-icon i {
-  font-size: 24px;
-  color: white;
-}
-
-.adoption-rate .stat-icon {
-  background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
 }
 
 .map-section {

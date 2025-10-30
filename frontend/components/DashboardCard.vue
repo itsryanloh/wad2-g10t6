@@ -1,5 +1,6 @@
 <template>
-  <div class="stat-card">
+  <div class="bg-white p-4 rounded-4 d-flex gap-4 shadow-sm stat-card"
+    style="transition: transform 0.2s, box-shadow 0.2s">
     <div class="stat-icon" :style="{ background: colorGradient }">
       <i :class="`text-light fs-4 fas ${iconClass}`"></i>
     </div>
@@ -20,17 +21,6 @@ const { label, value, iconClass, colorGradient } = defineProps<{
 </script>
 
 <style scoped>
-.stat-card {
-  background: white;
-  border-radius: 16px;
-  padding: 24px;
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
 .stat-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
