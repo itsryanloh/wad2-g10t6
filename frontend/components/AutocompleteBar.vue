@@ -1,17 +1,15 @@
 <template>
-  <div class="form-section">
+  <div class="position-relative">
     <div class="position-relative">
-      <div class="position-relative">
-        <input v-model="name" type="text" class="form-input address-input" :placeholder @keyup="input"
-          @focus="() => showDropdown = true" @blur="handleBlur" />
-        <i v-if="searchController" class="fas fa-spinner fa-spin search-spinner"></i>
-      </div>
+      <input v-model="name" type="text" class="form-input address-input" :placeholder @input="input"
+        @focus="() => showDropdown = true" @blur="handleBlur" />
+      <i v-if="searchController" class="fas fa-spinner fa-spin search-spinner"></i>
+    </div>
 
-      <div v-if="showDropdown && valuesToReplaceSearchbox.length > 0" class="address-dropdown">
-        <div v-for="(data, idx) in valuesToReplaceSearchbox" :key="idx" class="address-dropdown-item"
-          @click.prevent="chooseFromDropdown(idx)">
-          <LocationSuggestion v-bind="data" :suggestion-icon="suggestionIcon" />
-        </div>
+    <div v-if="showDropdown && valuesToReplaceSearchbox.length > 0" class="address-dropdown">
+      <div v-for="(data, idx) in valuesToReplaceSearchbox" :key="idx" class="address-dropdown-item"
+        @click.prevent="chooseFromDropdown(idx)">
+        <LocationSuggestion v-bind="data" :suggestion-icon="suggestionIcon" />
       </div>
     </div>
   </div>
@@ -31,11 +29,12 @@ const valuesToReplaceSearchbox = ref<Awaited<ReturnType<typeof keyDown>>>([])
 const showDropdown = ref(false)
 const searchController = ref<AbortController | null>(null)
 
-function input(payload: KeyboardEvent) {
+function input(payload: InputEvent) {
   if (!name.value.trim()) return valuesToReplaceSearchbox.value = []
-  if (payload.key === "Enter") return chooseFromDropdown(0)
+
   searchController.value?.abort()
   searchController.value = new AbortController()
+
   keyDown(name.value, searchController.value.signal)
     .then(data =>
       showDropdown.value = (valuesToReplaceSearchbox.value = data || []).length > 0
