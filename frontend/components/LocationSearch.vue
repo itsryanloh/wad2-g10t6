@@ -11,7 +11,6 @@
 </template>
 
 <script setup lang="ts">
-import AutocompleteBar from './AutocompleteBar.vue';
 const model = defineModel<{ name: string } & Record<"lat" | "lng", number>>({ default: { lat: 0, lng: 0, name: '' } })
 
 const { VITE_BASE_URL: base_url } = import.meta.env;
@@ -21,6 +20,7 @@ type SuggestedLocation = Record<"SEARCHVAL" | "ADDRESS" | "LATITUDE" | "LONGITUD
 const suggestedLocations = ref<SuggestedLocation[]>([])
 
 async function onLocationChange(searchString: string, signal: AbortSignal): Promise<Record<"title" | "description", string>[]> {
+  if (!searchString) return []
   return fetch(`${base_url}/maps/search?q=${searchString}`, { signal })
     .then<{ results: SuggestedLocation[] }>(data => data.json())
     .then(({ results }) => {

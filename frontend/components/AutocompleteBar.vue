@@ -2,14 +2,14 @@
   <div class="position-relative">
     <div class="position-relative">
       <input v-model="name" type="text" class="form-input address-input" :placeholder @input="input"
-        @focus="() => showDropdown = true" @blur="handleBlur" />
+        @focus="() => showDropdown = true" @blur="handleBlur" @click="() => input()" />
       <i v-if="searchController" class="fas fa-spinner fa-spin search-spinner"></i>
     </div>
 
     <div v-if="showDropdown && valuesToReplaceSearchbox.length > 0" class="address-dropdown">
       <div v-for="(data, idx) in valuesToReplaceSearchbox" :key="idx" class="address-dropdown-item"
         @click.prevent="chooseFromDropdown(idx)">
-        <LocationSuggestion v-bind="data" :suggestion-icon="suggestionIcon" />
+        <Suggestion v-bind="data" :suggestion-icon="suggestionIcon" />
       </div>
     </div>
   </div>
@@ -29,9 +29,7 @@ const valuesToReplaceSearchbox = ref<Awaited<ReturnType<typeof keyDown>>>([])
 const showDropdown = ref(false)
 const searchController = ref<AbortController | null>(null)
 
-function input(payload: InputEvent) {
-  if (!name.value.trim()) return valuesToReplaceSearchbox.value = []
-
+function input() {
   searchController.value?.abort()
   searchController.value = new AbortController()
 
@@ -50,7 +48,7 @@ function chooseFromDropdown(idx: number) {
 function handleBlur() {
   setTimeout(() => {
     showDropdown.value = false
-  }, 200)
+  }, 100)
 }
 </script>
 

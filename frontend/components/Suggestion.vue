@@ -7,6 +7,7 @@
 </template>
 
 <script setup lang="ts">
+export type Suggestion = Record<"title" | "description", string>
 const { title, description, suggestionIcon } = defineProps<{
   title: string
   description: string
