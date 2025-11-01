@@ -96,7 +96,9 @@
           </div>
 
           <!-- Location -->
-          <LocationSearch v-model="form.location" />
+          <!--<LocationSearch v-model="form.location" />-->
+          <AutocompleteBar placeholder="e.g., Block 123 Ang Mo Kio Ave 3" :key-down="onLocationChange"
+            :select-idx="chooseSuggestion" suggestion-icon="fa-map-marker-alt" />
 
           <!-- Tags -->
           <div class="form-section">
@@ -136,6 +138,8 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useForum } from '~/composables/useForum'
 import { useRouter } from 'vue-router'
 import LocationSearch from '~/components/LocationSearch.vue'
+import AutocompleteBar from '~/components/AutocompleteBar.vue'
+import LocationSuggestion from '~/components/LocationSuggestion.vue'
 
 const { createPost } = useForum()
 const token = useCookie("token")
@@ -153,7 +157,7 @@ const currentUserId = ref(null)
 const base_url = import.meta.env.VITE_BASE_URL;
 
 onMounted(async () => {
-  if (!token.value) return await navigateTo("/login");
+  // if (!token.value) return await navigateTo("/login");
 
   try {
     const base_url = import.meta.env.VITE_BASE_URL;
@@ -345,6 +349,37 @@ const handleSubmit = async () => {
   } finally {
     submitting.value = false
   }
+}
+
+const suggestedLocations = ref(/** @type {Record<"LATITUDE"|"LONGITUDE"|"SEARCHVAL"|"ADDRESS", string>}*/([]))
+
+/**
+ * @param {string} searchString 
+ * @param {AbortSignal} signal
+ * @returns {Promise<Record<"title"|"description", string>[]>}
+ */
+async function onLocationChange(searchString, signal) {
+  return fetch(`${base_url}/maps/search?q=${searchString}`, { signal })
+    .then(data => data.json())
+    .then(({ results }) => {
+      suggestedLocations.value = results
+      return results.map(({ SEARCHVAL: title, ADDRESS: description }) => ({ title, description }))
+    })
+    .catch(error => {
+      console.error('Error fetching locations:', error)
+      suggestedLocations.value = []
+    })
+}
+
+/**
+ * @param {number} idx
+ */
+function chooseSuggestion(idx) {
+  const { SEARCHVAL: name, LATITUDE: lat, LONGITUDE: lng } = suggestedLocations.value[idx]
+  form.value.location = {
+    name, lat, lng
+  }
+  return name
 }
 </script>
 
