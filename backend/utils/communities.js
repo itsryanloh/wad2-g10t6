@@ -8,7 +8,7 @@ const community_members = () => database.from("community_members")
 const communities = () => database.from("communities")
 
 export async function getAllCommunities() {
-  return communities().select("id,name,description");
+  return communities().select("id,name,description,location_name");
 }
 
 /**
@@ -37,4 +37,15 @@ export async function removeUserFromCommunity({ user_id, community_id }) {
  */
 export async function getCommunityIdByAreaName(areaName) {
   return communities().select("id").ilike('location_name', areaName).limit(1).maybeSingle();
+}
+
+/**
+ * Get all community memberships for a specific user
+ * @param {string} userId - The UUID of the user
+ * @returns {Promise<import("@supabase/supabase-js").PostgrestSingleResponse<any>>}
+ */
+export async function getUserCommunityMemberships(userId) {
+  return community_members()
+    .select("*")
+    .eq('user_id', userId);
 }
