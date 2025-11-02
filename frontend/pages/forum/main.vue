@@ -182,9 +182,17 @@
                       <i class="fas fa-eye"></i>
                       {{ post.view_count || 0 }}
                     </span>
-                    <span class="stat-item">
+                    <span class="stat-item reaction-like">
+                      <i class="fas fa-thumbs-up"></i>
+                      {{ post.reaction_counts?.like || 0 }}
+                    </span>
+                    <span class="stat-item reaction-heart">
                       <i class="fas fa-heart"></i>
-                      {{ post.reaction_count || 0 }}
+                      {{ post.reaction_counts?.heart || 0 }}
+                    </span>
+                    <span class="stat-item reaction-helpful">
+                      <i class="fas fa-star"></i>
+                      {{ post.reaction_counts?.helpful || 0 }}
                     </span>
                   </div>
                 </div>
@@ -225,7 +233,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onActivated } from 'vue'
 import { useForum } from '~/composables/useForum'
 import { useCommunities } from '~/composables/useCommunities'
 import CommunitySidebar from '~/components/CommunitySidebar.vue'
@@ -258,18 +266,15 @@ const postTypes = [
 const filteredPosts = computed(() => {
   let result = posts.value || []
   
-  //Filter by community_id
   if (selectedCommunity.value && selectedCommunity.value.id) {
     const communityId = selectedCommunity.value.id
     result = result.filter(post => post.community_id === communityId)
   }
 
-  //Filter by type
   if (selectedType.value) {
     result = result.filter(post => post.post_type === selectedType.value)
   }
 
-  //Filter by search query
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
     result = result.filter(post => {
@@ -314,7 +319,6 @@ const handleImageError = (e) => {
 }
 
 onMounted(async () => {
-  //Check authentication
   if (!token.value) {
     return await navigateTo("/login")
   }
@@ -322,45 +326,67 @@ onMounted(async () => {
   try {
     const base_url = import.meta.env.VITE_BASE_URL
     
-    //Get current user from token
     const tokenResponse = await fetch(`${base_url}/auth/me`, { 
       headers: { Authorization: `Bearer ${token.value}` } 
     })
     const tokenData = await tokenResponse.json()
 
-    //Fetch all users to get user ID
     const userResponse = await fetch(`${base_url}/users`)
     const users = await userResponse.json()
     const targetUser = users.find(user => user.username === tokenData.username)
 
     if (targetUser) {
       currentUserId.value = targetUser.id
-      
-      //Fetch user's communities
       await fetchUserCommunities(targetUser.id)
     }
   } catch (error) {
     console.error('Error loading user data:', error)
   }
 
-  //Fetch all posts
+  await fetchPosts()
+})
+
+//Refresh posts when navigating back to this page
+onActivated(async () => {
   await fetchPosts()
 })
 </script>
 
 <style scoped>
+/* Page Layout */
 .forum-page {
   background: linear-gradient(135deg, #FFF5E6 0%, #FFE8D6 50%, #FFF0E0 100%);
   min-height: 100vh;
   padding-bottom: 80px;
 }
 
+/* Hero Section */
 .hero-section {
   background: linear-gradient(135deg, #FFB74D 0%, #FFA726 50%, #FF9800 100%);
-  padding: 60px 0 100px;
+  padding: 40px 0 70px;
   position: relative;
   overflow: hidden;
   box-shadow: 0 10px 40px rgba(255, 183, 77, 0.3);
+}
+
+.hero-title {
+  color: white;
+  font-size: 2.5rem;
+  font-weight: 800;
+  text-align: center;
+  margin-bottom: 10px;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
+  animation: fadeInDown 1s ease;
+  letter-spacing: 1px;
+}
+
+.hero-subtitle {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 1.1rem;
+  text-align: center;
+  margin: 0;
+  font-weight: 500;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .wave-animation {
@@ -368,7 +394,7 @@ onMounted(async () => {
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 100px;
+  height: 80px;
   overflow: hidden;
 }
 
@@ -396,17 +422,6 @@ onMounted(async () => {
   100% { transform: translateX(-1200px); }
 }
 
-.hero-title {
-  color: white;
-  font-size: 3rem;
-  font-weight: 800;
-  text-align: center;
-  margin-bottom: 10px;
-  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
-  animation: fadeInDown 1s ease;
-  letter-spacing: 1px;
-}
-
 @keyframes fadeInDown {
   from {
     opacity: 0;
@@ -418,17 +433,9 @@ onMounted(async () => {
   }
 }
 
-.hero-subtitle {
-  color: rgba(255, 255, 255, 0.95);
-  font-size: 1.2rem;
-  text-align: center;
-  margin: 0;
-  font-weight: 500;
-  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
-}
-
+/* Main Container */
 .content-container {
-  margin-top: -50px;
+  margin-top: -40px;
   position: relative;
   z-index: 10;
 }
@@ -448,6 +455,7 @@ onMounted(async () => {
   min-width: 0;
 }
 
+/* Find Community Button */
 .find-communities-btn {
   width: 100%;
   margin-top: 15px;
@@ -482,17 +490,6 @@ onMounted(async () => {
   justify-content: space-between;
   box-shadow: 0 3px 12px rgba(255, 152, 0, 0.2); 
   animation: slideIn 0.3s ease;
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .community-banner-content {
@@ -534,6 +531,18 @@ onMounted(async () => {
   transform: rotate(90deg);
 }
 
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Search & Filter */
 .search-card {
   background: white;
   border-radius: 25px;
@@ -674,6 +683,7 @@ onMounted(async () => {
   transform: rotate(90deg);
 }
 
+/* Posts */
 .posts-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -751,30 +761,11 @@ onMounted(async () => {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
-.badge-adoption {
-  background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
-  color: white;
-}
-
-.badge-sighting {
-  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-  color: white;
-}
-
-.badge-lost {
-  background: linear-gradient(135deg, #FF6B6B 0%, #EE5A6F 100%);
-  color: white;
-}
-
-.badge-found {
-  background: linear-gradient(135deg, #A8E6CF 0%, #88D8F7 100%);
-  color: white;
-}
-
-.badge-discussion {
-  background: linear-gradient(135deg, #B8A4E8 0%, #9B7FD4 100%);
-  color: white;
-}
+.badge-adoption { background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); color: white; }
+.badge-sighting { background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); color: white; }
+.badge-lost { background: linear-gradient(135deg, #FF6B6B 0%, #EE5A6F 100%); color: white; }
+.badge-found { background: linear-gradient(135deg, #A8E6CF 0%, #88D8F7 100%); color: white; }
+.badge-discussion { background: linear-gradient(135deg, #B8A4E8 0%, #9B7FD4 100%); color: white; }
 
 .resolved-badge {
   position: absolute;
@@ -880,18 +871,37 @@ onMounted(async () => {
 
 .post-stats {
   display: flex;
-  gap: 15px;
+  gap: 12px;
   color: #7A7265;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
 }
 
 .stat-item {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   font-weight: 500;
+  transition: all 0.3s;
 }
 
+.stat-item i {
+  font-size: 0.9rem;
+}
+
+/* Individual reaction colors */
+.reaction-like {
+  color: #3498db;
+}
+
+.reaction-heart {
+  color: #e74c3c;
+}
+
+.reaction-helpful {
+  color: #f39c12;
+}
+
+/* Loading & Empty State */
 .skeleton-card {
   height: 450px;
   background: linear-gradient(90deg, #FFF5E6 25%, #FFE8D6 50%, #FFF5E6 75%);
@@ -950,6 +960,7 @@ onMounted(async () => {
   box-shadow: 0 15px 40px rgba(255, 152, 0, 0.5);
 }
 
+/* Floating Action Button (FAB +) */
 .fab {
   position: fixed;
   bottom: 30px;
@@ -978,83 +989,37 @@ onMounted(async () => {
   box-shadow: 0 15px 50px rgba(255, 152, 0, 0.6);
 }
 
+/* Responsiveness related */
 @media (max-width: 1024px) {
-  .forum-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .sidebar-column {
-    position: static;
-    order: 2;
-  }
-
-  .main-column {
-    order: 1;
-  }
+  .forum-layout { grid-template-columns: 1fr; }
+  .sidebar-column { position: static; order: 2; }
+  .main-column { order: 1; }
 }
 
 @media (max-width: 768px) {
-  .hero-title {
-    font-size: 2rem;
+  .hero-title { font-size: 2rem; }
+  .search-card { padding: 20px; }
+  .filter-section { flex-direction: column; align-items: flex-start; }
+  .posts-grid { grid-template-columns: 1fr; }
+  .fab { width: 60px; height: 60px; font-size: 20px; bottom: 20px; right: 20px; }
+  .community-banner-desc { display: none; }
+  
+  .post-stats {
+    flex-wrap: wrap;
+    gap: 8px;
   }
-
-  .search-card {
-    padding: 20px;
-  }
-
-  .filter-section {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .posts-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .fab {
-    width: 60px;
-    height: 60px;
-    font-size: 20px;
-    bottom: 20px;
-    right: 20px;
-  }
-
-  .community-banner-desc {
-    display: none;
+  
+  .stat-item {
+    font-size: 0.75rem;
   }
 }
 
-.row {
-  display: flex;
-  flex-wrap: wrap;
-  margin: -12px;
-}
-
-.g-4 > * {
-  padding: 12px;
-}
-
-.col-12, .col-lg-12 {
-  width: 100%;
-}
-
-.mt-4 {
-  margin-top: 1.5rem;
-}
-
-.me-1 {
-  margin-right: 0.25rem;
-}
-
-.me-2 {
-  margin-right: 0.5rem;
-}
-
-.me-3 {
-  margin-right: 1rem;
-}
-
-.ms-2 {
-  margin-left: 0.5rem;
-}
+.row { display: flex; flex-wrap: wrap; margin: -12px; }
+.g-4 > * { padding: 12px; }
+.col-12, .col-lg-12 { width: 100%; }
+.mt-4 { margin-top: 1.5rem; }
+.me-1 { margin-right: 0.25rem; }
+.me-2 { margin-right: 0.5rem; }
+.me-3 { margin-right: 1rem; }
+.ms-2 { margin-left: 0.5rem; }
 </style>

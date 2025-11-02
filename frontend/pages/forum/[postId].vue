@@ -375,10 +375,6 @@ const replyContent = ref('')
 const currentUserId = ref(null)
 const base_url = import.meta.env.VITE_BASE_URL
 
-const isAuthor = computed(() => {
-  return currentPost.value?.user_id === currentUserId.value
-})
-
 // Get top-level comments (no parent)
 const topLevelComments = computed(() => {
   return comments.value.filter(c => !c.parent_comment_id)
@@ -502,7 +498,7 @@ const handleAddComment = async () => {
   }
 }
 
-// Handle multiple reaction types
+// Handle multiple reaction types with persistence
 const handleReaction = async (reactionType) => {
   if (!currentUserId.value) {
     alert('Please log in to react to posts')
@@ -522,7 +518,7 @@ const handleReaction = async (reactionType) => {
   }
 }
 
-// Check user's existing reactions
+// Check user's existing reactions (restored on page load)
 const checkUserReactions = async () => {
   if (!currentUserId.value || !route.params.postId) return
   
@@ -549,7 +545,7 @@ const checkUserReactions = async () => {
   }
 }
 
-// Get all reaction counts
+// Get all reaction counts for the post
 const getAllReactionCounts = async () => {
   if (!route.params.postId) return
   
@@ -603,13 +599,16 @@ onMounted(async () => {
   await loadComments()
   await incrementViewCount(route.params.postId)
   
-  // Load reaction data
+  // Load reaction data - this restores user's previous reactions
   await getAllReactionCounts()
   await checkUserReactions()
 })
 </script>
 
 <style scoped>
+/* ===========================
+   GLOBAL PAGE LAYOUT
+   =========================== */
 .post-details-page {
   background: linear-gradient(135deg, #FFF4E6 0%, #FFE4E1 50%, #E6F3FF 100%);
   min-height: 100vh;
@@ -622,6 +621,9 @@ onMounted(async () => {
   padding: 0 20px;
 }
 
+/* ===========================
+   BACK BUTTON
+   =========================== */
 .back-btn {
   background: rgba(255, 155, 133, 0.15);
   color: #FF9B85;
@@ -641,6 +643,9 @@ onMounted(async () => {
   box-shadow: 0 5px 20px rgba(255, 155, 133, 0.3);
 }
 
+/* ===========================
+   POST CARD CONTAINER
+   =========================== */
 .post-card {
   background: white;
   border-radius: 25px;
@@ -661,6 +666,9 @@ onMounted(async () => {
   }
 }
 
+/* ===========================
+   IMAGE CAROUSEL
+   =========================== */
 .carousel-container {
   position: relative;
 }
@@ -679,6 +687,7 @@ onMounted(async () => {
   object-fit: cover;
 }
 
+/* Carousel navigation buttons */
 .carousel-btn {
   position: absolute;
   top: 50%;
@@ -709,6 +718,7 @@ onMounted(async () => {
   right: 20px;
 }
 
+/* Thumbnail strip for multi-image posts */
 .thumbnail-strip {
   display: flex;
   gap: 10px;
@@ -746,6 +756,9 @@ onMounted(async () => {
   object-fit: cover;
 }
 
+/* ===========================
+   POST HEADER (AUTHOR INFO)
+   =========================== */
 .post-header {
   display: flex;
   justify-content: space-between;
@@ -794,6 +807,7 @@ onMounted(async () => {
   margin: 0;
 }
 
+/* Post type badge */
 .post-meta {
   display: flex;
   gap: 10px;
@@ -834,6 +848,9 @@ onMounted(async () => {
   color: white;
 }
 
+/* ===========================
+   POST BODY CONTENT
+   =========================== */
 .post-body {
   padding: 30px;
 }
@@ -854,6 +871,7 @@ onMounted(async () => {
   white-space: pre-wrap;
 }
 
+/* Location card (clickable to show map) */
 .location-card {
   display: flex;
   gap: 15px;
@@ -902,6 +920,7 @@ onMounted(async () => {
   font-size: 1.1rem;
 }
 
+/* Tags section */
 .tags-section {
   display: flex;
   flex-wrap: wrap;
@@ -924,7 +943,9 @@ onMounted(async () => {
   box-shadow: 0 5px 15px rgba(136, 216, 247, 0.3);
 }
 
-/* Enhanced Engagement Bar */
+/* ===========================
+   ENGAGEMENT BAR (REACTIONS & STATS)
+   =========================== */
 .engagement-bar {
   display: flex;
   justify-content: space-between;
@@ -943,6 +964,7 @@ onMounted(async () => {
   flex-wrap: wrap;
 }
 
+/* Base reaction button styles */
 .reaction-btn {
   display: flex;
   align-items: center;
@@ -1032,6 +1054,7 @@ onMounted(async () => {
   animation: starSpin 0.6s ease-in-out;
 }
 
+/* Reaction animations */
 @keyframes reactionPop {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.15); }
@@ -1050,6 +1073,7 @@ onMounted(async () => {
   100% { transform: rotate(360deg) scale(1); }
 }
 
+/* Stats display */
 .stats {
   display: flex;
   gap: 20px;
@@ -1061,7 +1085,9 @@ onMounted(async () => {
   font-weight: 500;
 }
 
-/* Adoption Section */
+/* ===========================
+   ADOPTION SECTION (CALL-TO-ACTION)
+   =========================== */
 .adoption-section {
   margin-top: 30px;
   animation: slideUp 0.6s ease;
@@ -1154,6 +1180,9 @@ onMounted(async () => {
   transform: translateX(5px);
 }
 
+/* ===========================
+   COMMENTS SECTION
+   =========================== */
 .comments-section {
   background: white;
   border-radius: 25px;
@@ -1169,6 +1198,7 @@ onMounted(async () => {
   margin-bottom: 25px;
 }
 
+/* Add comment form */
 .add-comment-card {
   background: linear-gradient(135deg, #FFF4E6 0%, #FFE4E1 100%);
   padding: 20px;
@@ -1215,6 +1245,7 @@ onMounted(async () => {
   cursor: not-allowed;
 }
 
+/* Comments list */
 .comments-list {
   display: flex;
   flex-direction: column;
@@ -1271,6 +1302,7 @@ onMounted(async () => {
   margin: 0;
 }
 
+/* Reply button */
 .reply-btn {
   background: rgba(255, 152, 0, 0.1);
   border: 2px solid rgba(255, 152, 0, 0.3);
@@ -1294,6 +1326,7 @@ onMounted(async () => {
   box-shadow: 0 5px 15px rgba(255, 152, 0, 0.3);
 }
 
+/* Comment threads (parent + replies) */
 .comment-thread {
   display: flex;
   flex-direction: column;
@@ -1305,6 +1338,7 @@ onMounted(async () => {
   border-left: 3px solid #FF9800;
 }
 
+/* Nested replies container */
 .replies-container {
   margin-left: 60px;
   display: flex;
@@ -1323,6 +1357,7 @@ onMounted(async () => {
   background: linear-gradient(to bottom, #FFB74D, transparent);
 }
 
+/* Reply form */
 .reply-form {
   margin-top: 15px;
   padding: 15px;
@@ -1414,6 +1449,7 @@ onMounted(async () => {
   gap: 15px;
 }
 
+/* Deeply nested replies */
 .nested-replies {
   margin-left: 40px;
   display: flex;
@@ -1440,6 +1476,7 @@ onMounted(async () => {
   padding: 6px 14px;
 }
 
+/* No comments state */
 .no-comments {
   text-align: center;
   padding: 60px 20px;
@@ -1457,6 +1494,9 @@ onMounted(async () => {
   margin: 0;
 }
 
+/* ===========================
+   LOADING STATES
+   =========================== */
 .loading-skeleton,
 .comment-skeleton {
   height: 300px;
@@ -1476,6 +1516,9 @@ onMounted(async () => {
   100% { background-position: -200% 0; }
 }
 
+/* ===========================
+   ERROR STATE
+   =========================== */
 .error-state {
   text-align: center;
   padding: 80px 20px;
@@ -1526,6 +1569,17 @@ onMounted(async () => {
   box-shadow: 0 10px 30px rgba(255, 155, 133, 0.4);
 }
 
+/* ===========================
+   MAP MODAL OVERLAY
+   =========================== */
+.popupdiv {
+  z-index: 2000;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* ===========================
+   RESPONSIVE BREAKPOINTS
+   =========================== */
 @media (max-width: 768px) {
   .main-image-wrapper {
     height: 300px;
@@ -1589,11 +1643,9 @@ onMounted(async () => {
   }
 }
 
-.popupdiv {
-  z-index: 2000;
-  background-color: rgba(0, 0, 0, 0.5);
-}
-
+/* ===========================
+   UTILITY CLASSES
+   =========================== */
 .me-1 {
   margin-right: 0.25rem;
 }

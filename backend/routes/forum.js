@@ -89,8 +89,7 @@ router.get('/posts', async (req, res) => {
       .select(`
         *,
         users (id, name, username, avatar_url),
-        comments (count),
-        post_reactions (count)
+        comments (count)
       `)
       .order('created_at', { ascending: false })
       .limit(limit);
@@ -112,10 +111,45 @@ router.get('/posts', async (req, res) => {
 
     if (error) throw error;
 
+    //Fetch reaction counts for all posts
+    const postIds = data.map(post => post.id);
+    
+    const { data: reactions, error: reactionsError } = await supabase
+      .from('post_reactions')
+      .select('post_id, reaction_type')
+      .in('post_id', postIds);
+
+    if (reactionsError) {
+      console.error('Error fetching reactions:', reactionsError);
+    }
+
+    //Create a map of post_id to reaction counts
+    const reactionCountsMap = {};
+    
+    if (reactions) {
+      reactions.forEach(reaction => {
+        if (!reactionCountsMap[reaction.post_id]) {
+          reactionCountsMap[reaction.post_id] = {
+            like: 0,
+            heart: 0,
+            helpful: 0,
+            total: 0
+          };
+        }
+        
+        if (reactionCountsMap[reaction.post_id].hasOwnProperty(reaction.reaction_type)) {
+          reactionCountsMap[reaction.post_id][reaction.reaction_type]++;
+          reactionCountsMap[reaction.post_id].total++;
+        }
+      });
+    }
+
+    //Attach reaction counts to posts
     const postsWithCounts = data.map(post => ({
       ...post,
       comment_count: post.comments?.length || 0,
-      reaction_count: post.post_reactions?.length || 0
+      reaction_count: reactionCountsMap[post.id]?.total || 0,
+      reaction_counts: reactionCountsMap[post.id] || { like: 0, heart: 0, helpful: 0, total: 0 }
     }));
 
     res.json(postsWithCounts);
@@ -320,7 +354,7 @@ router.get('/posts/:id/reactions/counts', async (req, res) => {
 
     if (error) throw error;
 
-    // Count reactions by type
+    //Count reactions by type
     const counts = {
       like: 0,
       heart: 0,
@@ -387,7 +421,7 @@ router.post('/posts/:id/reactions', async (req, res) => {
   }
 });
 
-// GET user's reactions for a post
+//GET user's reactions for a post
 router.get('/posts/:id/reactions', async (req, res) => {
   try {
     const { user_id } = req.query;
