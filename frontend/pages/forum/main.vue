@@ -326,19 +326,19 @@ onMounted(async () => {
   try {
     const base_url = import.meta.env.VITE_BASE_URL
     
+    //Get token data
     const tokenResponse = await fetch(`${base_url}/auth/me`, { 
       headers: { Authorization: `Bearer ${token.value}` } 
     })
     const tokenData = await tokenResponse.json()
-
-    const userResponse = await fetch(`${base_url}/users`)
-    const users = await userResponse.json()
-    const targetUser = users.find(user => user.username === tokenData.username)
-
-    if (targetUser) {
-      currentUserId.value = targetUser.id
-      await fetchUserCommunities(targetUser.id)
-    }
+    if (tokenData.user_id) 
+    {
+      currentUserId.value = tokenData.user_id
+      
+      //Fetch user's communities using the user_id
+      await fetchUserCommunities(tokenData.user_id)
+    } 
+  
   } catch (error) {
     console.error('Error loading user data:', error)
   }

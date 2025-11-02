@@ -581,13 +581,11 @@ const loadCurrentUser = async () => {
     })
     const tokenData = await tokenResponse.json()
 
-    const response = await fetch(`${base_url}/users`)
-    const users = await response.json()
-    const targetUser = users.find(user => user.username === tokenData.username)
-
-    if (targetUser) {
-      currentUserId.value = targetUser.id
-    }
+    if (tokenData.user_id) 
+    {
+      currentUserId.value = tokenData.user_id
+    } 
+    
   } catch (error) {
     console.error('Error loading user:', error)
   }
