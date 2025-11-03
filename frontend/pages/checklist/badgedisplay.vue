@@ -1,20 +1,27 @@
 <template>
   <div class="badges-section">
     
-    <!-- Badges Grid (stays as original) -->
+    <!-- Badges Grid -->
     <div class="badges-container">
       <div 
-        v-for="badge in allBadges" 
+        v-for="(badge, index) in allBadges" 
         :key="badge.id"
         :class="['badge-item', { 
           'badge-earned': badge.earned, 
           'badge-locked': !badge.earned,
           'special': badge.special && badge.earned
         }]"
+        :data-animation="getAnimationClass(index)"
       >
         <div class="badge-paw">
           <div class="paw-background">🐾</div>
-          <div class="badge-emoji">{{ badge.emoji }}</div>
+          <!-- Use image if available, otherwise show styled placeholder -->
+          <div v-if="badge.image" class="badge-image-wrapper" :style="getBadgeSize(badge)">
+            <img :src="badge.image" :alt="badge.name" class="badge-image" />
+          </div>
+          <div v-else class="badge-placeholder" :style="getBadgeSize(badge)">
+            <div class="placeholder-paw">🐾</div>
+          </div>
         </div>
         <div class="badge-name">{{ badge.name }}</div>
       </div>
@@ -32,7 +39,13 @@
               :key="badge.id"
               class="badge-carousel-slide"
             >
-              <div class="next-badge-icon">{{ badge.emoji }}</div>
+              <!-- Use image if available in carousel, otherwise show placeholder -->
+              <div v-if="badge.image" class="next-badge-icon-wrapper" :style="getCarouselSize(badge)">
+                <img :src="badge.image" :alt="badge.name" class="next-badge-icon-img" />
+              </div>
+              <div v-else class="next-badge-placeholder" :style="getCarouselSize(badge)">
+                🐾
+              </div>
               <div class="next-badge-name">{{ badge.name }}</div>
             </div>
           </div>
@@ -74,6 +87,43 @@ let autoplayInterval = null
 const unearnedBadges = computed(() => {
   return props.allBadges.filter(badge => !badge.earned)
 })
+
+const getAnimationClass = (index) => {
+  const animations = ['float', 'bounce', 'wiggle', 'spin', 'pulse', 'swing']
+  return animations[index % animations.length]
+}
+
+const getBadgeSize = (badge) => {
+  const style = {}
+  
+  if (badge.size) {
+    style.width = badge.size + 'px'
+    style.height = badge.size + 'px'
+  }
+  
+  if (badge.yOffset) {
+    style.transform = `translateY(${badge.yOffset}px)`
+  }
+  
+  return style
+}
+
+const getCarouselSize = (badge) => {
+  const style = {}
+  
+  if (badge.size) {
+    // Make carousel badges slightly smaller (about 75% of original)
+    const carouselSize = Math.round(badge.size * 0.76)
+    style.width = carouselSize + 'px'
+    style.height = carouselSize + 'px'
+  }
+  
+  if (badge.yOffset) {
+    style.transform = `translateY(${badge.yOffset}px)`
+  }
+  
+  return style
+}
 
 const goToSlide = (index) => {
   currentSlide.value = index
@@ -118,7 +168,7 @@ onBeforeUnmount(() => {
   padding-top: 20px;
 }
 
-/* Badges Grid (original) */
+/* Badges Grid */
 .badges-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
@@ -178,13 +228,116 @@ onBeforeUnmount(() => {
   filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
 }
 
-.badge-earned .badge-emoji {
+/* Badge Placeholder Styling */
+.badge-placeholder {
+  position: relative;
+  width: 85px;
+  height: 85px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #FFD9B3, #FFC999);
+  border-radius: 50%;
+  z-index: 1;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.placeholder-paw {
+  font-size: 2.5em;
+  opacity: 0.6;
+}
+
+/* Badge Image Container - Creates uniform bounds */
+.badge-image-wrapper {
+  position: relative;
+  width: 85px;
+  height: 85px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+/* Badge Image Styling - UNIFORM SIZE */
+.badge-image {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+}
+
+/* Different Animations for Each Badge */
+.badge-earned[data-animation="float"] .badge-emoji,
+.badge-earned[data-animation="float"] .badge-image-wrapper,
+.badge-earned[data-animation="float"] .badge-placeholder {
   animation: float 3s ease-in-out infinite;
 }
 
+.badge-earned[data-animation="bounce"] .badge-emoji,
+.badge-earned[data-animation="bounce"] .badge-image-wrapper,
+.badge-earned[data-animation="bounce"] .badge-placeholder {
+  animation: bounce 2s ease-in-out infinite;
+}
+
+.badge-earned[data-animation="wiggle"] .badge-emoji,
+.badge-earned[data-animation="wiggle"] .badge-image-wrapper,
+.badge-earned[data-animation="wiggle"] .badge-placeholder {
+  animation: wiggle 2.5s ease-in-out infinite;
+}
+
+.badge-earned[data-animation="spin"] .badge-emoji,
+.badge-earned[data-animation="spin"] .badge-image-wrapper,
+.badge-earned[data-animation="spin"] .badge-placeholder {
+  animation: spin 4s linear infinite;
+}
+
+.badge-earned[data-animation="pulse"] .badge-emoji,
+.badge-earned[data-animation="pulse"] .badge-image-wrapper,
+.badge-earned[data-animation="pulse"] .badge-placeholder {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.badge-earned[data-animation="swing"] .badge-emoji,
+.badge-earned[data-animation="swing"] .badge-image-wrapper,
+.badge-earned[data-animation="swing"] .badge-placeholder {
+  animation: swing 3s ease-in-out infinite;
+}
+
+/* Animation Keyframes */
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-8px); }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+@keyframes swing {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(15deg); }
+  40% { transform: rotate(-10deg); }
+  60% { transform: rotate(5deg); }
+  80% { transform: rotate(-5deg); }
 }
 
 .badge-name {
@@ -194,7 +347,7 @@ onBeforeUnmount(() => {
   margin-top: 5px;
 }
 
-/* Special badge sparkle */
+/* Special badge sparkle - DISABLED
 .badge-item.special::after {
   content: '✨';
   position: absolute;
@@ -214,6 +367,7 @@ onBeforeUnmount(() => {
     transform: scale(1.2) rotate(180deg); 
   }
 }
+*/
 
 /* Next Badge Section */
 .next-badge {
@@ -257,8 +411,40 @@ onBeforeUnmount(() => {
 
 .next-badge-icon {
   font-size: 2.5em;
-  filter: grayscale(50%);
   flex-shrink: 0;
+}
+
+/* Carousel Placeholder */
+.next-badge-placeholder {
+  width: 65px;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #FFD9B3, #FFC999);
+  border-radius: 50%;
+  font-size: 2em;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+/* Next Badge Image Wrapper in Carousel */
+.next-badge-icon-wrapper {
+  width: 65px;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Next Badge Image in Carousel - UNIFORM SIZE */
+.next-badge-icon-img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
 }
 
 .next-badge-name {
@@ -340,6 +526,43 @@ onBeforeUnmount(() => {
   
   .badge-emoji {
     font-size: 2.5em;
+  }
+  
+  /* Mobile placeholder sizing */
+  .badge-placeholder {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .placeholder-paw {
+    font-size: 2em;
+  }
+  
+  /* Uniform size on mobile too */
+  .badge-image-wrapper {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .badge-image {
+    max-width: 100%;
+    max-height: 100%;
+  }
+  
+  .next-badge-icon-wrapper {
+    width: 55px;
+    height: 55px;
+  }
+  
+  .next-badge-placeholder {
+    width: 55px;
+    height: 55px;
+    font-size: 1.5em;
+  }
+  
+  .next-badge-icon-img {
+    max-width: 100%;
+    max-height: 100%;
   }
 }
 </style>

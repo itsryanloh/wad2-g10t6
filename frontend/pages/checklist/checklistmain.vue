@@ -115,7 +115,7 @@ const BADGE_CONFIG = [
     id: 'pawfect_match',
     name: 'Paw-fect Match',
     emoji: '🐱',
-    image: null,
+    image: '/uniform_cat1.png',
     itemIndex: 0,
     gradient: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)'
   },
@@ -123,8 +123,9 @@ const BADGE_CONFIG = [
     id: 'healthy_start',
     name: 'Healthy Start',
     emoji: '🦁',
-    image: null,
+    image: '/uniform_cat2.png',
     itemIndex: 1,
+    yOffset: 11,
     gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
     special: true
   },
@@ -132,7 +133,7 @@ const BADGE_CONFIG = [
     id: 'furever_home',
     name: 'Furever Home',
     emoji: '🐈',
-    image: null,
+    image: '/uniform_cat3.png',
     itemIndex: 2,
     gradient: 'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)'
   },
@@ -140,7 +141,7 @@ const BADGE_CONFIG = [
     id: 'getting_ready',
     name: 'Getting Ready',
     emoji: '🐈‍⬛',
-    image: null,
+    image: '/cat4.png',
     itemIndex: 3,
     gradient: 'linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)'
   },
@@ -148,7 +149,7 @@ const BADGE_CONFIG = [
     id: 'best_furiend',
     name: 'Best Furiend',
     emoji: '🦁',
-    image: null,
+    image: '/cat5.png',
     itemIndex: 4,
     gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
     special: true
@@ -157,7 +158,7 @@ const BADGE_CONFIG = [
     id: 'cat_parent',
     name: 'Cat Parent',
     emoji: '🦁',
-    image: null,
+    image: '/cat6(1).png',
     itemIndex: 5,
     gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
     special: true
@@ -170,6 +171,7 @@ const earnedBadges = ref([])
 const notificationRef = ref(null)
 const showLoginModal = ref(false)
 const userDismissedWarning = ref(false)
+const windowWidth = ref(0)
 
 const canvas = ref(null)
 const catContainer = ref(null)
@@ -220,19 +222,54 @@ const progress = computed(() => {
   return (completed / total) * 100
 })
 
-const catPositions = {
-  0: -175,
-  1: -40,
-  2: 160,
-  3: 350,
-  4: 550,    
-  5: 740,
-  6: 930
+// Base positions
+const desktopPositions = {
+  0: -175,  // 0 items completed
+  1: -40,   // 1 item completed
+  2: 160,   // 2 items completed
+  3: 350,   // 3 items completed
+  4: 550,   // 4 items completed
+  5: 740,   // 5 items completed
+  6: 930    // All items completed
 }
+
+// Scaling factors for different screen sizes
+const scalingFactors = {
+  lg: 1.0,
+  md: 0.55,
+  sm: 0.30
+}
+
+// Auto-calculate positions for all screen sizes
+const catPositionMaps = computed(() => {
+  const maps = {}
+  
+  for (const [breakpoint, factor] of Object.entries(scalingFactors)) {
+    maps[breakpoint] = {}
+    for (const [index, position] of Object.entries(desktopPositions)) {
+      maps[breakpoint][index] = Math.round(position * factor)
+    }
+  }
+  
+  return maps
+})
+
+const currentBreakpoint = computed(() => {
+  const width = windowWidth.value
+  if (width < 768) return 'sm'
+  if (width < 992) return 'md'
+  return 'lg'
+})
 
 const catPosition = computed(() => {
   const completed = checklistItems.value.filter(i => i.completed).length
-  return catPositions[completed] || catPositions[0]
+  const breakpoint = currentBreakpoint.value
+  const position = catPositionMaps.value[breakpoint][completed] || catPositionMaps.value[breakpoint][0]
+  
+  // Debug: Log position changes
+  console.log(`Cat Position - Breakpoint: ${breakpoint}, Items: ${completed}, Position: ${position}px`)
+  
+  return position
 })
 
 function getAuthHeaders() {
@@ -358,6 +395,7 @@ async function saveChecklistItem(index, completed) {
   } catch (err) {
     console.error('Error saving:', err)
     error.value = 'Failed to save. Please try again.'
+    // Revert the change
     checklistItems.value[index].completed = !completed
   }
 }
@@ -431,6 +469,9 @@ onMounted(async () => {
   console.log('Component mounted');
   console.log('Base URL:', base_url);
   
+  // Set initial window width
+  windowWidth.value = window.innerWidth
+  
   // --- Load user data ---
   await loadUserData();
 
@@ -447,8 +488,21 @@ onMounted(async () => {
       },
     });
 
-    // --- Handle window resize ---
-    onResize = () => riveInstance?.resizeDrawingSurfaceToCanvas();
+    // --- Handle window resize with debounce for performance ---
+    let resizeTimeout;
+    onResize = () => {
+      // Clear previous timeout
+      clearTimeout(resizeTimeout);
+      
+      // Update immediately for cat position (smooth)
+      windowWidth.value = window.innerWidth;
+      
+      // Debounce canvas resize for performance
+      resizeTimeout = setTimeout(() => {
+        riveInstance?.resizeDrawingSurfaceToCanvas();
+      }, 100);
+    };
+    
     window.addEventListener('resize', onResize);
   } catch (err) {
     console.error('Rive initialization failed:', err);
@@ -655,6 +709,12 @@ onBeforeUnmount(() => {
   margin-bottom: 10px;
 }
 
+@media (max-width: 768px) {
+  .progress-section {
+    margin-bottom: 5px;
+  }
+}
+
 .cat-container {
   position: absolute;
   top: -255px;
@@ -662,6 +722,24 @@ onBeforeUnmount(() => {
   height: 400px;
   z-index: 2;
   transition: left 0.5s ease;
+}
+
+/* Tablet (768px - 992px) */
+@media (max-width: 991px) {
+  .cat-container {
+    width: 300px;
+    height: 300px;
+    top: -200px;
+  }
+}
+
+/* Mobile (<768px) */
+@media (max-width: 767px) {
+  .cat-container {
+    width: 200px;
+    height: 200px;
+    top: -150px;
+  }
 }
 
 .cat-canvas {
@@ -672,6 +750,20 @@ onBeforeUnmount(() => {
 .progress-container {
   width: 100%;
   margin-top: 60px;
+}
+
+/* Tablet (768px - 992px) */
+@media (max-width: 991px) {
+  .progress-container {
+    margin-top: 45px;
+  }
+}
+
+/* Mobile (<768px) */
+@media (max-width: 767px) {
+  .progress-container {
+    margin-top: 35px;
+  }
 }
 
 .progress-bar-custom {
