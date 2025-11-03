@@ -260,10 +260,8 @@ definePageMeta({
 }
 
 .feature-item {
-  background: linear-gradient(135deg, #FFF4E6 0%, #ffffff 100%);
-  padding: 20px;
+  padding: 10px;
   border-radius: 20px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
   border: 2px solid transparent;
   display: flex;
