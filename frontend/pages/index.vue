@@ -260,7 +260,7 @@ definePageMeta({
 }
 
 .feature-item {
-  padding: 20px;
+  padding: 10px;
   border-radius: 20px;
   transition: all 0.3s ease;
   border: 2px solid transparent;
