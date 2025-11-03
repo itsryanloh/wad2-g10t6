@@ -250,7 +250,7 @@ function getAuthHeaders() {
     if (match) token = decodeURIComponent(match[1]);
   }
 
-  console.log('🔑 Using token:', token ? 'Token found' : 'No token');
+  console.log('Using token:', token ? 'Token found' : 'No token');
 
   return {
     'Content-Type': 'application/json',
@@ -263,21 +263,21 @@ async function loadUserData() {
     const headers = getAuthHeaders();
     
     if (!headers.Authorization) {
-      console.log('👤 No user logged in - checklist available but not saved');
+      console.log('No user logged in - checklist available but not saved');
       loading.value = false
       return
     }
     
-    console.log('📡 Fetching from:', `${base_url}/users/me/checklist`);
+    console.log('Fetching from:', `${base_url}/users/me/checklist`);
     
     const response = await fetch(`${base_url}/users/me/checklist`, {
       headers: headers
     })
     
-    console.log('📥 Response status:', response.status);
+    console.log('Response status:', response.status);
     
     if (response.status === 401) {
-      console.log('🔑 Session expired');
+      console.log('Session expired');
       localStorage.removeItem('token')
       loading.value = false
       return
@@ -285,12 +285,12 @@ async function loadUserData() {
     
     if (!response.ok) {
       const errorData = await response.text()
-      console.error('❌ Error response:', errorData)
+      console.error('Error response:', errorData)
       throw new Error(`Failed to load checklist: ${response.status}`)
     }
     
     const items = await response.json()
-    console.log('✅ Loaded items:', items);
+    console.log('Loaded items:', items);
     
     // Reset all items to uncompleted
     checklistItems.value.forEach(item => item.completed = false)
@@ -309,7 +309,7 @@ async function loadUserData() {
     error.value = ''
     
   } catch (err) {
-    console.error('❌ Error loading data:', err)
+    console.error('Error loading data:', err)
     error.value = 'Failed to load checklist. Please try again.'
   } finally {
     loading.value = false
@@ -320,13 +320,13 @@ async function saveChecklistItem(index, completed) {
   const headers = getAuthHeaders();
   
   if (!headers.Authorization) {
-    console.log('⚠️ Not logged in - changes not saved');
+    console.log('Not logged in - changes not saved');
     return
   }
   
   try {
     if (completed) {
-      console.log(`📤 Adding item ${index}`);
+      console.log(`Adding item ${index}`);
       const response = await fetch(`${base_url}/users/me/checklist/${index}`, {
         method: 'POST',
         headers: headers
@@ -334,13 +334,13 @@ async function saveChecklistItem(index, completed) {
       
       if (!response.ok) {
         const errorData = await response.text()
-        console.error('❌ Error saving:', errorData)
+        console.error('Error saving:', errorData)
         throw new Error('Failed to save')
       }
       
-      console.log('✅ Item added');
+      console.log('Item added');
     } else {
-      console.log(`📤 Removing item ${index}`);
+      console.log(`Removing item ${index}`);
       const response = await fetch(`${base_url}/users/me/checklist/${index}`, {
         method: 'DELETE',
         headers: headers
@@ -348,17 +348,16 @@ async function saveChecklistItem(index, completed) {
       
       if (!response.ok) {
         const errorData = await response.text()
-        console.error('❌ Error deleting:', errorData)
+        console.error('Error deleting:', errorData)
         throw new Error('Failed to delete')
       }
       
-      console.log('✅ Item removed');
+      console.log('Item removed');
     }
     
   } catch (err) {
-    console.error('❌ Error saving:', err)
+    console.error('Error saving:', err)
     error.value = 'Failed to save. Please try again.'
-    // Revert the change
     checklistItems.value[index].completed = !completed
   }
 }
@@ -429,8 +428,8 @@ function continueWithoutSaving() {
 onMounted(async () => {
   if (typeof window === 'undefined') return;
 
-  console.log('🚀 Component mounted');
-  console.log('🔧 Base URL:', base_url);
+  console.log('Component mounted');
+  console.log('Base URL:', base_url);
   
   // --- Load user data ---
   await loadUserData();
