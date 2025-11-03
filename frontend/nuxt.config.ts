@@ -4,7 +4,12 @@ export default defineNuxtConfig({
   modules: ['@nuxt/image', '@nuxt/ui'],
 
   devServer: {
-    host: "0.0.0.0"
+    host: "0.0.0.0",
+    port: 80
+  },
+
+  routeRules: {
+    '/index.html': { redirect: '/' }
   },
 
   app: {
