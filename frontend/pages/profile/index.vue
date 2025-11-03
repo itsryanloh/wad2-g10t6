@@ -157,7 +157,7 @@
                   />
                 </div>
 
-                <div class="row mx-0">
+                <div v-if="currentUser.role !== 'org'" class="row mx-0">
                   <div class="col-md-6 ps-0">
                     <div class="form-section">
                       <label class="section-label">
@@ -174,7 +174,7 @@
                     </div>
                   </div>
                   
-                  <div class="col-md-6 pe-0">
+                  <div v-if="currentUser.role !== 'org'" class="col-md-6 pe-0">
                     <div class="form-section">
                       <label class="section-label">
                         <i class="fas fa-venus-mars me-2"></i>Gender
@@ -1047,8 +1047,8 @@ const handleLogout = () => {
   right: 0;
   bottom: 0;
   background-color: #ccc;
-  -webkit-transition: .4s;
-  transition: .4s;
+  -webkit-transition: .3s;
+  transition: .3s;
 }
 
 .slider:before {
@@ -1059,8 +1059,8 @@ const handleLogout = () => {
   left: 4px;
   bottom: 4px;
   background-color: white;
-  -webkit-transition: .4s;
-  transition: .4s;
+  -webkit-transition: .3s;
+  transition: .3s;
 }
 
 input:checked + .slider {
