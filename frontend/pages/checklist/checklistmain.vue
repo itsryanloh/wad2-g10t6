@@ -82,6 +82,23 @@
 
     <!-- Badge Notification -->
     <BadgeNotification ref="notificationRef" />
+
+    <!-- Login Warning Modal -->
+    <div v-if="showLoginModal" class="modal-overlay" @click="showLoginModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>🔒 Login Required</h3>
+        </div>
+        <div class="modal-body">
+          <p>Please log in to save your checklist progress!</p>
+          <p class="warning-text">Without logging in, your progress will be lost when you close the page.</p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-login" @click="goToLogin">Log In</button>
+          <button class="btn-cancel" @click="continueWithoutSaving">Continue Anyway</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -90,6 +107,8 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { Rive } from '@rive-app/canvas'
 import BadgeDisplay from './badgedisplay.vue'
 import BadgeNotification from './badgenotification.vue'
+
+const base_url = import.meta.env.VITE_BASE_URL;
 
 const BADGE_CONFIG = [
   {
@@ -146,9 +165,11 @@ const BADGE_CONFIG = [
 ]
 
 const loading = ref(true)
-const userId = ref(null)
+const error = ref('')
 const earnedBadges = ref([])
 const notificationRef = ref(null)
+const showLoginModal = ref(false)
+const userDismissedWarning = ref(false)
 
 const canvas = ref(null)
 const catContainer = ref(null)
@@ -216,7 +237,6 @@ const catPosition = computed(() => {
 
 function getAuthHeaders() {
   if (typeof window === 'undefined') {
-    // SSR: just return empty headers
     return {
       'Content-Type': 'application/json',
       'Authorization': ''
@@ -230,6 +250,8 @@ function getAuthHeaders() {
     if (match) token = decodeURIComponent(match[1]);
   }
 
+  console.log('🔑 Using token:', token ? 'Token found' : 'No token');
+
   return {
     'Content-Type': 'application/json',
     'Authorization': token ? `Bearer ${token}` : ''
@@ -238,35 +260,42 @@ function getAuthHeaders() {
 
 async function loadUserData() {
   try {
-    const token = localStorage.getItem('token');
+    const headers = getAuthHeaders();
     
-    if (!token) {
-      console.log('No user logged in - using local storage')
-      loadFromLocalStorage()
+    if (!headers.Authorization) {
+      console.log('👤 No user logged in - checklist available but not saved');
       loading.value = false
       return
     }
     
-    const response = await fetch('/api/users/me/checklist', {
-      headers: getAuthHeaders()
+    console.log('📡 Fetching from:', `${base_url}/users/me/checklist`);
+    
+    const response = await fetch(`${base_url}/users/me/checklist`, {
+      headers: headers
     })
     
+    console.log('📥 Response status:', response.status);
+    
     if (response.status === 401) {
-      console.log('Session expired - using local storage')
+      console.log('🔑 Session expired');
       localStorage.removeItem('token')
-      loadFromLocalStorage()
       loading.value = false
       return
     }
     
     if (!response.ok) {
-      throw new Error('Failed to load checklist')
+      const errorData = await response.text()
+      console.error('❌ Error response:', errorData)
+      throw new Error(`Failed to load checklist: ${response.status}`)
     }
     
     const items = await response.json()
+    console.log('✅ Loaded items:', items);
     
+    // Reset all items to uncompleted
     checklistItems.value.forEach(item => item.completed = false)
     
+    // Mark completed items
     if (items && items.length > 0) {
       items.forEach(item => {
         if (item.item_index < checklistItems.value.length) {
@@ -277,44 +306,60 @@ async function loadUserData() {
       rebuildBadges()
     }
     
-    userId.value = true
+    error.value = ''
     
-  } catch (error) {
-    console.error('Error loading data:', error)
-    loadFromLocalStorage()
+  } catch (err) {
+    console.error('❌ Error loading data:', err)
+    error.value = 'Failed to load checklist. Please try again.'
   } finally {
     loading.value = false
   }
 }
 
 async function saveChecklistItem(index, completed) {
-  const token = localStorage.getItem('token');
+  const headers = getAuthHeaders();
   
-  if (!token) {
-    saveToLocalStorage()
+  if (!headers.Authorization) {
+    console.log('⚠️ Not logged in - changes not saved');
     return
   }
   
   try {
     if (completed) {
-      const response = await fetch(`/api/users/me/checklist/${index}`, {
+      console.log(`📤 Adding item ${index}`);
+      const response = await fetch(`${base_url}/users/me/checklist/${index}`, {
         method: 'POST',
-        headers: getAuthHeaders()
+        headers: headers
       })
       
-      if (!response.ok) throw new Error('Failed to save')
+      if (!response.ok) {
+        const errorData = await response.text()
+        console.error('❌ Error saving:', errorData)
+        throw new Error('Failed to save')
+      }
+      
+      console.log('✅ Item added');
     } else {
-      const response = await fetch(`/api/users/me/checklist/${index}`, {
+      console.log(`📤 Removing item ${index}`);
+      const response = await fetch(`${base_url}/users/me/checklist/${index}`, {
         method: 'DELETE',
-        headers: getAuthHeaders()
+        headers: headers
       })
       
-      if (!response.ok) throw new Error('Failed to delete')
+      if (!response.ok) {
+        const errorData = await response.text()
+        console.error('❌ Error deleting:', errorData)
+        throw new Error('Failed to delete')
+      }
+      
+      console.log('✅ Item removed');
     }
     
-  } catch (error) {
-    console.error('Error saving:', error)
-    saveToLocalStorage()
+  } catch (err) {
+    console.error('❌ Error saving:', err)
+    error.value = 'Failed to save. Please try again.'
+    // Revert the change
+    checklistItems.value[index].completed = !completed
   }
 }
 
@@ -325,29 +370,6 @@ function rebuildBadges() {
       earnedBadges.value.push(badge.id)
     }
   }
-}
-
-// LocalStorage fallback (for users not logged in)
-function loadFromLocalStorage() {
-  const saved = localStorage.getItem('catChecklist')
-  if (saved) {
-    try {
-      const data = JSON.parse(saved)
-      data.forEach((completed, index) => {
-        if (index < checklistItems.value.length) {
-          checklistItems.value[index].completed = completed
-        }
-      })
-      rebuildBadges()
-    } catch (e) {
-      console.error('Error loading from localStorage:', e)
-    }
-  }
-}
-
-function saveToLocalStorage() {
-  const data = checklistItems.value.map(item => item.completed)
-  localStorage.setItem('catChecklist', JSON.stringify(data))
 }
 
 function checkForNewBadges() {
@@ -382,16 +404,35 @@ async function showBadgeNotifications(badges) {
 }
 
 const toggleItem = async (index) => {
+  const headers = getAuthHeaders();
+  
+  // Check if user is logged in
+  if (!headers.Authorization && !userDismissedWarning.value) {
+    showLoginModal.value = true
+    return
+  }
+  
   checklistItems.value[index].completed = !checklistItems.value[index].completed
   await saveChecklistItem(index, checklistItems.value[index].completed)
   checkForNewBadges()
 }
 
+function goToLogin() {
+  window.location.href = '/login'
+}
+
+function continueWithoutSaving() {
+  userDismissedWarning.value = true
+  showLoginModal.value = false
+}
+
 onMounted(async () => {
   if (typeof window === 'undefined') return;
 
+  console.log('🚀 Component mounted');
+  console.log('🔧 Base URL:', base_url);
+  
   // --- Load user data ---
-  console.log('Token found:', getAuthHeaders().Authorization);
   await loadUserData();
 
   // --- Initialize Rive animation ---
@@ -432,6 +473,127 @@ onBeforeUnmount(() => {
 
 .container {
   max-width: 1400px;
+}
+
+/* Alert */
+.alert {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-content {
+  background: white;
+  border-radius: 20px;
+  padding: 0;
+  max-width: 450px;
+  width: 90%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-header {
+  background: linear-gradient(135deg, #FF8243 0%, #FFA566 100%);
+  padding: 25px;
+  border-radius: 20px 20px 0 0;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: white;
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.modal-body {
+  padding: 30px 25px;
+  text-align: center;
+}
+
+.modal-body p {
+  margin: 0 0 15px 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.modal-body p:last-child {
+  margin-bottom: 0;
+}
+
+.warning-text {
+  color: #FF6B6B;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 10px;
+  padding: 0 25px 25px 25px;
+}
+
+.btn-login,
+.btn-cancel {
+  flex: 1;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-login {
+  background: linear-gradient(135deg, #FF8243 0%, #FFA566 100%);
+  color: white;
+}
+
+.btn-login:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(255, 130, 67, 0.4);
+}
+
+.btn-cancel {
+  background: #f0f0f0;
+  color: #666;
+}
+
+.btn-cancel:hover {
+  background: #e0e0e0;
 }
 
 /* Loading spinner */
