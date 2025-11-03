@@ -218,13 +218,13 @@ const getPostTypeIcon = (type) => {
   return icons[type] || 'fas fa-circle'
 }
 
-// Handle file selection
+//Handle file selection
 const handleFileSelect = async (event) => {
   const files = Array.from(event.target.files)
   await uploadFiles(files)
 }
 
-// Handle drag and drop
+//Handle drag and drop
 const handleDrop = async (event) => {
   isDragging.value = false
   const files = Array.from(event.dataTransfer.files).filter(file =>
@@ -239,7 +239,7 @@ const handleDrop = async (event) => {
   await uploadFiles(files)
 }
 
-// Upload files to backend data bucket
+//Upload files to backend data bucket
 const uploadFiles = async (files) => {
   if (files.length + (editForm.value.image_urls?.length || 0) > 5) {
     uploadError.value = 'Maximum 5 images allowed'
@@ -255,7 +255,7 @@ const uploadFiles = async (files) => {
       formData.append('images', file)
     })
 
-    // Upload to backend data bucket
+    //Upload to backend data bucket
     const response = await fetch(`${base_url}/upload-images`, {
       method: 'POST',
       body: formData
@@ -267,7 +267,7 @@ const uploadFiles = async (files) => {
       throw new Error(data.error || 'Upload failed')
     }
 
-    // Add uploaded URLs to form
+    //Add uploaded URLs to form
     editForm.value.image_urls = [...(editForm.value.image_urls || []), ...data.urls]
 
   } catch (error) {
@@ -278,7 +278,7 @@ const uploadFiles = async (files) => {
   }
 }
 
-// Remove image
+//Remove image
 const removeImage = (index) => {
   editForm.value.image_urls.splice(index, 1)
 }
@@ -290,7 +290,7 @@ const handleSubmit = async () => {
 
   try {
     const postId = route.query.postId
-    // Debug logging
+    //Debug logging
     console.log('=== SUBMITTING UPDATE ===')
     console.log('Post ID:', postId)
     console.log('Form data being sent:', {

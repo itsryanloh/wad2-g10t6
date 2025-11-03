@@ -1,9 +1,8 @@
 // @ts-check
-import { CommId, CommUserPair } from "../schemas/communities.js";
-import { addUserToCommunity, getAllCommunities, getCommunityById, removeUserFromCommunity } from "../utils/communities.js";
+import { CommId, CommUserPair, UserId } from "../schemas/communities.js";
+import { addUserToCommunity, getAllCommunities, getCommunityById, removeUserFromCommunity, getUserCommunityMemberships } from "../utils/communities.js";
 
 /** @import {Request, Response} from "express" */
-
 /**
  * @param {Request} _req
  * @param {Response} res
@@ -54,6 +53,20 @@ export async function leaveCommunity(req, res) {
     .then(wrapSupabaseResponse(res))
 }
 
+/**
+ * Get all community memberships for a user
+ * @param {Request} req
+ * @param {Response} res
+ */
+export async function getUserMemberships(req, res) {
+  const { data, success, error } = UserId.safeParse(req.query.user_id)
+
+  if (!success)
+    return res.status(400).send(error.issues);
+
+  return getUserCommunityMemberships(data)
+    .then(wrapSupabaseResponse(res))
+}
 
 /**
  * @param {Response} res 
