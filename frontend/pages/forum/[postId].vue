@@ -103,12 +103,39 @@
               </span>
             </div>
 
-            <!-- Engagement Bar -->
+            <!-- Enhanced Engagement Bar with Multiple Reactions -->
             <div class="engagement-bar">
-              <button @click="handleReaction" :class="['reaction-btn', { active: hasLiked }]">
-                <i :class="hasLiked ? 'fas fa-heart' : 'far fa-heart'"></i>
-                <span>{{ reactionCount }}</span>
-              </button>
+              <div class="reaction-buttons">
+                <!-- Like Button (Thumbs Up) -->
+                <button 
+                  @click.stop="handleReaction('like')" 
+                  :class="['reaction-btn', { active: userReactions.like }]"
+                  title="Like"
+                >
+                  <i :class="userReactions.like ? 'fas fa-thumbs-up' : 'far fa-thumbs-up'"></i>
+                  <span>{{ reactionCounts.like }}</span>
+                </button>
+
+                <!-- Heart Button -->
+                <button 
+                  @click.stop="handleReaction('heart')" 
+                  :class="['reaction-btn', 'heart-btn', { active: userReactions.heart }]"
+                  title="Love"
+                >
+                  <i :class="userReactions.heart ? 'fas fa-heart' : 'far fa-heart'"></i>
+                  <span>{{ reactionCounts.heart }}</span>
+                </button>
+
+                <!-- Helpful Button (Star) -->
+                <button 
+                  @click.stop="handleReaction('helpful')" 
+                  :class="['reaction-btn', 'helpful-btn', { active: userReactions.helpful }]"
+                  title="Helpful"
+                >
+                  <i :class="userReactions.helpful ? 'fas fa-star' : 'far fa-star'"></i>
+                  <span>{{ reactionCounts.helpful }}</span>
+                </button>
+              </div>
 
               <div class="stats">
                 <span class="stat-item">
@@ -119,6 +146,30 @@
                   <i class="far fa-comment me-1"></i>
                   {{ comments.length }} comments
                 </span>
+              </div>
+            </div>
+
+            <!-- Adoption Section (Only for adoption posts) -->
+            <div v-if="currentPost.post_type === 'adoption'" class="adoption-section">
+              <div class="adoption-card">
+                <div class="adoption-icon">
+                  <i class="fas fa-clipboard-check"></i>
+                </div>
+                <div class="adoption-content">
+                  <h3 class="adoption-title">Interested in Adopting?</h3>
+                  <p class="adoption-text">
+                    Start your adoption journey by completing our adoption checklist to ensure
+                    you're ready to welcome a new furry friend into your home.
+                  </p>
+                  <button 
+                    @click="navigateTo('/checklist/checklistmain')" 
+                    class="adoption-btn"
+                  >
+                    <i class="fas fa-heart me-2"></i>
+                    Start Adoption Checklist
+                    <i class="fas fa-arrow-right ms-2"></i>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -191,8 +242,7 @@
                     <img :src="reply.users?.avatar_url || 'https://i.pravatar.cc/150'" class="comment-avatar" />
                     <div class="comment-content">
                       <div class="comment-header">
-                        <span class="comment-author">{{ reply.users?.name || 'Anonymous'
-                          }}</span>
+                        <span class="comment-author">{{ reply.users?.name || 'Anonymous' }}</span>
                         <span class="comment-date">{{ formatDate(reply.created_at) }}</span>
                       </div>
                       <p class="comment-text">{{ reply.content }}</p>
@@ -229,10 +279,8 @@
                         class="comment-avatar small-avatar" />
                       <div class="comment-content">
                         <div class="comment-header">
-                          <span class="comment-author">{{ nestedReply.users?.name ||
-                            'Anonymous' }}</span>
-                          <span class="comment-date">{{ formatDate(nestedReply.created_at)
-                            }}</span>
+                          <span class="comment-author">{{ nestedReply.users?.name || 'Anonymous' }}</span>
+                          <span class="comment-date">{{ formatDate(nestedReply.created_at) }}</span>
                         </div>
                         <p class="comment-text">{{ nestedReply.content }}</p>
 
@@ -278,7 +326,7 @@
         </div>
         <h2>Post not found</h2>
         <p>The post you're looking for doesn't exist or has been removed.</p>
-        <button class="back-home-btn" @click="navigateTo('/forum')">
+        <button class="back-home-btn" @click="navigateTo('/forum/main')">
           <i class="fas fa-home me-2"></i>Back to Forum
         </button>
       </div>
@@ -305,19 +353,27 @@ const {
 const showMapModal = ref(false)
 const comments = ref([])
 const loadingComments = ref(false)
-const hasLiked = ref(false)
-const reactionCount = ref(0)
+
+// Multiple reaction types with persistent state
+const userReactions = ref({
+  like: false,
+  heart: false,
+  helpful: false
+})
+
+const reactionCounts = ref({
+  like: 0,
+  heart: 0,
+  helpful: 0
+})
+
 const newComment = ref('')
 const addingComment = ref(false)
 const currentCarouselIndex = ref(0)
 const replyingTo = ref(null)
 const replyContent = ref('')
 const currentUserId = ref(null)
-const base_url = import.meta.env.VITE_BASE_URL;
-
-const isAuthor = computed(() => {
-  return currentPost.value?.user_id === currentUserId.value
-})
+const base_url = import.meta.env.VITE_BASE_URL
 
 // Get top-level comments (no parent)
 const topLevelComments = computed(() => {
@@ -348,33 +404,26 @@ const handleReply = async (parentCommentId) => {
   if (!replyContent.value.trim()) return
 
   if (!currentUserId.value) {
-    alert('User not loaded. Please refresh the page.')
+    alert('Please log in to comment')
     return
   }
 
   addingComment.value = true
   try {
-    console.log('Adding reply to comment:', parentCommentId)
-
     const result = await addComment(route.params.postId, {
       content: replyContent.value,
       user_id: currentUserId.value,
       parent_comment_id: parentCommentId
     })
 
-    console.log('Reply result:', result)
-
     if (result) {
       replyContent.value = ''
       replyingTo.value = null
       await loadComments()
-    } else {
-      console.error('Failed to add reply')
-      alert('Failed to post reply. Please try again.')
     }
   } catch (error) {
     console.error('Error adding reply:', error)
-    alert('Error posting reply. Check console for details.')
+    alert('Error posting reply. Please try again.')
   } finally {
     addingComment.value = false
   }
@@ -412,9 +461,7 @@ const getPostTypeIcon = (type) => {
 const loadComments = async () => {
   loadingComments.value = true
   try {
-    console.log('Loading comments for post:', route.params.postId)
     const result = await fetchComments(route.params.postId)
-    console.log('Comments loaded:', result)
     comments.value = result || []
   } catch (error) {
     console.error('Error loading comments:', error)
@@ -428,95 +475,138 @@ const handleAddComment = async () => {
   if (!newComment.value.trim()) return
 
   if (!currentUserId.value) {
-    alert('User not loaded. Please refresh the page.')
+    alert('Please log in to comment')
     return
   }
 
   addingComment.value = true
   try {
-    console.log('Adding comment to post:', route.params.postId)
-    console.log('Comment content:', newComment.value)
-    console.log('User ID:', currentUserId.value)
-
     const result = await addComment(route.params.postId, {
       content: newComment.value,
       user_id: currentUserId.value
     })
 
-    console.log('Comment result:', result)
-
     if (result) {
       newComment.value = ''
       await loadComments()
-    } else {
-      console.error('Failed to add comment')
-      alert('Failed to post comment. Please try again.')
     }
   } catch (error) {
     console.error('Error adding comment:', error)
-    alert('Error posting comment. Check console for details.')
+    alert('Error posting comment. Please try again.')
   } finally {
     addingComment.value = false
   }
 }
 
-const handleReaction = async () => {
+// Handle multiple reaction types with persistence
+const handleReaction = async (reactionType) => {
   if (!currentUserId.value) {
-    alert('User not loaded. Please refresh the page.')
+    alert('Please log in to react to posts')
     return
   }
 
   try {
-    console.log('Toggling reaction for post:', route.params.postId)
-    const result = await toggleReaction(route.params.postId, currentUserId.value, 'like')
-    console.log('Reaction result:', result)
-
-    hasLiked.value = !hasLiked.value
-    reactionCount.value += hasLiked.value ? 1 : -1
+    await toggleReaction(route.params.postId, currentUserId.value, reactionType)
+    
+    // Toggle the reaction state
+    userReactions.value[reactionType] = !userReactions.value[reactionType]
+    
+    // Update count
+    reactionCounts.value[reactionType] += userReactions.value[reactionType] ? 1 : -1
   } catch (error) {
     console.error('Error toggling reaction:', error)
   }
 }
 
-const loadCurrentUser = async () => {
+// Check user's existing reactions (restored on page load)
+const checkUserReactions = async () => {
+  if (!currentUserId.value || !route.params.postId) return
+  
   try {
-    const response = await fetch(`${base_url}/users`)
-    const users = await response.json()
-
-    // Find David Chen or use first user
-    const davidChen = users.find(user =>
-      user.username === 'davidchen' || user.name.toLowerCase().includes('david chen')
+    const response = await fetch(
+      `${base_url}/posts/${route.params.postId}/reactions?user_id=${currentUserId.value}`
     )
-
-    const targetUser = davidChen || users[0]
-
-    if (targetUser) {
-      currentUserId.value = targetUser.id
-      console.log('Current user loaded:', targetUser.name, targetUser.id)
-    } else {
-      console.error('No users found in database')
+    
+    if (response.ok) {
+      const reactions = await response.json()
+      
+      // Reset all reactions
+      userReactions.value = { like: false, heart: false, helpful: false }
+      
+      // Set user's existing reactions
+      reactions.forEach(reaction => {
+        if (userReactions.value.hasOwnProperty(reaction.reaction_type)) {
+          userReactions.value[reaction.reaction_type] = true
+        }
+      })
     }
   } catch (error) {
-    console.error('Error fetching user:', error)
+    console.error('Error checking user reactions:', error)
+  }
+}
+
+// Get all reaction counts for the post
+const getAllReactionCounts = async () => {
+  if (!route.params.postId) return
+  
+  try {
+    const response = await fetch(`${base_url}/posts/${route.params.postId}/reactions/counts`)
+    
+    if (response.ok) {
+      const counts = await response.json()
+      
+      reactionCounts.value = {
+        like: counts.like || 0,
+        heart: counts.heart || 0,
+        helpful: counts.helpful || 0
+      }
+    }
+  } catch (error) {
+    console.error('Error getting reaction counts:', error)
+    // Set defaults if error
+    reactionCounts.value = { like: 0, heart: 0, helpful: 0 }
+  }
+}
+
+const loadCurrentUser = async () => {
+  try {
+    const token = useCookie("token")
+    
+    if (!token.value) {
+      return
+    }
+
+    const tokenResponse = await fetch(`${base_url}/auth/me`, { 
+      headers: { Authorization: `Bearer ${token.value}` } 
+    })
+    const tokenData = await tokenResponse.json()
+
+    if (tokenData.user_id) 
+    {
+      currentUserId.value = tokenData.user_id
+    } 
+    
+  } catch (error) {
+    console.error('Error loading user:', error)
   }
 }
 
 onMounted(async () => {
-  console.log('Post page mounted with ID:', route.params.postId)
-
   await loadCurrentUser()
   await fetchPostById(route.params.postId)
   await loadComments()
   await incrementViewCount(route.params.postId)
-
-  if (currentPost.value) {
-    reactionCount.value = currentPost.value.reaction_count || 0
-    console.log('Post loaded:', currentPost.value)
-  }
+  
+  // Load reaction data - this restores user's previous reactions
+  await getAllReactionCounts()
+  await checkUserReactions()
 })
 </script>
 
 <style scoped>
+/* ===========================
+   GLOBAL PAGE LAYOUT
+   =========================== */
 .post-details-page {
   background: linear-gradient(135deg, #FFF4E6 0%, #FFE4E1 50%, #E6F3FF 100%);
   min-height: 100vh;
@@ -529,6 +619,9 @@ onMounted(async () => {
   padding: 0 20px;
 }
 
+/* ===========================
+   BACK BUTTON
+   =========================== */
 .back-btn {
   background: rgba(255, 155, 133, 0.15);
   color: #FF9B85;
@@ -548,6 +641,9 @@ onMounted(async () => {
   box-shadow: 0 5px 20px rgba(255, 155, 133, 0.3);
 }
 
+/* ===========================
+   POST CARD CONTAINER
+   =========================== */
 .post-card {
   background: white;
   border-radius: 25px;
@@ -562,13 +658,15 @@ onMounted(async () => {
     opacity: 0;
     transform: translateY(30px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
+/* ===========================
+   IMAGE CAROUSEL
+   =========================== */
 .carousel-container {
   position: relative;
 }
@@ -587,6 +685,7 @@ onMounted(async () => {
   object-fit: cover;
 }
 
+/* Carousel navigation buttons */
 .carousel-btn {
   position: absolute;
   top: 50%;
@@ -617,6 +716,7 @@ onMounted(async () => {
   right: 20px;
 }
 
+/* Thumbnail strip for multi-image posts */
 .thumbnail-strip {
   display: flex;
   gap: 10px;
@@ -654,6 +754,9 @@ onMounted(async () => {
   object-fit: cover;
 }
 
+/* ===========================
+   POST HEADER (AUTHOR INFO)
+   =========================== */
 .post-header {
   display: flex;
   justify-content: space-between;
@@ -702,6 +805,7 @@ onMounted(async () => {
   margin: 0;
 }
 
+/* Post type badge */
 .post-meta {
   display: flex;
   gap: 10px;
@@ -742,6 +846,9 @@ onMounted(async () => {
   color: white;
 }
 
+/* ===========================
+   POST BODY CONTENT
+   =========================== */
 .post-body {
   padding: 30px;
 }
@@ -762,6 +869,7 @@ onMounted(async () => {
   white-space: pre-wrap;
 }
 
+/* Location card (clickable to show map) */
 .location-card {
   display: flex;
   gap: 15px;
@@ -770,6 +878,13 @@ onMounted(async () => {
   border-radius: 15px;
   border-left: 5px solid #FF9B85;
   margin-bottom: 25px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.location-card:hover {
+  transform: translateX(5px);
+  box-shadow: 0 5px 20px rgba(255, 155, 133, 0.2);
 }
 
 .location-icon {
@@ -803,6 +918,7 @@ onMounted(async () => {
   font-size: 1.1rem;
 }
 
+/* Tags section */
 .tags-section {
   display: flex;
   flex-wrap: wrap;
@@ -825,21 +941,33 @@ onMounted(async () => {
   box-shadow: 0 5px 15px rgba(136, 216, 247, 0.3);
 }
 
+/* ===========================
+   ENGAGEMENT BAR (REACTIONS & STATS)
+   =========================== */
 .engagement-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px;
+  padding: 25px;
   background: linear-gradient(135deg, #FFF4E6 0%, #ffffff 100%);
   border-radius: 15px;
   margin-top: 30px;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
+.reaction-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Base reaction button styles */
 .reaction-btn {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 25px;
+  gap: 8px;
+  padding: 12px 20px;
   background: white;
   border: 2px solid #FFB88C;
   border-radius: 50px;
@@ -848,24 +976,102 @@ onMounted(async () => {
   font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s;
+  min-width: 80px;
+  justify-content: center;
 }
 
 .reaction-btn:hover {
-  background: linear-gradient(135deg, #FF9B85 0%, #FFB88C 100%);
-  color: white;
-  transform: scale(1.05);
-  box-shadow: 0 5px 15px rgba(255, 155, 133, 0.3);
-}
-
-.reaction-btn.active {
-  background: linear-gradient(135deg, #FF9B85 0%, #FFB88C 100%);
-  color: white;
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 20px rgba(255, 155, 133, 0.3);
 }
 
 .reaction-btn i {
   font-size: 1.2rem;
+  transition: all 0.3s;
 }
 
+/* Like Button (Thumbs Up) - Blue Theme */
+.reaction-btn:not(.heart-btn):not(.helpful-btn) {
+  border-color: #3498db;
+  color: #3498db;
+}
+
+.reaction-btn:not(.heart-btn):not(.helpful-btn):hover {
+  border-color: #2980b9;
+  color: #2980b9;
+}
+
+.reaction-btn:not(.heart-btn):not(.helpful-btn).active {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  color: white;
+  border-color: transparent;
+  animation: reactionPop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Heart Button - Red/Pink Theme */
+.heart-btn {
+  border-color: #e74c3c;
+  color: #e74c3c;
+}
+
+.heart-btn:hover {
+  border-color: #c0392b;
+  color: #c0392b;
+}
+
+.heart-btn.active {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  color: white;
+  border-color: transparent;
+  animation: reactionPop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.heart-btn.active i {
+  animation: heartBeat 0.6s ease-in-out;
+}
+
+/* Helpful Button (Star) - Gold Theme */
+.helpful-btn {
+  border-color: #f39c12;
+  color: #f39c12;
+}
+
+.helpful-btn:hover {
+  border-color: #e67e22;
+  color: #e67e22;
+}
+
+.helpful-btn.active {
+  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+  color: white;
+  border-color: transparent;
+  animation: reactionPop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.helpful-btn.active i {
+  animation: starSpin 0.6s ease-in-out;
+}
+
+/* Reaction animations */
+@keyframes reactionPop {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+@keyframes heartBeat {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.2); }
+  50% { transform: scale(1); }
+  75% { transform: scale(1.2); }
+}
+
+@keyframes starSpin {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.2); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+/* Stats display */
 .stats {
   display: flex;
   gap: 20px;
@@ -877,6 +1083,104 @@ onMounted(async () => {
   font-weight: 500;
 }
 
+/* ===========================
+   ADOPTION SECTION (CALL-TO-ACTION)
+   =========================== */
+.adoption-section {
+  margin-top: 30px;
+  animation: slideUp 0.6s ease;
+}
+
+.adoption-card {
+  background: linear-gradient(135deg, #FFF4E6 0%, #FFE8F0 100%);
+  border: 3px solid #FF9B85;
+  border-radius: 20px;
+  padding: 30px;
+  display: flex;
+  gap: 25px;
+  align-items: center;
+  box-shadow: 0 10px 30px rgba(255, 155, 133, 0.2);
+  transition: all 0.3s ease;
+}
+
+.adoption-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 40px rgba(255, 155, 133, 0.3);
+}
+
+.adoption-icon {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #FF9B85 0%, #FFB88C 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 5px 20px rgba(255, 155, 133, 0.4);
+}
+
+.adoption-icon i {
+  font-size: 2.5rem;
+  color: white;
+}
+
+.adoption-content {
+  flex: 1;
+}
+
+.adoption-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #5D4E37;
+  margin-bottom: 10px;
+}
+
+.adoption-text {
+  color: #7A7265;
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.adoption-btn {
+  background: linear-gradient(135deg, #FF9B85 0%, #FFB88C 100%);
+  color: white;
+  border: none;
+  padding: 15px 35px;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 20px rgba(255, 155, 133, 0.3);
+  display: inline-flex;
+  align-items: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.adoption-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(255, 155, 133, 0.5);
+  background: linear-gradient(135deg, #FFB88C 0%, #FF9B85 100%);
+}
+
+.adoption-btn i:first-child {
+  animation: heartBeat 1.5s ease-in-out infinite;
+}
+
+.adoption-btn i:last-child {
+  transition: transform 0.3s;
+}
+
+.adoption-btn:hover i:last-child {
+  transform: translateX(5px);
+}
+
+/* ===========================
+   COMMENTS SECTION
+   =========================== */
 .comments-section {
   background: white;
   border-radius: 25px;
@@ -892,6 +1196,7 @@ onMounted(async () => {
   margin-bottom: 25px;
 }
 
+/* Add comment form */
 .add-comment-card {
   background: linear-gradient(135deg, #FFF4E6 0%, #FFE4E1 100%);
   padding: 20px;
@@ -938,6 +1243,7 @@ onMounted(async () => {
   cursor: not-allowed;
 }
 
+/* Comments list */
 .comments-list {
   display: flex;
   flex-direction: column;
@@ -994,6 +1300,7 @@ onMounted(async () => {
   margin: 0;
 }
 
+/* Reply button */
 .reply-btn {
   background: rgba(255, 152, 0, 0.1);
   border: 2px solid rgba(255, 152, 0, 0.3);
@@ -1017,6 +1324,7 @@ onMounted(async () => {
   box-shadow: 0 5px 15px rgba(255, 152, 0, 0.3);
 }
 
+/* Comment threads (parent + replies) */
 .comment-thread {
   display: flex;
   flex-direction: column;
@@ -1028,6 +1336,7 @@ onMounted(async () => {
   border-left: 3px solid #FF9800;
 }
 
+/* Nested replies container */
 .replies-container {
   margin-left: 60px;
   display: flex;
@@ -1046,6 +1355,7 @@ onMounted(async () => {
   background: linear-gradient(to bottom, #FFB74D, transparent);
 }
 
+/* Reply form */
 .reply-form {
   margin-top: 15px;
   padding: 15px;
@@ -1060,7 +1370,6 @@ onMounted(async () => {
     opacity: 0;
     transform: translateY(-10px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1138,6 +1447,7 @@ onMounted(async () => {
   gap: 15px;
 }
 
+/* Deeply nested replies */
 .nested-replies {
   margin-left: 40px;
   display: flex;
@@ -1164,6 +1474,7 @@ onMounted(async () => {
   padding: 6px 14px;
 }
 
+/* No comments state */
 .no-comments {
   text-align: center;
   padding: 60px 20px;
@@ -1181,6 +1492,9 @@ onMounted(async () => {
   margin: 0;
 }
 
+/* ===========================
+   LOADING STATES
+   =========================== */
 .loading-skeleton,
 .comment-skeleton {
   height: 300px;
@@ -1196,19 +1510,16 @@ onMounted(async () => {
 }
 
 @keyframes loading {
-  0% {
-    background-position: 200% 0;
-  }
-
-  100% {
-    background-position: -200% 0;
-  }
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
+/* ===========================
+   ERROR STATE
+   =========================== */
 .error-state {
   text-align: center;
   padding: 80px 20px;
-  animation: fadeIn 0.8s ease;
 }
 
 .error-icon {
@@ -1256,6 +1567,17 @@ onMounted(async () => {
   box-shadow: 0 10px 30px rgba(255, 155, 133, 0.4);
 }
 
+/* ===========================
+   MAP MODAL OVERLAY
+   =========================== */
+.popupdiv {
+  z-index: 2000;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* ===========================
+   RESPONSIVE BREAKPOINTS
+   =========================== */
 @media (max-width: 768px) {
   .main-image-wrapper {
     height: 300px;
@@ -1281,6 +1603,25 @@ onMounted(async () => {
     gap: 15px;
   }
 
+  .reaction-buttons {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .adoption-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .adoption-icon {
+    width: 70px;
+    height: 70px;
+  }
+
+  .adoption-icon i {
+    font-size: 2rem;
+  }
+
   .comment-item {
     flex-direction: column;
   }
@@ -1300,8 +1641,18 @@ onMounted(async () => {
   }
 }
 
-.popupdiv {
-  z-index: 2000;
-  background-color: rgba(0, 0, 0, 0.5);
+/* ===========================
+   UTILITY CLASSES
+   =========================== */
+.me-1 {
+  margin-right: 0.25rem;
+}
+
+.me-2 {
+  margin-right: 0.5rem;
+}
+
+.ms-2 {
+  margin-left: 0.5rem;
 }
 </style>

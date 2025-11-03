@@ -42,11 +42,11 @@ router.post('/upload-images', upload.array('images', 5), async (req, res) => {
 
     //Upload each file to Supabase Storage
     for (const file of req.files) {
-      // Generate unique filename
+      //Generate unique filename
       const filename = `${Date.now()}-${Math.random().toString(36).substring(7)}-${file.originalname}`;
       const filepath = `post-images/${filename}`;
 
-      // Upload to Supabase Storage
+      //Upload to Supabase Storage
       const { data, error } = await supabase.storage
         .from('postImages')
         .upload(filepath, file.buffer, {
@@ -60,7 +60,7 @@ router.post('/upload-images', upload.array('images', 5), async (req, res) => {
         throw error;
       }
 
-      // Get public URL
+      //Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('postImages')
         .getPublicUrl(filepath);
@@ -79,7 +79,7 @@ router.post('/upload-images', upload.array('images', 5), async (req, res) => {
   }
 });
 
-// GET all posts with filters
+//GET all posts with filters
 router.get('/posts', async (req, res) => {
   try {
     const { type, search, tags, limit = 50 } = req.query;
@@ -89,8 +89,7 @@ router.get('/posts', async (req, res) => {
       .select(`
         *,
         users (id, name, username, avatar_url),
-        comments (count),
-        post_reactions (count)
+        comments (count)
       `)
       .order('created_at', { ascending: false })
       .limit(limit);
@@ -112,10 +111,45 @@ router.get('/posts', async (req, res) => {
 
     if (error) throw error;
 
+    //Fetch reaction counts for all posts
+    const postIds = data.map(post => post.id);
+    
+    const { data: reactions, error: reactionsError } = await supabase
+      .from('post_reactions')
+      .select('post_id, reaction_type')
+      .in('post_id', postIds);
+
+    if (reactionsError) {
+      console.error('Error fetching reactions:', reactionsError);
+    }
+
+    //Create a map of post_id to reaction counts
+    const reactionCountsMap = {};
+    
+    if (reactions) {
+      reactions.forEach(reaction => {
+        if (!reactionCountsMap[reaction.post_id]) {
+          reactionCountsMap[reaction.post_id] = {
+            like: 0,
+            heart: 0,
+            helpful: 0,
+            total: 0
+          };
+        }
+        
+        if (reactionCountsMap[reaction.post_id].hasOwnProperty(reaction.reaction_type)) {
+          reactionCountsMap[reaction.post_id][reaction.reaction_type]++;
+          reactionCountsMap[reaction.post_id].total++;
+        }
+      });
+    }
+
+    //Attach reaction counts to posts
     const postsWithCounts = data.map(post => ({
       ...post,
       comment_count: post.comments?.length || 0,
-      reaction_count: post.post_reactions?.length || 0
+      reaction_count: reactionCountsMap[post.id]?.total || 0,
+      reaction_counts: reactionCountsMap[post.id] || { like: 0, heart: 0, helpful: 0, total: 0 }
     }));
 
     res.json(postsWithCounts);
@@ -125,7 +159,7 @@ router.get('/posts', async (req, res) => {
   }
 });
 
-// GET single post by ID
+//GET single post by ID
 router.get('/posts/:id', async (req, res) => {
   try {
     const { data, error } = await supabase
@@ -147,7 +181,7 @@ router.get('/posts/:id', async (req, res) => {
   }
 });
 
-// CREATE new post
+//CREATE new post
 router.post('/posts', async (req, res) => {
   try {
     const {
@@ -197,7 +231,7 @@ router.post('/posts', async (req, res) => {
   }
 });
 
-// UPDATE post
+//UPDATE post
 router.put('/posts/:id', async (req, res) => {
   try {
     const { title, content, location_name, location_lat, location_lng, is_resolved, image_urls, tags } = req.body;
@@ -238,7 +272,7 @@ router.put('/posts/:id', async (req, res) => {
   }
 });
 
-// DELETE post
+//DELETE post
 router.delete('/posts/:id', async (req, res) => {
   try {
     const { error } = await supabase
@@ -255,7 +289,7 @@ router.delete('/posts/:id', async (req, res) => {
   }
 });
 
-// GET comments for a post
+//GET comments for a post
 router.get('/posts/:id/comments', async (req, res) => {
   try {
     const { data, error } = await supabase
@@ -276,7 +310,7 @@ router.get('/posts/:id/comments', async (req, res) => {
   }
 });
 
-// ADD comment to post
+//ADD comment to post
 router.post('/posts/:id/comments', async (req, res) => {
   try {
     const { user_id, content, parent_comment_id } = req.body;
@@ -310,7 +344,37 @@ router.post('/posts/:id/comments', async (req, res) => {
   }
 });
 
-// TOGGLE reaction on post
+//GET reaction counts for a post
+router.get('/posts/:id/reactions/counts', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('post_reactions')
+      .select('reaction_type')
+      .eq('post_id', req.params.id);
+
+    if (error) throw error;
+
+    //Count reactions by type
+    const counts = {
+      like: 0,
+      heart: 0,
+      helpful: 0
+    };
+
+    data.forEach(reaction => {
+      if (counts.hasOwnProperty(reaction.reaction_type)) {
+        counts[reaction.reaction_type]++;
+      }
+    });
+
+    res.json(counts);
+  } catch (error) {
+    console.error('Error getting reaction counts:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+//TOGGLE reaction on post
 router.post('/posts/:id/reactions', async (req, res) => {
   try {
     const { user_id, reaction_type = 'like' } = req.body;
@@ -357,7 +421,31 @@ router.post('/posts/:id/reactions', async (req, res) => {
   }
 });
 
-// INCREMENT view count
+//GET user's reactions for a post
+router.get('/posts/:id/reactions', async (req, res) => {
+  try {
+    const { user_id } = req.query;
+
+    if (!user_id) {
+      return res.status(400).json({ error: 'Missing user_id query parameter' });
+    }
+
+    const { data, error } = await supabase
+      .from('post_reactions')
+      .select('*')
+      .eq('post_id', req.params.id)
+      .eq('user_id', user_id);
+
+    if (error) throw error;
+
+    res.json(data || []);
+  } catch (error) {
+    console.error('Error getting user reactions:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+//INCREMENT view count
 router.post('/posts/:id/view', async (req, res) => {
   try {
     const { error } = await supabase.rpc('increment_post_views', {

@@ -147,7 +147,7 @@ const uploading = ref(false)
 const uploadError = ref('')
 const fileInput = ref(null)
 
-// Get current user ID from database
+//Get current user ID from database
 const currentUserId = ref(null)
 
 const base_url = import.meta.env.VITE_BASE_URL;
@@ -160,15 +160,8 @@ onMounted(async () => {
     const tokenResponse = await fetch(`${base_url}/auth/me`, { headers: { Authorization: `Bearer ${token.value}` } });
     const tokenData = await tokenResponse.json();
 
-    // TODO: avoid fetch all (exposes all users)
-    const response = await fetch(`${base_url}/users`)
-    const users = await response.json()
-
-    // Find current user
-    const targetUser = users.find(user => user.username === tokenData.username)
-
-    if (targetUser) {
-      currentUserId.value = targetUser.id
+    if (tokenData.user_id) {
+      currentUserId.value = tokenData.user_id
     }
   } catch (error) {
     console.error('Error fetching user:', error)

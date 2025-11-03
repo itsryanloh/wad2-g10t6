@@ -8,6 +8,7 @@ export const CommUserPair = z.object({
 });
 
 export const CommId = z.uuid()
+export const UserId = z.uuid()
 
 /**
  * @param {"users" | "communities"} table 
