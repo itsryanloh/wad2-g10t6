@@ -32,17 +32,15 @@
             <li class="nav-item">
               <NuxtLink to="/dashboard" class="nav-link" active-class="active">
                 <i class="fas fa-map-marked-alt me-2"></i>Map
-                <span class="badge bg-secondary ms-1">Soon</span>
               </NuxtLink>
             </li>
             <li class="nav-item">
               <NuxtLink to="/checklist/checklistmain" class="nav-link" active-class="active">
                 <i class="fas fa-list-check me-2"></i>Checklist
-                <span class="badge bg-secondary ms-1">Soon</span>
               </NuxtLink>
             </li>
             <li class="nav-item">
-              <NuxtLink to="/profile" class="nav-link">
+              <NuxtLink to="/profile" class="nav-link" active-class="active">
                 <i class="fas fa-user me-2"></i>Profile
               </NuxtLink>
             </li>
@@ -61,7 +59,7 @@
               <i class="fas fa-sign-out-alt me-2"></i>Logout
             </button>
             <button v-else class="btn btn-logout" @click="handleLogin">
-              <i class="fas fa-sign-out-alt me-2"></i>Login
+              <i class="fas fa-sign-in-alt me-2"></i>Login
             </button>
           </div>
         </div>
@@ -113,7 +111,6 @@ onMounted(async () => {
 })
 
 const handleLogout = () => {
-  console.log('Logging out...')
   token.value = null;
   router.push('/')
   window.location.reload();
@@ -125,7 +122,6 @@ const handleLogin = async () => {
 </script>
 
 <style scoped>
-/* Navbar Styling */
 .navbar-custom {
   background: linear-gradient(135deg, #FF9800 0%, #FFC107 100%);
   box-shadow: 0 4px 20px rgba(255, 152, 0, 0.3);
@@ -143,7 +139,7 @@ const handleLogin = async () => {
   align-items: center;
   justify-content: center;
   font-size: 24px;
-  color: #667eea;
+  color: #FF9800;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   transition: transform 0.3s ease;
 }
@@ -164,15 +160,8 @@ const handleLogin = async () => {
 }
 
 @keyframes bounce {
-
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-10px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
 }
 
 .nav-link {
@@ -212,11 +201,6 @@ const handleLogin = async () => {
   font-weight: 600;
 }
 
-.nav-link.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .user-avatar {
   width: 45px;
   height: 45px;
@@ -226,6 +210,7 @@ const handleLogin = async () => {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   transition: transform 0.3s ease;
   cursor: pointer;
+  background: linear-gradient(135deg, #FF9800 0%, #FFC107 100%);
 }
 
 .user-avatar:hover {
@@ -250,7 +235,7 @@ const handleLogin = async () => {
 
 .btn-logout:hover {
   background: white;
-  color: #667eea;
+  color: #FF9800;
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
@@ -264,12 +249,10 @@ const handleLogin = async () => {
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 255, 255, 1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
-/* Main Content */
 .main-content {
   min-height: calc(100vh - 200px);
 }
 
-/* Footer */
 .footer-custom {
   background: linear-gradient(135deg, #FF9800 0%, #FFC107 100%);
   color: white;
@@ -289,7 +272,6 @@ const handleLogin = async () => {
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-/* Responsive */
 @media (max-width: 991px) {
   .navbar-nav {
     margin-top: 20px;
