@@ -5,7 +5,7 @@
       <p class="dashboard-subtitle">Track lost pets and adoption statistics in real-time</p>
     </div>
 
-    <div v-if="loading" class="loading-container">
+    <div v-if="!communities.length" class="loading-container">
       <div class="spinner"></div>
       <p>Loading dashboard data...</p>
     </div>
@@ -17,13 +17,17 @@
 
     <div v-else>
       <div class="container w-100">
+        <div>
+          <AutocompleteBar class="mb-4" placeholder="Select a community" suggestion-icon="fa-cat" :key-down="keyDown"
+            :select-idx="selectIdx" />
+        </div>
         <div class="row mb-4 g-4">
           <div v-for="({ label, value, iconClass, colorGradient }, idx) in cards" class="col-12 col-md-6 col-lg-4">
             <DashboardCard :label :value :icon-class :color-gradient :key="idx" />
           </div>
         </div>
 
-        <div class="map-section col-12 g-4">
+        <!--<div class="map-section col-12 g-4">
           <div class="map-header">
             <h2 class="map-title">Lost Pets Locations</h2>
             <div class="map-legend">
@@ -34,12 +38,15 @@
               <span class="legend-count">{{ lostPetsWithLocation.length }} locations</span>
             </div>
           </div>
-        </div>
+        </div>-->
 
         <div class="pets-section col-12">
           <h2 class="section-title">Recent Activity</h2>
           <div class="pets-grid">
-            <div v-for="pet in pets.slice(0, 6)" :key="pet.id" class="pet-card">
+            <div>
+              <PostCard v-for="post in posts" :post/>
+            </div>
+            <!--<div v-for="pet in pets.slice(0, 6)" :key="pet.id" class="pet-card">
               <div class="pet-image-container">
                 <img v-if="pet.image_url" :src="pet.image_url" :alt="pet.name" class="pet-image" />
                 <div v-else class="pet-image-placeholder">
@@ -64,7 +71,7 @@
                   </span>
                 </div>
               </div>
-            </div>
+</div>-->
           </div>
         </div>
       </div>
@@ -75,7 +82,9 @@
 <script setup lang="ts">
 import type { ComponentInstance } from 'vue'
 import DashboardCard from '~/components/DashboardCard.vue'
-const { statistics, pets, lostPetsWithLocation, loading, error, fetchPets } = usePetDashboard()
+import type { Suggestion } from '~/components/Suggestion.vue'
+
+const { statistics, communities, posts, error, fetchAllData } = usePetDashboard()
 
 const cards = ref<ComponentInstance<typeof DashboardCard>['$props'][]>([
   {
@@ -128,8 +137,26 @@ const formatDate = (dateString: string) => {
   return date.toLocaleDateString()
 }
 
+const suggestions = ref<Community[]>([])
+const selectedCommunity = ref<string>("")
+
+async function keyDown(searchString: string, _: any): Promise<Suggestion[]> {
+  const lowercaseSearch = searchString.toLowerCase()
+  return suggestions.value = communities.value
+    .map(({ name: title, description }) => ({ title, description }))
+    .filter(({ title, description }) => title.toLowerCase().includes(lowercaseSearch) || description.toLowerCase().includes(lowercaseSearch))
+
+}
+
+function selectIdx(idx: number): string {
+  selectedCommunity.value = suggestions.value[idx]!
+  return (suggestions.value = [suggestions.value[idx]!])[0]!.title
+}
+
 onBeforeMount(() => {
-  fetchPets()
+  fetchAllData().then(
+    data => suggestions.value = data.map(({ name: title, description }) => ({ title, description }))
+  )
 })
 </script>
 
