@@ -31,8 +31,14 @@
         </div>
       </div>
 
+      <!-- Loading State -->
+      <div v-if="loading" class="text-center py-5">
+        <div class="spinner">🐾</div>
+        <p>Loading your checklist...</p>
+      </div>
+
       <!-- Two Column Layout -->
-      <div class="row g-4">
+      <div v-else class="row g-4">
         <!-- Left Column: Checklist -->
         <div class="col-lg-7">
           <div class="card h-100">
@@ -91,7 +97,7 @@ const BADGE_CONFIG = [
     name: 'Paw-fect Match',
     emoji: '🐱',
     image: null,
-    itemIndex: 0,  // Tied to "Research cat breeds..."
+    itemIndex: 0,
     gradient: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)'
   },
   {
@@ -99,7 +105,7 @@ const BADGE_CONFIG = [
     name: 'Healthy Start',
     emoji: '🦁',
     image: null,
-    itemIndex: 1,  // Tied to "Schedule a vet visit..."
+    itemIndex: 1,
     gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
     special: true
   },
@@ -108,7 +114,7 @@ const BADGE_CONFIG = [
     name: 'Furever Home',
     emoji: '🐈',
     image: null,
-    itemIndex: 2,  // Tied to "Prepare a safe space..."
+    itemIndex: 2,
     gradient: 'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)'
   },
   {
@@ -116,7 +122,7 @@ const BADGE_CONFIG = [
     name: 'Getting Ready',
     emoji: '🐈‍⬛',
     image: null,
-    itemIndex: 3,  // Tied to "Purchase essential supplies..."
+    itemIndex: 3,
     gradient: 'linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)'
   },
   {
@@ -124,7 +130,7 @@ const BADGE_CONFIG = [
     name: 'Best Furiend',
     emoji: '🦁',
     image: null,
-    itemIndex: 4,  // Tied to "Cat-proof your home..."
+    itemIndex: 4,
     gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
     special: true
   },
@@ -133,14 +139,30 @@ const BADGE_CONFIG = [
     name: 'Cat Parent',
     emoji: '🦁',
     image: null,
-    itemIndex: 5,  // Tied to "Register with local authorities..."
+    itemIndex: 5,
     gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
     special: true
   }
 ]
 
+const loading = ref(true)
+const userId = ref(null)
 const earnedBadges = ref([])
 const notificationRef = ref(null)
+
+const canvas = ref(null)
+const catContainer = ref(null)
+let riveInstance = null
+let onResize = null
+
+const checklistItems = ref([
+  { text: 'Research cat breeds and temperament to match your lifestyle.', completed: false},
+  { text: 'Schedule a vet visit within the first week (even if the cat looks healthy).', completed: false },
+  { text: 'Prepare a safe space with food, water, litter box, and hiding spots.', completed: false },
+  { text: 'Purchase essential supplies: food bowls, litter, scratching post, toys.', completed: false },
+  { text: 'Cat-proof your home: secure windows, remove toxic plants, hide cables.', completed: false },
+  { text: 'Register with local authorities and get your cat microchipped.', completed: false }
+])
 
 const completedCount = computed(() => {
   return checklistItems.value.filter(item => item.completed).length
@@ -157,69 +179,19 @@ const allBadges = computed(() => {
 })
 
 const nextBadge = computed(() => {
-  // Count total uncompleted tasks
   const totalRemaining = checklistItems.value.filter(item => !item.completed).length
   
-  // Find the first badge whose checklist item is not completed
   for (const badge of BADGE_CONFIG) {
     if (!checklistItems.value[badge.itemIndex].completed) {
       return {
         ...badge,
-        remaining: totalRemaining,  // Total number of uncompleted tasks
+        remaining: totalRemaining,
         taskName: checklistItems.value[badge.itemIndex].text
       }
     }
   }
-  return null  // All tasks completed
+  return null
 })
-
-function checkForNewBadges() {
-  const newBadges = []
-  
-  for (const badge of BADGE_CONFIG) {
-    const itemCompleted = checklistItems.value[badge.itemIndex].completed
-    const badgeEarned = earnedBadges.value.includes(badge.id)
-    
-    // Earn badge if item is completed and badge not yet earned
-    if (itemCompleted && !badgeEarned) {
-      earnedBadges.value.push(badge.id)
-      newBadges.push(badge)
-    }
-    
-    // Remove badge if item is unchecked and badge was earned
-    if (!itemCompleted && badgeEarned) {
-      const index = earnedBadges.value.indexOf(badge.id)
-      if (index > -1) {
-        earnedBadges.value.splice(index, 1)
-      }
-    }
-  }
-  
-  if (newBadges.length > 0) {
-    showBadgeNotifications(newBadges)
-  }
-}
-
-async function showBadgeNotifications(badges) {
-  for (const badge of badges) {
-    await notificationRef.value?.show(badge)
-    // No extra delay needed - the show() method now waits for completion
-  }
-}
-
-const canvas = ref(null)
-const catContainer = ref(null)
-let riveInstance = null
-let onResize = null
-
-const checklistItems = ref([
-  { text: 'Research cat breeds and temperament to match your lifestyle.', completed: false},
-  { text: 'Schedule a vet visit within the first week (even if the cat looks healthy).', completed: false },
-  { text: 'Prepare a safe space with food, water, litter box, and hiding spots.', completed: false },
-  { text: 'Purchase essential supplies: food bowls, litter, scratching post, toys.', completed: false },
-  { text: 'Cat-proof your home: secure windows, remove toxic plants, hide cables.', completed: false },
-  { text: 'Register with local authorities and get your cat microchipped.', completed: false }
-])
 
 const progress = computed(() => {
   const completed = checklistItems.value.filter(i => i.completed).length
@@ -242,34 +214,216 @@ const catPosition = computed(() => {
   return catPositions[completed] || catPositions[0]
 })
 
-onMounted(() => {
-  riveInstance = new Rive({
-    src: '/cute_cat2.0.riv',
-    canvas: canvas.value,
-    autoplay: true,
-    animations: 'Main',
-    onLoad: () => {
-      riveInstance.resizeDrawingSurfaceToCanvas()
-      riveInstance.play('Main')
+function getAuthHeaders() {
+  if (typeof window === 'undefined') {
+    // SSR: just return empty headers
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': ''
+    };
+  }
+
+  let token = localStorage.getItem('token');
+
+  if (!token) {
+    const match = document.cookie.match(/(?:^|;)\s*token=([^;]*)/);
+    if (match) token = decodeURIComponent(match[1]);
+  }
+
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': token ? `Bearer ${token}` : ''
+  };
+}
+
+async function loadUserData() {
+  try {
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      console.log('No user logged in - using local storage')
+      loadFromLocalStorage()
+      loading.value = false
+      return
     }
-  })
+    
+    const response = await fetch('/api/users/me/checklist', {
+      headers: getAuthHeaders()
+    })
+    
+    if (response.status === 401) {
+      console.log('Session expired - using local storage')
+      localStorage.removeItem('token')
+      loadFromLocalStorage()
+      loading.value = false
+      return
+    }
+    
+    if (!response.ok) {
+      throw new Error('Failed to load checklist')
+    }
+    
+    const items = await response.json()
+    
+    checklistItems.value.forEach(item => item.completed = false)
+    
+    if (items && items.length > 0) {
+      items.forEach(item => {
+        if (item.item_index < checklistItems.value.length) {
+          checklistItems.value[item.item_index].completed = true
+        }
+      })
+      
+      rebuildBadges()
+    }
+    
+    userId.value = true
+    
+  } catch (error) {
+    console.error('Error loading data:', error)
+    loadFromLocalStorage()
+  } finally {
+    loading.value = false
+  }
+}
 
-  onResize = () => riveInstance?.resizeDrawingSurfaceToCanvas()
-  window.addEventListener('resize', onResize)
-})
+async function saveChecklistItem(index, completed) {
+  const token = localStorage.getItem('token');
+  
+  if (!token) {
+    saveToLocalStorage()
+    return
+  }
+  
+  try {
+    if (completed) {
+      const response = await fetch(`/api/users/me/checklist/${index}`, {
+        method: 'POST',
+        headers: getAuthHeaders()
+      })
+      
+      if (!response.ok) throw new Error('Failed to save')
+    } else {
+      const response = await fetch(`/api/users/me/checklist/${index}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      })
+      
+      if (!response.ok) throw new Error('Failed to delete')
+    }
+    
+  } catch (error) {
+    console.error('Error saving:', error)
+    saveToLocalStorage()
+  }
+}
 
-onBeforeUnmount(() => {
-  if (onResize) window.removeEventListener('resize', onResize)
-})
+function rebuildBadges() {
+  earnedBadges.value = []
+  for (const badge of BADGE_CONFIG) {
+    if (checklistItems.value[badge.itemIndex].completed) {
+      earnedBadges.value.push(badge.id)
+    }
+  }
+}
 
-const toggleItem = (index) => {
+// LocalStorage fallback (for users not logged in)
+function loadFromLocalStorage() {
+  const saved = localStorage.getItem('catChecklist')
+  if (saved) {
+    try {
+      const data = JSON.parse(saved)
+      data.forEach((completed, index) => {
+        if (index < checklistItems.value.length) {
+          checklistItems.value[index].completed = completed
+        }
+      })
+      rebuildBadges()
+    } catch (e) {
+      console.error('Error loading from localStorage:', e)
+    }
+  }
+}
+
+function saveToLocalStorage() {
+  const data = checklistItems.value.map(item => item.completed)
+  localStorage.setItem('catChecklist', JSON.stringify(data))
+}
+
+function checkForNewBadges() {
+  const newBadges = []
+  
+  for (const badge of BADGE_CONFIG) {
+    const itemCompleted = checklistItems.value[badge.itemIndex].completed
+    const badgeEarned = earnedBadges.value.includes(badge.id)
+    
+    if (itemCompleted && !badgeEarned) {
+      earnedBadges.value.push(badge.id)
+      newBadges.push(badge)
+    }
+    
+    if (!itemCompleted && badgeEarned) {
+      const index = earnedBadges.value.indexOf(badge.id)
+      if (index > -1) {
+        earnedBadges.value.splice(index, 1)
+      }
+    }
+  }
+  
+  if (newBadges.length > 0) {
+    showBadgeNotifications(newBadges)
+  }
+}
+
+async function showBadgeNotifications(badges) {
+  for (const badge of badges) {
+    await notificationRef.value?.show(badge)
+  }
+}
+
+const toggleItem = async (index) => {
   checklistItems.value[index].completed = !checklistItems.value[index].completed
+  await saveChecklistItem(index, checklistItems.value[index].completed)
   checkForNewBadges()
 }
+
+onMounted(async () => {
+  if (typeof window === 'undefined') return;
+
+  // --- Load user data ---
+  console.log('Token found:', getAuthHeaders().Authorization);
+  await loadUserData();
+
+  // --- Initialize Rive animation ---
+  try {
+    riveInstance = new Rive({
+      src: '/cute_cat2.0.riv',
+      canvas: canvas.value,
+      autoplay: true,
+      animations: 'Main',
+      onLoad: () => {
+        riveInstance.resizeDrawingSurfaceToCanvas();
+        riveInstance.play('Main');
+      },
+    });
+
+    // --- Handle window resize ---
+    onResize = () => riveInstance?.resizeDrawingSurfaceToCanvas();
+    window.addEventListener('resize', onResize);
+  } catch (err) {
+    console.error('Rive initialization failed:', err);
+  }
+});
+
+onBeforeUnmount(() => {
+  if (typeof window !== 'undefined' && onResize) {
+    window.removeEventListener('resize', onResize);
+  }
+});
+
 </script>
 
 <style scoped>
-
 .checklist-page {
   background: linear-gradient(135deg, #FFF5E6 0%, #FFE8D6 50%, #FFF0E0 100%);
   min-height: 100vh;
@@ -280,6 +434,17 @@ const toggleItem = (index) => {
   max-width: 1400px;
 }
 
+/* Loading spinner */
+.spinner {
+  font-size: 3em;
+  animation: bounce 1s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
 /* Cards */
 .card {
   background: white;
@@ -288,24 +453,22 @@ const toggleItem = (index) => {
   border: none;
 }
 
-/* Reduce padding for progress card specifically */
 .mb-4 .card-body {
-  padding: 20px 20px 15px 20px;  /* Reduced bottom padding */
+  padding: 20px 20px 15px 20px;
 }
 
 .trophy-card {
   background: white;
 }
 
-/* Trophy card header - ADJUST THESE VALUES AS NEEDED */
 .trophy-card h3 {
   text-align: center;
   color: #FF8243;
   font-size: 32px;
   font-weight: bold;
   margin: 0;
-  padding-top: 17px;       /* Space above text */
-  padding-bottom: 17px;    /* Space between text and line */
+  padding-top: 17px;
+  padding-bottom: 17px;
   padding-left: 20px;
   padding-right: 20px;
   font-family: Georgia, serif;
@@ -315,28 +478,27 @@ const toggleItem = (index) => {
   position: relative;
 }
 
-/* Line under the header with gaps on sides */
 .trophy-card h3::after {
   content: '';
   position: absolute;
   bottom: 0;
-  left: 16px;              /* Gap from left edge - ADJUST THIS */
-  right: 17px;             /* Gap from right edge - ADJUST THIS */
-  height: 1.2px;           /* Line thickness */
+  left: 16px;
+  right: 17px;
+  height: 1.2px;
   background: #FFD9B3;
 }
 
 /* Progress Section */
 .progress-section {
   position: relative;
-  margin-bottom: 10px;     /* Reduced to minimize card height */
+  margin-bottom: 10px;
 }
 
 .cat-container {
   position: absolute;
-  top: -255px;             /* Brought cat down to reduce empty space */
-  width: 400px;            /* Reduced from 500px */
-  height: 400px;           /* Reduced from 500px */
+  top: -255px;
+  width: 400px;
+  height: 400px;
   z-index: 2;
   transition: left 0.5s ease;
 }
@@ -348,11 +510,11 @@ const toggleItem = (index) => {
 
 .progress-container {
   width: 100%;
-  margin-top: 60px;        /* Reduced to make card more compact */
+  margin-top: 60px;
 }
 
 .progress-bar-custom {
-  height: 25px;            /* Reduced from 45px for more compact look */
+  height: 25px;
   background: #FFD9B3;
   border-radius: 22px;
   overflow: visible;
@@ -373,30 +535,29 @@ const toggleItem = (index) => {
   transition: width 0.5s ease, opacity 0.5s ease;
 }
 
-/* Checklist Title - ADJUST THESE VALUES AS NEEDED */
+/* Checklist Title */
 .checklist-title {
   text-align: center;
   color: #FF8243;
   font-size: 32px;
   font-weight: bold;
   margin: 0;
-  margin-bottom: 30px;     /* Space below the title */
+  margin-bottom: 30px;
   font-family: Georgia, serif;
-  padding-bottom: 18px;    /* Space between text and line */
+  padding-bottom: 18px;
   padding-left: 20px;
   padding-right: 20px;
   line-height: 1.2;
   position: relative;
 }
 
-/* Line under the title with gaps on sides */
 .checklist-title::after {
   content: '';
   position: absolute;
   bottom: 0;
-  left: 0px;              /* Gap from left edge - ADJUST THIS */
-  right: 0px;             /* Gap from right edge - ADJUST THIS */
-  height: 1.2px;             /* Line thickness */
+  left: 0px;
+  right: 0px;
+  height: 1.2px;
   background: #FFD9B3;
 }
 

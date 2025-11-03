@@ -48,6 +48,7 @@ async function onCodeSubmit(_: SubmitEvent) {
     expires.setHours(expires.getHours() + 1);
     let token = useCookie("token", { expires });
     token.value = data.token;
+    localStorage.setItem('token', data.token);
 
     await navigateTo("/");
     window.location.reload();
