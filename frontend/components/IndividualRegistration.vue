@@ -37,9 +37,16 @@
         </div>
         <div id="error" class="form-text text-danger mb-2" v-text="error"></div>
         <div id="success" class="form-text text-success mb-2" v-text="success"></div>
-        <button type="submit" class="btn btn-save w-100" :disabled="isLoading">
-          {{ isLoading ? 'Creating Account...' : 'Create Account' }}
-        </button>
+        <div class="text-center mb-3 singpass-btn btn-save">
+          <button class="btn w-75 p-0 border-0">
+            <img src="/singpass-myinfo.svg" class="w-100"/>
+          </button>
+        </div>
+        <div class="text-center">
+          <button type="submit" class="btn btn-save w-75" :disabled="isLoading">
+            {{ isLoading ? 'Creating Account...' : 'Create Account' }}
+          </button>
+        </div>
       </form>
       <div class="text-center mt-3">
         <NuxtLink href="/register" @click="$emit('setFormType', '')" class="link-secondary">Back to account type selection</NuxtLink>
@@ -129,6 +136,11 @@ async function onSubmit(_: Event) {
 </script>
 
 <style scoped>
+.singpass-btn {
+  background: unset !important;
+  box-shadow: unset !important;
+}
+
 .btn-save {
   background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
   color: white;
