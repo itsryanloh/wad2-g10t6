@@ -4,7 +4,7 @@
       <div class="wave-animation" />
     </div>
     <div class="align-items-center flex-grow-1 d-flex">
-      <div class="mx-auto mt-1" style="z-index: 1000;">
+      <div class="mx-auto mt-1" style="z-index: 100;">
         <div class="dashboard-header text-light" style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);">
           <h1 class="dashboard-title"><i class="fas fa-bar-chart me-3" />Pet Dashboard</h1>
           <p class="dashboard-subtitle">Track lost pets and adoption statistics in real-time</p>
@@ -32,7 +32,7 @@
               </div>
             </div>
 
-            <div class="pets-section col-12">
+            <div class="pets-section col-12 mb-4">
               <h2 class="section-title">Recent Activity</h2>
 
               <!-- Empty State -->
