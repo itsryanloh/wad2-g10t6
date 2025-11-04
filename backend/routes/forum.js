@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import multer from 'multer';
 import { getCommunityIdByAreaName } from '../utils/communities.js';
-import { findAreaName } from '../utils/maps.js';
+import { coordsToCommunity, findAreaName } from '../utils/maps.js';
 
 //Load environment variables
 dotenv.config();
@@ -113,7 +113,7 @@ router.get('/posts', async (req, res) => {
 
     //Fetch reaction counts for all posts
     const postIds = data.map(post => post.id);
-    
+
     const { data: reactions, error: reactionsError } = await supabase
       .from('post_reactions')
       .select('post_id, reaction_type')
@@ -125,7 +125,7 @@ router.get('/posts', async (req, res) => {
 
     //Create a map of post_id to reaction counts
     const reactionCountsMap = {};
-    
+
     if (reactions) {
       reactions.forEach(reaction => {
         if (!reactionCountsMap[reaction.post_id]) {
@@ -136,7 +136,7 @@ router.get('/posts', async (req, res) => {
             total: 0
           };
         }
-        
+
         if (reactionCountsMap[reaction.post_id].hasOwnProperty(reaction.reaction_type)) {
           reactionCountsMap[reaction.post_id][reaction.reaction_type]++;
           reactionCountsMap[reaction.post_id].total++;
@@ -214,7 +214,7 @@ router.post('/posts', async (req, res) => {
         location_lng,
         image_urls: image_urls || [],
         tags: tags || [],
-        community_id: (await findAreaName([location_lng, location_lat]).then(getCommunityIdByAreaName)).data?.id
+        community_id: (await coordsToCommunity(location_lng, location_lat)).data?.id
       }])
       .select(`
         *,
@@ -237,7 +237,7 @@ router.put('/posts/:id', async (req, res) => {
     const { title, content, location_name, location_lat, location_lng, is_resolved, image_urls, tags } = req.body;
 
     const updates = {
-      community_id: (await findAreaName([location_lng, location_lat]).then(getCommunityIdByAreaName)).data?.id
+      community_id: (await coordsToCommunity(location_lng, location_lat)).data?.id
     };
     if (title !== undefined) updates.title = title;
     if (content !== undefined) updates.content = content;

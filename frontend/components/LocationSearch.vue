@@ -7,6 +7,12 @@
       :select-idx="chooseSuggestion" suggestion-icon="fa-map-marker-alt" />
     <small class="form-hint">Where did you spot the cat?</small>
     <PetMap :lat="model.lat" :lng="model.lng" :style="{ height: '50dvh' }" />
+    <small class="form-hint">This post will be in community (based on location):
+      <span class="rounded-5 text-light px-2 py-1"
+        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        {{ community }}
+      </span>
+    </small>
   </div>
 </template>
 
@@ -33,11 +39,15 @@ async function onLocationChange(searchString: string, signal: AbortSignal): Prom
     })
 }
 
+const community = ref("None")
 function chooseSuggestion(idx: number) {
   const { SEARCHVAL: name, LATITUDE: lat, LONGITUDE: lng } = suggestedLocations.value[idx]!
   model.value = {
     name, lat: Number(lat), lng: Number(lng)
   }
+  fetch(`${base_url}/maps/community?${new URLSearchParams({ lng, lat })}`)
+    .then<{ data: { area: Record<"id" | "name", string | null | undefined> } }>(data => data.json())
+    .then(({ data: { area } }) => community.value = area?.name || "None")
   return name
 }
 </script>
