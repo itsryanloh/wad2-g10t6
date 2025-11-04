@@ -177,6 +177,7 @@ const canvas = ref(null)
 const catContainer = ref(null)
 let riveInstance = null
 let onResize = null
+const token = useCookie("token")
 
 const checklistItems = ref([
   { text: 'Research cat breeds and temperament to match your lifestyle.', completed: false},
@@ -280,18 +281,11 @@ function getAuthHeaders() {
     };
   }
 
-  let token = localStorage.getItem('token');
-
-  if (!token) {
-    const match = document.cookie.match(/(?:^|;)\s*token=([^;]*)/);
-    if (match) token = decodeURIComponent(match[1]);
-  }
-
-  console.log('Using token:', token ? 'Token found' : 'No token');
+  console.log('Using token:', token.value ? 'Token found' : 'No token');
 
   return {
     'Content-Type': 'application/json',
-    'Authorization': token ? `Bearer ${token}` : ''
+    'Authorization': token.value ? `Bearer ${token.value}` : ''
   };
 }
 
@@ -315,7 +309,6 @@ async function loadUserData() {
     
     if (response.status === 401) {
       console.log('Session expired');
-      localStorage.removeItem('token')
       loading.value = false
       return
     }
