@@ -4,7 +4,7 @@
     <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
       <div class="container-fluid px-4">
         <!-- Logo & Brand -->
-        <NuxtLink to="/" class="navbar-brand d-flex align-items-center">
+        <NuxtLink to="/" class="navbar-brand d-flex">
           <div class="logo-container">
             <i class="fas fa-paw"></i>
           </div>
@@ -20,30 +20,38 @@
         <div class="collapse navbar-collapse" id="navbarContent">
           <ul class="navbar-nav mx-auto">
             <li class="nav-item">
-              <NuxtLink to="/" class="nav-link" active-class="active">
-                <i class="fas fa-home me-2"></i>Home
+              <NuxtLink to="/" style="text-decoration: none;">
+                <button class="btn nav-link" :class="{active: $route.path == '/' }" data-bs-toggle="collapse" data-bs-target="#navbarContent" @click="handlePageChange('home')">
+                  <i class="fas fa-home me-2"></i>Home
+                </button>
               </NuxtLink>
             </li>
             <li class="nav-item">
-              <NuxtLink to="/forum/main" class="nav-link" active-class="active">
-                <i class="fas fa-comments me-2"></i>Forum
+              <NuxtLink to="/forum/main" style="text-decoration: none;">
+                <button class="btn nav-link" :class="{active: $route.path.startsWith('/forum')}" data-bs-toggle="collapse" data-bs-target="#navbarContent" @click="handlePageChange('forum')">
+                  <i class="fas fa-comments me-2"></i>Forum
+                </button>
               </NuxtLink>
             </li>
             <li class="nav-item">
-              <NuxtLink to="/dashboard" class="nav-link" active-class="active">
-                <i class="fas fa-map-marked-alt me-2"></i>Map
-                <span class="badge bg-secondary ms-1">Soon</span>
+              <NuxtLink to="/dashboard" style="text-decoration: none;" >
+                <button class="btn nav-link" :class="{active: $route.path.startsWith('/dashboard')}" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+                  <i class="fas fa-map-marked-alt me-2"></i>Dashboard
+                </button>
               </NuxtLink>
             </li>
             <li class="nav-item">
-              <NuxtLink to="/checklist/checklistmain" class="nav-link" active-class="active">
-                <i class="fas fa-list-check me-2"></i>Checklist
-                <span class="badge bg-secondary ms-1">Soon</span>
+              <NuxtLink to="/checklist/checklistmain" style="text-decoration: none;" >
+                <button class="btn nav-link" :class="{active: $route.path.startsWith('/checklist')}" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+                  <i class="fas fa-list-check me-2"></i>Checklist
+                </button>
               </NuxtLink>
             </li>
             <li class="nav-item">
-              <NuxtLink to="/profile" class="nav-link">
-                <i class="fas fa-user me-2"></i>Profile
+              <NuxtLink to="/profile" style="text-decoration: none;" >
+                <button class="btn nav-link" :class="{active: $route.path.startsWith('/profile')}" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+                  <i class="fas fa-user me-2"></i>Profile
+                </button>
               </NuxtLink>
             </li>
           </ul>
@@ -61,7 +69,7 @@
               <i class="fas fa-sign-out-alt me-2"></i>Logout
             </button>
             <button v-else class="btn btn-logout" @click="handleLogin">
-              <i class="fas fa-sign-out-alt me-2"></i>Login
+              <i class="fas fa-sign-in-alt me-2"></i>Login
             </button>
           </div>
         </div>
@@ -113,7 +121,6 @@ onMounted(async () => {
 })
 
 const handleLogout = () => {
-  console.log('Logging out...')
   token.value = null;
   router.push('/')
   window.location.reload();
@@ -125,25 +132,23 @@ const handleLogin = async () => {
 </script>
 
 <style scoped>
-/* Navbar Styling */
 .navbar-custom {
   background: linear-gradient(135deg, #FF9800 0%, #FFC107 100%);
   box-shadow: 0 4px 20px rgba(255, 152, 0, 0.3);
-  padding: 15px 0;
   backdrop-filter: blur(10px);
   z-index: 1000;
 }
 
 .logo-container {
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
   background: white;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 24px;
-  color: #667eea;
+  color: #FF9800;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   transition: transform 0.3s ease;
 }
@@ -164,15 +169,8 @@ const handleLogin = async () => {
 }
 
 @keyframes bounce {
-
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-10px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
 }
 
 .nav-link {
@@ -212,11 +210,6 @@ const handleLogin = async () => {
   font-weight: 600;
 }
 
-.nav-link.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .user-avatar {
   width: 45px;
   height: 45px;
@@ -226,6 +219,7 @@ const handleLogin = async () => {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   transition: transform 0.3s ease;
   cursor: pointer;
+  background: linear-gradient(135deg, #FF9800 0%, #FFC107 100%);
 }
 
 .user-avatar:hover {
@@ -242,7 +236,6 @@ const handleLogin = async () => {
   background: rgba(255, 255, 255, 0.2);
   color: white;
   border: 2px solid rgba(255, 255, 255, 0.3);
-  padding: 10px 25px;
   border-radius: 50px;
   font-weight: 600;
   transition: all 0.3s ease;
@@ -250,7 +243,7 @@ const handleLogin = async () => {
 
 .btn-logout:hover {
   background: white;
-  color: #667eea;
+  color: #FF9800;
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
@@ -264,12 +257,18 @@ const handleLogin = async () => {
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 255, 255, 1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
-/* Main Content */
+.collapse {
+  transition: height 0.2s ease;
+}
+
+.collapsing {
+  transition: height 0.2s ease;
+}
+
 .main-content {
   min-height: calc(100vh - 200px);
 }
 
-/* Footer */
 .footer-custom {
   background: linear-gradient(135deg, #FF9800 0%, #FFC107 100%);
   color: white;
@@ -289,7 +288,6 @@ const handleLogin = async () => {
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-/* Responsive */
 @media (max-width: 991px) {
   .navbar-nav {
     margin-top: 20px;

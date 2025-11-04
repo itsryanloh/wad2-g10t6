@@ -83,19 +83,19 @@ definePageMeta({
 <style scoped>
 .landing-page {
   position: relative;
-  min-height: 100vh; /* Full viewport height */
+  min-height: 100vh; 
   overflow: hidden;
 }
 
 /* Video Background */
 .video-background {
-  position: absolute; /* Changed from fixed to absolute */
+  position: absolute; 
   top: 0;
   left: 0;
   width: 100%;
-  height: calc(100% + 200px); /* Extend beyond container to cover gap */
+  height: calc(100% + 200px);
   z-index: 0;
-  pointer-events: none; /* Prevent blocking clicks */
+  pointer-events: none; 
 }
 
 .background-video {
@@ -121,15 +121,15 @@ definePageMeta({
   backdrop-filter: none;
 }
 
-/* Content Wrapper - Flush to left with NO gap */
+/* Content Wrapper */
 .content-wrapper {
   position: relative;
   z-index: 10;
-  min-height: 100vh; /* Full viewport height */
+  min-height: 100vh; 
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding: 0; /* Remove all padding */
+  padding: 0; 
 }
 
 .hero-content {
@@ -137,12 +137,12 @@ definePageMeta({
   text-align: left;
   background: rgba(255, 255, 255, 0.65);
   padding: 50px 40px;
-  border-radius: 0 30px 30px 0; /* Rounded only on right side */
+  border-radius: 0 30px 30px 0; 
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(20px);
   animation: slideInLeft 1s ease;
   border: 2px solid rgba(255, 255, 255, 0.8);
-  border-left: none; /* Remove left border since it's flush */
+  border-left: none; 
 }
 
 @keyframes slideInLeft {
@@ -251,7 +251,7 @@ definePageMeta({
   box-shadow: 0 15px 40px rgba(136, 216, 247, 0.5);
 }
 
-/* Features Section - Now Inside Hero Content */
+/* Features Section */
 .features-section {
   display: grid;
   grid-template-columns: 1fr;
@@ -260,21 +260,13 @@ definePageMeta({
 }
 
 .feature-item {
-  background: linear-gradient(135deg, #FFF4E6 0%, #ffffff 100%);
-  padding: 20px;
+  padding: 10px;
   border-radius: 20px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
   border: 2px solid transparent;
   display: flex;
   align-items: center;
   gap: 15px;
-}
-
-.feature-item:hover {
-  transform: translateX(10px);
-  box-shadow: 0 10px 25px rgba(255, 155, 133, 0.2);
-  border-color: #FF9B85;
 }
 
 .feature-icon {
@@ -288,11 +280,6 @@ definePageMeta({
   justify-content: center;
   box-shadow: 0 8px 20px rgba(255, 155, 133, 0.3);
   transition: all 0.3s ease;
-}
-
-.feature-item:hover .feature-icon {
-  transform: scale(1.1) rotate(10deg);
-  box-shadow: 0 12px 30px rgba(255, 155, 133, 0.4);
 }
 
 .feature-icon i {

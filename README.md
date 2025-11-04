@@ -1,12 +1,12 @@
 # WAD2-G10T6
 
-A web application for pet owners.
+A web application for helping cats find a home.
 
 ## Features
 
-*   **Pet Map:** Find pet-friendly locations.
-*   **Forum:** Discuss pet-related topics with the community.
-*   **User Profiles:** Create and manage your pet's profile.
+*   **Pet Dashboard:** Get high-level overview of current lost cat statistics
+*   **Forum:** Discuss and report lost cat locations
+*   **User Profiles:** Create and manage your ADORE account
 
 ## Technologies
 
@@ -69,7 +69,7 @@ The frontend will be available at http://localhost:3001.
 ```
 /
 ├── backend/        # Node.js/Express backend
-│   ├── database/   # Database schema
+│   ├── database/   # Database interface
 │   ├── routes/     # API routes
 │   ├── schemas/    # Zod schemas
 │   └── utils/      # Utility functions
