@@ -98,7 +98,7 @@ router.get("/me/checklist", async (req, res) => {
   const token = authHeader.split(' ')[1];
   
   try {
-    console.log('🔑 Received token:', req.headers.authorization);
+    // console.log('🔑 Received token:', req.headers.authorization);
     const payload = jwt.verify(token, process.env.TOKEN_SECRET);
     
     // Get user ID from database
