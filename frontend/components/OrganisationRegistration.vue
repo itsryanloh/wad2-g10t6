@@ -1,15 +1,39 @@
 <template>
-  <div class="card mx-auto p-3" style="width: 28rem">
+  <div class="card mx-auto p-3" style="width: 36rem">
     <div class="card-body">
       <h5 class="card-title">Organisation Registration</h5>
       <form :schema="schema" :state="state" @submit.prevent="onSubmit">
-        <div class="mb-3">
-          <label for="name" class="form-label">Organisation Name</label>
-          <input type="text" class="form-control" v-model="state.name" id="name" required />
-        </div>
-        <div class="mb-3">
-          <label for="username" class="form-label">Username</label>
-          <input type="text" class="form-control" v-model="state.username" id="username" required />
+        <div class="d-flex">
+          <div class="avatar-upload-section">
+            <div class="avatar-preview" @click="avatarInput!.click()">
+              <img 
+                v-if="state.avatar_url" 
+                :src="state.avatar_url" 
+                alt="Avatar"
+              />
+              <i v-else class="fas fa-user"></i>
+            </div>
+            <div class="mx-3">
+              <input
+                ref="avatarInput"
+                type="file"
+                accept="image/*"
+                style="display: none;"
+                @change="handleAvatarUpload"
+              />
+              <small class="upload-hint">JPG, PNG or GIF. Max 2MB</small>
+            </div>
+          </div>
+          <div class="flex-grow-1">
+            <div class="mb-3">
+              <label for="name" class="form-label">Organisation Name</label>
+              <input type="text" class="form-control" v-model="state.name" id="name" required />
+            </div>
+            <div class="mb-3">
+              <label for="username" class="form-label">Username</label>
+              <input type="text" class="form-control" v-model="state.username" id="username" required />
+            </div>
+          </div>
         </div>
         <div class="mb-3">
           <label for="contact_no" class="form-label">Contact Number</label>
@@ -25,10 +49,9 @@
         </div>
         <div id="error" class="form-text text-danger mb-2" v-text="error"></div>
         <div id="success" class="form-text text-success mb-2" v-text="success"></div>
-        <div class="text-center mb-3 singpass-btn btn-save">
-          <button class="btn w-75 p-0 border-0">
-            <img src="/singpass-myinfo.svg" class="w-100"/>
-          </button>
+        <div class="d-flex justify-content-center align-items-center btn-singpass mb-3">
+          <button type="submit" class="btn fw-bold w-75">Retrieve Myinfo with
+          <img src="/singpass.png"/></button>
         </div>
         <div class="text-center">
           <button type="submit" class="btn btn-save w-75" :disabled="isLoading">
@@ -66,7 +89,7 @@ const state = reactive<Partial<Schema>>({
   username: "",
   password: "",
   contact_no: "",
-  avatar_url: "https://i.pravatar.cc/150?img=68",
+  avatar_url: "",
   role: "org",
   age: 0,
   gender: null,
@@ -77,7 +100,31 @@ const confirmPassword = ref("");
 const error = ref("");
 const success = ref("");
 const isLoading = ref(false);
-const showPasswordModal = ref(true);
+const avatarInput = useTemplateRef('avatarInput');
+
+const handleAvatarUpload = async (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  const file = target.files![0]
+
+  if (file!.size > 2 * 1024 * 1024) {
+    error.value = 'Avatar image must be less than 2MB'
+    setTimeout(() => error.value = '', 3000)
+    return
+  }
+
+  const formData = new FormData()
+  formData.append('avatar', file as Blob)
+
+  await fetch(`${base_url}/avatars/upload`, {
+    method: 'POST',
+    body: formData
+  }).then(async res => {
+    const data = await res.json()
+    state.avatar_url = data.url
+  }).catch(err => {
+    console.log(err)
+  })
+}
 
 async function onSubmit(_: Event) {
   error.value = "";
@@ -93,6 +140,8 @@ async function onSubmit(_: Event) {
     error.value = validation.error.message;
     return;
   }
+
+  if (!state.avatar_url) state.avatar_url = `https://cat-avatars.vercel.app/api/cat?name=${state.username}`;
 
   isLoading.value = true;
 
@@ -111,7 +160,7 @@ async function onSubmit(_: Event) {
       success.value = "Account created successfully! Redirecting to login...";
       setTimeout(() => {
         navigateTo("/login");
-      }, 2000);
+      }, 1000);
     } else {
       error.value = data.error || data[0].message || "Registration failed";
     }
@@ -125,9 +174,88 @@ async function onSubmit(_: Event) {
 </script>
 
 <style scoped>
-.singpass-btn {
-  background: unset !important;
-  box-shadow: unset !important;
+.avatar-upload-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.avatar-preview {
+  cursor: pointer;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FFB74D 0%, #FF9800 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 3px solid #FFE8D6;
+  transition: all 0.3s;
+}
+
+.avatar-preview:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(255, 152, 0, 0.3);
+}
+
+.avatar-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-preview i {
+  font-size: 2.5rem;
+  color: white;
+}
+
+.btn-upload {
+  background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-upload:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(255, 152, 0, 0.3);
+}
+
+.btn-upload:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.upload-hint {
+  display: block;
+  text-align: center;
+}
+
+.btn-singpass button {
+  border: 1px solid #C8C9CC;
+  border-radius: 0.375rem;
+  background-color: #FFFFFF;
+  font-family: "Poppins", sans-serif;
+  transition: all 0.3s;
+}
+
+.btn-singpass button:hover {
+  border: 1px solid #C8C9CC;
+  border-radius: 0.375rem;
+  background-color: #F5F5F7;
+  transform: translateY(-2px);
+}
+
+.btn-singpass button img {
+  height: 16px;
+  transform: translateY(1px);
 }
 
 .modal-overlay {
