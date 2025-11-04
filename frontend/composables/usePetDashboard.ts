@@ -1,6 +1,6 @@
 const { VITE_BASE_URL } = import.meta.env;
 
-type Community = Record<"id" | "name" | "description", string>
+export type Community = Record<"id" | "name" | "description", string>
 type Post = {
   id: string,
   user_id: string,
@@ -41,8 +41,8 @@ type SortedPosts = Record<string, Post[]>
 
 import { ref, computed } from "vue"
 
-export const usePetDashboard = () => {
-  const communities = ref<Community[]>([])
+export const usePetDashboard = async () => {
+  const communities = (await useFetch<Community[]>(`${VITE_BASE_URL}/communities`)).data
   const posts = ref<SortedPosts>({})
   const error = ref(null)
 
@@ -68,18 +68,12 @@ export const usePetDashboard = () => {
   })
 
   const fetchAllData = async () => {
-    // fetch(`${VITE_BASE_URL}/posts`)
-    //   .then<Post[]>(data => data.json())
-    //   .then(data => data.reduce<SortedPosts>((accum, elem) => {
-    //     const { community_id } = elem
-    //     if (accum[community_id]) accum[community_id].push(elem)
-    //     else accum[community_id] = [elem]
-    //     return accum
-    //   }, {}))
-    //   .then(map => posts.value = map)
-    return fetch(`${VITE_BASE_URL}/communities`)
-      .then<Community[]>(data => data.json())
-      .then(data => communities.value = data)
+    return fetch(`${VITE_BASE_URL}/posts`)
+      .then<Post[]>(data => data.json())
+      .then(data => data.reduce<SortedPosts>((accum, elem) =>
+        ({ ...accum, [elem.community_id]: accum[elem.community_id] ? [...accum[elem.community_id]!, elem] : [elem] })
+        , {}))
+      .then(map => posts.value = map)
   }
 
   return {

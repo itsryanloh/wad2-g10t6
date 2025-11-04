@@ -48,7 +48,7 @@ function chooseFromDropdown(idx: number) {
 function handleBlur() {
   setTimeout(() => {
     showDropdown.value = false
-  }, 100)
+  }, 200)
 }
 </script>
 

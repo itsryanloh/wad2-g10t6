@@ -5,7 +5,7 @@
       <p class="dashboard-subtitle">Track lost pets and adoption statistics in real-time</p>
     </div>
 
-    <div v-if="!communities.length" class="loading-container">
+    <div v-if="!communities!.length" class="loading-container">
       <div class="spinner"></div>
       <p>Loading dashboard data...</p>
     </div>
@@ -22,56 +22,22 @@
             :select-idx="selectIdx" />
         </div>
         <div class="row mb-4 g-4">
-          <div v-for="({ label, value, iconClass, colorGradient }, idx) in cards" class="col-12 col-md-6 col-lg-4">
-            <DashboardCard :label :value :icon-class :color-gradient :key="idx" />
+          <div v-for="(data, idx) in cards" class="col-12 col-md-6 col-lg-4">
+            <DashboardCard v-bind="data" :key="idx" />
           </div>
         </div>
-
-        <!--<div class="map-section col-12 g-4">
-          <div class="map-header">
-            <h2 class="map-title">Lost Pets Locations</h2>
-            <div class="map-legend">
-              <span class="legend-item">
-                <span class="legend-marker"></span>
-                Lost Pet Location
-              </span>
-              <span class="legend-count">{{ lostPetsWithLocation.length }} locations</span>
-            </div>
-          </div>
-        </div>-->
 
         <div class="pets-section col-12">
           <h2 class="section-title">Recent Activity</h2>
           <div class="pets-grid">
-            <div>
-              <PostCard v-for="post in posts" :post/>
-            </div>
-            <!--<div v-for="pet in pets.slice(0, 6)" :key="pet.id" class="pet-card">
-              <div class="pet-image-container">
-                <img v-if="pet.image_url" :src="pet.image_url" :alt="pet.name" class="pet-image" />
-                <div v-else class="pet-image-placeholder">
-                  <i class="fas fa-paw"></i>
-                </div>
-                <span :class="['pet-status', `status-${pet.status}`]">
-                  {{ pet.status }}
+            <ul class="position-relative">
+              <li class="btn btn-secondary" v-if="selectedCommunity" v-for="post in posts[selectedCommunity.id]">
+                <span class="post-badge" :style="{ background: categoryColor[post.post_type]! }">
+                  {{ post.post_type }}
                 </span>
-              </div>
-              <div class="pet-details">
-                <h3 class="pet-name">{{ pet.name }}</h3>
-                <p class="pet-breed">{{ pet.breed || pet.species }}</p>
-                <p class="pet-description">{{ pet.description.slice(0, 80) }}...</p>
-                <div class="pet-meta">
-                  <span v-if="pet.location_name" class="pet-location">
-                    <i class="fas fa-map-marker-alt"></i>
-                    {{ pet.location_name }}
-                  </span>
-                  <span class="pet-date">
-                    <i class="fas fa-clock"></i>
-                    {{ formatDate(pet.reported_date) }}
-                  </span>
-                </div>
-              </div>
-</div>-->
+                <p class="d-inline-block">{{ post.title }}</p>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
@@ -84,7 +50,7 @@ import type { ComponentInstance } from 'vue'
 import DashboardCard from '~/components/DashboardCard.vue'
 import type { Suggestion } from '~/components/Suggestion.vue'
 
-const { statistics, communities, posts, error, fetchAllData } = usePetDashboard()
+const { statistics, communities, posts, error, fetchAllData } = await usePetDashboard()
 
 const cards = ref<ComponentInstance<typeof DashboardCard>['$props'][]>([
   {
@@ -94,36 +60,39 @@ const cards = ref<ComponentInstance<typeof DashboardCard>['$props'][]>([
     colorGradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
   },
   {
+    label: "Available for Adoption",
+    value: `0`,
+    iconClass: "fa-heart",
+    colorGradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
+  },
+  {
+    label: "Pet Sightings",
+    value: `0`,
+    iconClass: "fa-eye",
+    colorGradient: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"
+  },
+  {
     label: "Lost Pets",
     value: `0`,
-    iconClass: "fa-search",
-    colorGradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
+    iconClass: "fa-exclamation-triangle",
+    colorGradient: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)"
   },
   {
     label: "Found Pets",
     value: `0`,
     iconClass: "fa-check-circle",
-    colorGradient: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"
-  },
-  {
-    label: "Adopted Pets",
-    value: `0`,
-    iconClass: "fa-heart",
-    colorGradient: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)"
-  },
-  {
-    label: "Available for Adoption",
-    value: `0`,
-    iconClass: "fa-home",
     colorGradient: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)"
-  },
-  {
-    label: "Adoption Rate",
-    value: `0%`,
-    iconClass: "fa-chart-line",
-    colorGradient: "linear-gradient(135deg, #30cfd0 0%, #330867 100%)"
   }
 ])
+
+const categoryColor = ref<Record<string, string>>(
+  {
+    adoption: "linear-gradient(135deg, #FF9800 0%, #F57C00 100%)",
+    sighting: "linear-gradient(135deg, #FFD700 0%, #FFA500 100%)",
+    lost: "linear-gradient(135deg, #FF6B6B 0%, #EE5A6F 100%)",
+    found: "linear-gradient(135deg, #A8E6CF 0%, #88D8F7 100%)",
+  }
+)
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString)
@@ -138,25 +107,32 @@ const formatDate = (dateString: string) => {
 }
 
 const suggestions = ref<Community[]>([])
-const selectedCommunity = ref<string>("")
+const selectedCommunity = ref<Community | null>({
+  "id": "b6d413f6-4114-444a-bccf-c7ef6a3eae0b",
+  "name": "Ang Mo Kio Cats",
+  "description": "AMK cat sightings, adoptions, and TNR"
+})
 
 async function keyDown(searchString: string, _: any): Promise<Suggestion[]> {
   const lowercaseSearch = searchString.toLowerCase()
-  return suggestions.value = communities.value
+  return (
+    suggestions.value = communities.value!
+      .filter(({ name, description }) =>
+        name.toLowerCase().includes(lowercaseSearch)
+        || description.toLowerCase().includes(lowercaseSearch))
+  )
     .map(({ name: title, description }) => ({ title, description }))
-    .filter(({ title, description }) => title.toLowerCase().includes(lowercaseSearch) || description.toLowerCase().includes(lowercaseSearch))
-
 }
 
 function selectIdx(idx: number): string {
   selectedCommunity.value = suggestions.value[idx]!
-  return (suggestions.value = [suggestions.value[idx]!])[0]!.title
+  return (suggestions.value = [selectedCommunity.value])[0]!.name
 }
 
-onBeforeMount(() => {
-  fetchAllData().then(
-    data => suggestions.value = data.map(({ name: title, description }) => ({ title, description }))
-  )
+onBeforeMount(async () => {
+  await fetchAllData()
+  suggestions.value = communities.value!
+
 })
 </script>
 
@@ -218,58 +194,6 @@ onBeforeMount(() => {
   margin-bottom: 16px;
 }
 
-.map-section {
-  background: white;
-  border-radius: 16px;
-  padding: 32px;
-  margin-bottom: 48px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-}
-
-.map-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-
-.map-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #1f2937;
-}
-
-.map-legend {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: #6b7280;
-}
-
-.legend-marker {
-  width: 16px;
-  height: 16px;
-  background: #ef4444;
-  border: 2px solid white;
-  border-radius: 50%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.legend-count {
-  font-size: 14px;
-  color: #9ca3af;
-  font-weight: 600;
-}
-
 .pets-section {
   background: white;
   border-radius: 16px;
@@ -282,128 +206,6 @@ onBeforeMount(() => {
   font-weight: 700;
   color: #1f2937;
   margin-bottom: 24px;
-}
-
-.pets-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 24px;
-}
-
-.pet-card {
-  background: #f9fafb;
-  border-radius: 12px;
-  overflow: hidden;
-  transition: transform 0.2s, box-shadow 0.2s;
-  cursor: pointer;
-}
-
-.pet-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-}
-
-.pet-image-container {
-  position: relative;
-  width: 100%;
-  height: 200px;
-}
-
-.pet-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.pet-image-placeholder {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.pet-image-placeholder i {
-  font-size: 48px;
-  color: #9ca3af;
-}
-
-.pet-status {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  backdrop-filter: blur(8px);
-}
-
-.status-lost {
-  background: rgba(239, 68, 68, 0.9);
-  color: white;
-}
-
-.status-found {
-  background: rgba(34, 197, 94, 0.9);
-  color: white;
-}
-
-.status-adopted {
-  background: rgba(59, 130, 246, 0.9);
-  color: white;
-}
-
-.status-available {
-  background: rgba(245, 158, 11, 0.9);
-  color: white;
-}
-
-.pet-details {
-  padding: 20px;
-}
-
-.pet-name {
-  font-size: 20px;
-  font-weight: 700;
-  color: #1f2937;
-  margin-bottom: 4px;
-}
-
-.pet-breed {
-  font-size: 14px;
-  color: #6b7280;
-  margin-bottom: 12px;
-}
-
-.pet-description {
-  font-size: 14px;
-  color: #4b5563;
-  line-height: 1.6;
-  margin-bottom: 12px;
-}
-
-.pet-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.pet-location,
-.pet-date {
-  font-size: 13px;
-  color: #6b7280;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.pet-location i,
-.pet-date i {
-  color: #9ca3af;
-  width: 14px;
 }
 
 @media (max-width: 768px) {
