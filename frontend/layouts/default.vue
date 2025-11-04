@@ -21,35 +21,40 @@
           <ul class="navbar-nav mx-auto">
             <li class="nav-item">
               <NuxtLink to="/" style="text-decoration: none;">
-                <button class="btn nav-link" :class="{active: $route.path == '/' }" data-bs-toggle="collapse" data-bs-target="#navbarContent" @click="handlePageChange('home')">
+                <button class="btn nav-link" :class="{ active: $route.path == '/' }" data-bs-toggle="collapse"
+                  data-bs-target="#navbarContent" @click="handlePageChange('home')">
                   <i class="fas fa-home me-2"></i>Home
                 </button>
               </NuxtLink>
             </li>
             <li class="nav-item">
               <NuxtLink to="/forum/main" style="text-decoration: none;">
-                <button class="btn nav-link" :class="{active: $route.path.startsWith('/forum')}" data-bs-toggle="collapse" data-bs-target="#navbarContent" @click="handlePageChange('forum')">
+                <button class="btn nav-link" :class="{ active: $route.path.startsWith('/forum') }"
+                  data-bs-toggle="collapse" data-bs-target="#navbarContent" @click="handlePageChange('forum')">
                   <i class="fas fa-comments me-2"></i>Forum
                 </button>
               </NuxtLink>
             </li>
             <li class="nav-item">
-              <NuxtLink to="/dashboard" style="text-decoration: none;" >
-                <button class="btn nav-link" :class="{active: $route.path.startsWith('/dashboard')}" data-bs-toggle="collapse" data-bs-target="#navbarContent">
-                  <i class="fas fa-map-marked-alt me-2"></i>Dashboard
+              <NuxtLink to="/dashboard" style="text-decoration: none;">
+                <button class="btn nav-link" :class="{ active: $route.path.startsWith('/dashboard') }"
+                  data-bs-toggle="collapse" data-bs-target="#navbarContent">
+                  <i class="fas fa-bar-chart me-2"></i>Dashboard
                 </button>
               </NuxtLink>
             </li>
             <li class="nav-item">
-              <NuxtLink to="/checklist/checklistmain" style="text-decoration: none;" >
-                <button class="btn nav-link" :class="{active: $route.path.startsWith('/checklist')}" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+              <NuxtLink to="/checklist/checklistmain" style="text-decoration: none;">
+                <button class="btn nav-link" :class="{ active: $route.path.startsWith('/checklist') }"
+                  data-bs-toggle="collapse" data-bs-target="#navbarContent">
                   <i class="fas fa-list-check me-2"></i>Checklist
                 </button>
               </NuxtLink>
             </li>
             <li class="nav-item">
-              <NuxtLink to="/profile" style="text-decoration: none;" >
-                <button class="btn nav-link" :class="{active: $route.path.startsWith('/profile')}" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+              <NuxtLink to="/profile" style="text-decoration: none;">
+                <button class="btn nav-link" :class="{ active: $route.path.startsWith('/profile') }"
+                  data-bs-toggle="collapse" data-bs-target="#navbarContent">
                   <i class="fas fa-user me-2"></i>Profile
                 </button>
               </NuxtLink>
@@ -169,8 +174,15 @@ const handleLogin = async () => {
 }
 
 @keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 .nav-link {

@@ -1,62 +1,82 @@
-export const usePetDashboard = () => {
-  const pets = ref([])
-  const loading = ref(false)
+const { VITE_BASE_URL } = import.meta.env;
+
+export type Community = Record<"id" | "name" | "description", string>
+type Post = {
+  id: string,
+  user_id: string,
+  title: string,
+  content: string,
+  post_type: string,
+  location_name: string,
+  location_lat: number,
+  location_lng: number,
+  image_urls: string[],
+  tags: string[],
+  view_count: number,
+  is_resolved: boolean,
+  created_at: string,
+  updated_at: string,
+  community_id: string,
+  users: {
+    id: string,
+    name: string,
+    username: string,
+    avatar_url: string
+  },
+  comments: [
+    {
+      count: number
+    }
+  ],
+  post_reactions: [
+    {
+      count: number
+    }
+  ],
+  comment_count: number,
+  reaction_count: number
+}
+
+export const post_types = ["adoption", "sighting", "lost", "found"] as const
+
+type SortedPosts = Record<string, Post[]>
+
+import { ref, computed } from "vue"
+
+export const usePetDashboard = async () => {
+  const communities = (await useFetch<Community[]>(`${VITE_BASE_URL}/communities`)).data
+  const posts = ref<SortedPosts>({})
   const error = ref(null)
 
   const statistics = computed(() => {
-    const total = pets.value.length
-    const lost = pets.value.filter(p => p.status === 'lost').length
-    const found = pets.value.filter(p => p.status === 'found').length
-    const adopted = pets.value.filter(p => p.status === 'adopted').length
-    const available = pets.value.filter(p => p.status === 'available').length
-
-    const adoptionRate = total > 0 ? ((adopted / total) * 100).toFixed(1) : '0'
-    const lostRate = total > 0 ? ((lost / total) * 100).toFixed(1) : '0'
-
-    return {
-      total,
-      lost,
-      found,
-      adopted,
-      available,
-      adoptionRate,
-      lostRate
-    }
-  })
-
-  const lostPetsWithLocation = computed(() => {
-    return pets.value.filter(
-      p => p.status === 'lost' && p.location_lat && p.location_lng
+    const stats = Object.fromEntries(
+      Object.entries(posts.value).map(([k, posts]) => [k, posts.reduce((accum, { post_type }) => {
+        accum[post_type]!++
+        return accum
+      }, Object.fromEntries(
+        post_types.map(type => [type, 0])
+      ))])
     )
+    Object.entries(stats).forEach(([_, obj]) => {
+      obj.total = Object.entries(obj).reduce((accum, [_, v]) => accum + v, 0)
+    })
+    return stats
   })
 
-  const fetchPets = async () => {
-    // loading.value = true
-    // error.value = null
-    //
-    // try {
-    //   const { data, error: fetchError } = await $supabase
-    //     .from('pets')
-    //     .select('*')
-    //     .order('reported_date', { ascending: false })
-    //
-    //   if (fetchError) throw fetchError
-    //
-    //   pets.value = data || []
-    // } catch (err) {
-    //   error.value = err.message
-    //   console.error('Error fetching pets:', err)
-    // } finally {
-    //   loading.value = false
-    // }
+  const fetchAllData = async () => {
+    return fetch(`${VITE_BASE_URL}/posts`)
+      .then<Post[]>(data => data.json())
+      .then(data => data.reduce<SortedPosts>((accum, elem) =>
+        ({ ...accum, [elem.community_id]: accum[elem.community_id] ? [...accum[elem.community_id]!, elem] : [elem] })
+        , {}))
+      .then(map => posts.value = map)
   }
 
   return {
-    pets,
-    loading,
+    communities,
+    posts,
     error,
     statistics,
-    lostPetsWithLocation,
-    fetchPets
+    fetchAllData
   }
 }

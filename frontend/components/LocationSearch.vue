@@ -3,25 +3,8 @@
     <label class="section-label">
       <i class="fas fa-map-marker-alt me-2"></i>Location
     </label>
-    <div class="position-relative">
-      <div class="position-relative">
-        <input v-model="model.name" type="text" class="form-input address-input"
-          placeholder="e.g., Block 123 Ang Mo Kio Ave 3" @input="findPlace" @focus="showDropdown = true"
-          @blur="handleBlur" />
-        <i v-if="searchController" class="fas fa-spinner fa-spin search-spinner"></i>
-      </div>
-
-      <div v-if="showDropdown && suggestedLocations.length > 0" class="address-dropdown">
-        <div v-for="({ SEARCHVAL, ADDRESS }, idx) in suggestedLocations" :key="idx" class="address-dropdown-item"
-          @click.prevent="selectLocation(idx)">
-          <div class="address-main">
-            <i class="fas fa-map-marker-alt address-icon" />
-            {{ SEARCHVAL }}
-          </div>
-          <div class="address-detail">{{ ADDRESS }}</div>
-        </div>
-      </div>
-    </div>
+    <AutocompleteBar placeholder="e.g., Block 123 Ang Mo Kio Ave 3" :key-down="onLocationChange"
+      :select-idx="chooseSuggestion" suggestion-icon="fa-map-marker-alt" />
     <small class="form-hint">Where did you spot the cat?</small>
     <PetMap :lat="model.lat" :lng="model.lng" :style="{ height: '50dvh' }" />
   </div>
@@ -32,45 +15,30 @@ const model = defineModel<{ name: string } & Record<"lat" | "lng", number>>({ de
 
 const { VITE_BASE_URL: base_url } = import.meta.env;
 
-const suggestedLocations = ref<Record<"SEARCHVAL" | "ADDRESS" | "LATITUDE" | "LONGITUDE", string>[]>([])
-const showDropdown = ref(false)
-const searchController = ref<AbortController | null>(null)
+type SuggestedLocation = Record<"SEARCHVAL" | "ADDRESS" | "LATITUDE" | "LONGITUDE", string>
 
-function findPlace() {
-  if (!model.value.name.trim()) {
-    suggestedLocations.value = []
-    showDropdown.value = false
-    return
-  }
+const suggestedLocations = ref<SuggestedLocation[]>([])
 
-  searchController.value?.abort()
-
-  searchController.value = new AbortController()
-  fetch(`${base_url}/maps/search?q=${model.value.name.trim()}`, { signal: searchController.value.signal })
-    .then(data => data.json())
-    .then(data => {
-      suggestedLocations.value = data.results ?? []
-      showDropdown.value = suggestedLocations.value.length > 0
-      searchController.value = null
+async function onLocationChange(searchString: string, signal: AbortSignal): Promise<Record<"title" | "description", string>[]> {
+  if (!searchString) return []
+  return fetch(`${base_url}/maps/search?q=${searchString}`, { signal })
+    .then<{ results: SuggestedLocation[] }>(data => data.json())
+    .then(({ results }) => {
+      suggestedLocations.value = results
+      return results.map(({ SEARCHVAL: title, ADDRESS: description }) => ({ title, description }))
     })
     .catch(error => {
       console.error('Error fetching locations:', error)
-      suggestedLocations.value = []
+      return suggestedLocations.value = []
     })
 }
 
-function selectLocation(location: number) {
-  const { SEARCHVAL, ADDRESS, LATITUDE, LONGITUDE } = suggestedLocations.value[location]!
-  model.value.name = `${SEARCHVAL}, ${ADDRESS}`
-  model.value.lat = Number(LATITUDE)
-  model.value.lng = Number(LONGITUDE)
-  showDropdown.value = false
-}
-
-function handleBlur() {
-  setTimeout(() => {
-    showDropdown.value = false
-  }, 200)
+function chooseSuggestion(idx: number) {
+  const { SEARCHVAL: name, LATITUDE: lat, LONGITUDE: lng } = suggestedLocations.value[idx]!
+  model.value = {
+    name, lat: Number(lat), lng: Number(lng)
+  }
+  return name
 }
 </script>
 

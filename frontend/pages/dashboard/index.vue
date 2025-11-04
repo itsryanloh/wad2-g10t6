@@ -1,124 +1,99 @@
 <template>
-  <div class="dashboard-container">
-    <div class="dashboard-header">
-      <h1 class="dashboard-title">Pet Dashboard</h1>
-      <p class="dashboard-subtitle">Track lost pets and adoption statistics in real-time</p>
+  <div class="forum-page d-flex flex-column flex-grow-1">
+    <div class="hero-section position-absolute w-100">
+      <div class="wave-animation" />
     </div>
-
-    <div v-if="loading" class="loading-container">
-      <div class="spinner"></div>
-      <p>Loading dashboard data...</p>
-    </div>
-
-    <div v-else-if="error" class="error-container">
-      <i class="fas fa-exclamation-circle"></i>
-      <p>{{ error }}</p>
-    </div>
-
-    <div v-else class="dashboard-content">
-      <div class="stats-grid">
-        <div class="stat-card total">
-          <div class="stat-icon">
-            <i class="fas fa-paw"></i>
-          </div>
-          <div class="stat-content">
-            <h3 class="stat-value">{{ statistics.total }}</h3>
-            <p class="stat-label">Total Pets</p>
-          </div>
+    <div class="align-items-center flex-grow-1 d-flex">
+      <div class="mx-auto mt-1" style="z-index: 100;">
+        <div class="dashboard-header text-light" style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);">
+          <h1 class="dashboard-title"><i class="fas fa-bar-chart me-3" />Pet Dashboard</h1>
+          <p class="dashboard-subtitle">Track lost pets and adoption statistics in real-time</p>
         </div>
 
-        <div class="stat-card lost">
-          <div class="stat-icon">
-            <i class="fas fa-search"></i>
-          </div>
-          <div class="stat-content">
-            <h3 class="stat-value">{{ statistics.lost }}</h3>
-            <p class="stat-label">Lost Pets</p>
-            <p class="stat-percentage">{{ statistics.lostRate }}% of total</p>
-          </div>
+        <div v-if="!communities!.length" class="loading-container">
+          <div class="spinner"></div>
+          <p>Loading dashboard data...</p>
         </div>
 
-        <div class="stat-card found">
-          <div class="stat-icon">
-            <i class="fas fa-check-circle"></i>
-          </div>
-          <div class="stat-content">
-            <h3 class="stat-value">{{ statistics.found }}</h3>
-            <p class="stat-label">Found Pets</p>
-          </div>
+        <div v-else-if="error" class="error-container">
+          <i class="fas fa-exclamation-circle"></i>
+          <p>{{ error }}</p>
         </div>
 
-        <div class="stat-card adopted">
-          <div class="stat-icon">
-            <i class="fas fa-heart"></i>
-          </div>
-          <div class="stat-content">
-            <h3 class="stat-value">{{ statistics.adopted }}</h3>
-            <p class="stat-label">Adopted Pets</p>
-          </div>
-        </div>
-
-        <div class="stat-card available">
-          <div class="stat-icon">
-            <i class="fas fa-home"></i>
-          </div>
-          <div class="stat-content">
-            <h3 class="stat-value">{{ statistics.available }}</h3>
-            <p class="stat-label">Available for Adoption</p>
-          </div>
-        </div>
-
-        <div class="stat-card adoption-rate">
-          <div class="stat-icon">
-            <i class="fas fa-chart-line"></i>
-          </div>
-          <div class="stat-content">
-            <h3 class="stat-value">{{ statistics.adoptionRate }}%</h3>
-            <p class="stat-label">Adoption Rate</p>
-            <p class="stat-info">Based on total pets</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="map-section">
-        <div class="map-header">
-          <h2 class="map-title">Lost Pets Locations</h2>
-          <div class="map-legend">
-            <span class="legend-item">
-              <span class="legend-marker"></span>
-              Lost Pet Location
-            </span>
-            <span class="legend-count">{{ lostPetsWithLocation.length }} locations</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="pets-section">
-        <h2 class="section-title">Recent Activity</h2>
-        <div class="pets-grid">
-          <div v-for="pet in pets.slice(0, 6)" :key="pet.id" class="pet-card">
-            <div class="pet-image-container">
-              <img v-if="pet.image_url" :src="pet.image_url" :alt="pet.name" class="pet-image" />
-              <div v-else class="pet-image-placeholder">
-                <i class="fas fa-paw"></i>
-              </div>
-              <span :class="['pet-status', `status-${pet.status}`]">
-                {{ pet.status }}
-              </span>
+        <div v-else>
+          <div class="container w-100">
+            <div>
+              <AutocompleteBar class="mb-4" placeholder="Select a community" suggestion-icon="fa-cat"
+                :key-down="keyDown" :select-idx="selectIdx" />
             </div>
-            <div class="pet-details">
-              <h3 class="pet-name">{{ pet.name }}</h3>
-              <p class="pet-breed">{{ pet.breed || pet.species }}</p>
-              <p class="pet-description">{{ pet.description.slice(0, 80) }}...</p>
-              <div class="pet-meta">
-                <span v-if="pet.location_name" class="pet-location">
-                  <i class="fas fa-map-marker-alt"></i>
-                  {{ pet.location_name }}
-                </span>
-                <span class="pet-date">
-                  <i class="fas fa-clock"></i>
-                  {{ formatDate(pet.reported_date) }}
-                </span>
+            <div class="row mb-4 g-4">
+              <div v-for="(data, idx) in cards" class="col-12 col-md-6 col-lg-4">
+                <DashboardCard v-bind="data" :key="idx" />
+              </div>
+            </div>
+
+            <div class="pets-section col-12 mb-4">
+              <h2 class="section-title">Recent Activity</h2>
+
+              <!-- Empty State -->
+              <div v-if="!selectedCommunity" class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <p>Select a community to view recent activities</p>
+              </div>
+
+              <!-- Activities List -->
+              <div v-else-if="posts[selectedCommunity.id]?.length" class="activities-list">
+                <div
+                  v-for="({ id, post_type, created_at, title, content, users: { name, avatar_url }, view_count, comment_count, reaction_count }, idx) in posts[selectedCommunity.id]"
+                  :key="idx" class="activity-card" @click="navigateTo(`/forum/${id}`)">
+                  <div class="activity-icon" :style="{ background: postCategory[post_type]!.color }">
+                    <i class="fas" :class="postCategory[post_type]!.icon" />
+                  </div>
+
+                  <div class="activity-content">
+                    <div class="activity-header">
+                      <span class="post-type-badge" :style="{ background: postCategory[post_type]!.color }">
+                        {{ post_type }}
+                      </span>
+                      <span class="activity-time">{{ formatDate(created_at) }}</span>
+                    </div>
+
+                    <h3 class="activity-title">{{ title }}</h3>
+
+                    <p class="activity-description">{{ truncateText(content, 100) }}</p>
+
+                    <div class="activity-meta">
+                      <span class="meta-item">
+                        <img :src="avatar_url" class="rounded-circle ratio ratio-1x1"
+                          style="width: 2em; object-fit: cover;" />
+                        {{ name || 'Anonymous' }}
+                      </span>
+                      <span class="meta-item" v-for="{ classname, attribute } in [
+                        {
+                          classname: 'fa-eye',
+                          attribute: view_count || 0
+                        },
+                        {
+                          classname: 'fa-comment',
+                          attribute: comment_count || 0
+                        },
+                        {
+                          classname: 'fa-heart',
+                          attribute: reaction_count || 0
+                        }
+                      ]">
+                        <i class="fas" :class="classname" />
+                        {{ attribute }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- No Activities -->
+              <div v-else class="empty-state">
+                <i class="fas fa-cat"></i>
+                <p>No recent activities in this community</p>
               </div>
             </div>
           </div>
@@ -128,13 +103,66 @@
   </div>
 </template>
 
-<script setup>
-const { statistics, pets, lostPetsWithLocation, loading, error, fetchPets } = usePetDashboard()
+<script setup lang="ts">
+import DashboardCard from '~/components/DashboardCard.vue'
+import type { Suggestion } from '~/components/Suggestion.vue'
+import type { post_types } from '~/composables/usePetDashboard'
 
-const formatDate = (dateString) => {
+const suggestions = ref<Community[]>([])
+const selectedCommunity = ref<Community | null>()
+
+const { statistics, communities, posts, error, fetchAllData } = await usePetDashboard()
+
+function getStatisticsValue(type: typeof post_types[number] | "total") {
+  return `${selectedCommunity.value ? statistics.value[selectedCommunity.value.id]?.[type] ?? 0 : 0}`
+}
+
+const cards = computed(() => [
+  {
+    label: "Total Pets",
+    value: getStatisticsValue("total"),
+    iconClass: "fa-paw",
+    colorGradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+  },
+  {
+    label: "Available for Adoption",
+    value: getStatisticsValue("adoption"),
+    iconClass: "fa-heart",
+    colorGradient: "linear-gradient(135deg, #FF9800 0%, #F57C00 100%)"
+  },
+  {
+    label: "Pet Sightings",
+    value: getStatisticsValue("sighting"),
+    iconClass: "fa-eye",
+    colorGradient: "linear-gradient(135deg, #FFD700 0%, #FFA500 100%)"
+  },
+  {
+    label: "Lost Pets",
+    value: getStatisticsValue("lost"),
+    iconClass: "fa-exclamation-triangle",
+    colorGradient: "linear-gradient(135deg, #FF6B6B 0%, #EE5A6F 100%)"
+  },
+  {
+    label: "Found Pets",
+    value: getStatisticsValue("found"),
+    iconClass: "fa-check-circle",
+    colorGradient: "linear-gradient(135deg, #A8E6CF 0%, #88D8F7 100%)"
+  }
+])
+
+const postCategory = ref<Record<string, { color: string, icon: string }>>(
+  {
+    adoption: { color: "linear-gradient(135deg, #FF9800 0%, #F57C00 100%)", icon: 'fa-heart' },
+    sighting: { color: "linear-gradient(135deg, #FFD700 0%, #FFA500 100%)", icon: 'fa-eye' },
+    lost: { color: "linear-gradient(135deg, #FF6B6B 0%, #EE5A6F 100%)", icon: 'fa-exclamation-triangle' },
+    found: { color: "linear-gradient(135deg, #A8E6CF 0%, #88D8F7 100%)", icon: 'fa-check-circle' },
+  }
+)
+
+const formatDate = (dateString: string) => {
   const date = new Date(dateString)
   const now = new Date()
-  const diff = now - date
+  const diff = now.valueOf() - date.valueOf()
   const days = Math.floor(diff / (1000 * 60 * 60 * 24))
 
   if (days === 0) return 'Today'
@@ -143,18 +171,35 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString()
 }
 
-onBeforeMount(() => {
-  fetchPets()
+async function keyDown(searchString: string, _: any): Promise<Suggestion[]> {
+  const lowercaseSearch = searchString.toLowerCase()
+  return (
+    suggestions.value = communities.value!
+      .filter(({ name, description }) =>
+        name.toLowerCase().includes(lowercaseSearch)
+        || description.toLowerCase().includes(lowercaseSearch))
+  )
+    .map(({ name: title, description }) => ({ title, description }))
+}
+
+function selectIdx(idx: number): string {
+  selectedCommunity.value = suggestions.value[idx]!
+  return (suggestions.value = [selectedCommunity.value])[0]!.name
+}
+
+const truncateText = (text: string, maxLength: number): string => {
+  if (!text) return ''
+  return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text
+}
+
+onBeforeMount(async () => {
+  await fetchAllData()
+  suggestions.value = communities.value!
+
 })
 </script>
 
 <style scoped>
-.dashboard-container {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  padding: 32px 24px;
-}
-
 .dashboard-header {
   text-align: center;
   margin-bottom: 48px;
@@ -163,14 +208,12 @@ onBeforeMount(() => {
 .dashboard-title {
   font-size: 48px;
   font-weight: 700;
-  color: #1f2937;
   margin-bottom: 8px;
   letter-spacing: -0.5px;
 }
 
 .dashboard-subtitle {
   font-size: 18px;
-  color: #6b7280;
   font-weight: 400;
 }
 
@@ -206,150 +249,6 @@ onBeforeMount(() => {
   margin-bottom: 16px;
 }
 
-.dashboard-content {
-  max-width: 1400px;
-  margin: 0 auto;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 24px;
-  margin-bottom: 48px;
-}
-
-.stat-card {
-  background: white;
-  border-radius: 16px;
-  padding: 24px;
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-}
-
-.stat-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.stat-icon i {
-  font-size: 24px;
-  color: white;
-}
-
-.total .stat-icon {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.lost .stat-icon {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-}
-
-.found .stat-icon {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-}
-
-.adopted .stat-icon {
-  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-}
-
-.available .stat-icon {
-  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-}
-
-.adoption-rate .stat-icon {
-  background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
-}
-
-.stat-content {
-  flex: 1;
-}
-
-.stat-value {
-  font-size: 36px;
-  font-weight: 700;
-  color: #1f2937;
-  margin-bottom: 4px;
-  line-height: 1;
-}
-
-.stat-label {
-  font-size: 14px;
-  color: #6b7280;
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-
-.stat-percentage,
-.stat-info {
-  font-size: 12px;
-  color: #9ca3af;
-}
-
-.map-section {
-  background: white;
-  border-radius: 16px;
-  padding: 32px;
-  margin-bottom: 48px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-}
-
-.map-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-
-.map-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #1f2937;
-}
-
-.map-legend {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: #6b7280;
-}
-
-.legend-marker {
-  width: 16px;
-  height: 16px;
-  background: #ef4444;
-  border: 2px solid white;
-  border-radius: 50%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.legend-count {
-  font-size: 14px;
-  color: #9ca3af;
-  font-weight: 600;
-}
-
 .pets-section {
   background: white;
   border-radius: 16px;
@@ -364,126 +263,126 @@ onBeforeMount(() => {
   margin-bottom: 24px;
 }
 
-.pets-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 24px;
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6b7280;
 }
 
-.pet-card {
-  background: #f9fafb;
-  border-radius: 12px;
-  overflow: hidden;
-  transition: transform 0.2s, box-shadow 0.2s;
+.empty-state i {
+  font-size: 64px;
+  color: #d1d5db;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-state p {
+  font-size: 16px;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.activities-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.activity-card {
+  display: flex;
+  gap: 20px;
+  padding: 24px;
+  background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
   cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.pet-card:hover {
+.activity-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  border-color: #d1d5db;
 }
 
-.pet-image-container {
-  position: relative;
-  width: 100%;
-  height: 200px;
-}
-
-.pet-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.pet-image-placeholder {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+.activity-icon {
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: white;
+  font-size: 24px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.pet-image-placeholder i {
-  font-size: 48px;
-  color: #9ca3af;
+.activity-content {
+  flex: 1;
+  min-width: 0;
 }
 
-.pet-status {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  padding: 4px 12px;
+.activity-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.post-type-badge {
+  display: inline-block;
+  padding: 6px 14px;
   border-radius: 20px;
   font-size: 12px;
   font-weight: 700;
+  color: white;
   text-transform: uppercase;
-  backdrop-filter: blur(8px);
+  letter-spacing: 0.5px;
 }
 
-.status-lost {
-  background: rgba(239, 68, 68, 0.9);
-  color: white;
+.activity-time {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
 }
 
-.status-found {
-  background: rgba(34, 197, 94, 0.9);
-  color: white;
-}
-
-.status-adopted {
-  background: rgba(59, 130, 246, 0.9);
-  color: white;
-}
-
-.status-available {
-  background: rgba(245, 158, 11, 0.9);
-  color: white;
-}
-
-.pet-details {
-  padding: 20px;
-}
-
-.pet-name {
+.activity-title {
   font-size: 20px;
   font-weight: 700;
   color: #1f2937;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
+  line-height: 1.4;
 }
 
-.pet-breed {
-  font-size: 14px;
-  color: #6b7280;
-  margin-bottom: 12px;
-}
-
-.pet-description {
-  font-size: 14px;
+.activity-description {
+  font-size: 15px;
   color: #4b5563;
   line-height: 1.6;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
-.pet-meta {
+.activity-meta {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
-.pet-location,
-.pet-date {
-  font-size: 13px;
-  color: #6b7280;
+.meta-item {
   display: flex;
   align-items: center;
   gap: 6px;
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
 }
 
-.pet-location i,
-.pet-date i {
+.meta-item i {
   color: #9ca3af;
-  width: 14px;
+  font-size: 14px;
 }
 
 @media (max-width: 768px) {
@@ -502,6 +401,77 @@ onBeforeMount(() => {
   .map-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .activity-card {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .activity-icon {
+    align-self: flex-start;
+  }
+
+  .activity-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .activity-meta {
+    gap: 12px;
+  }
+}
+
+.forum-page {
+  background: linear-gradient(135deg, #FFF5E6 0%, #FFE8D6 50%, #FFF0E0 100%);
+  height: 100%;
+  min-height: fit-content;
+  padding-bottom: 0;
+}
+
+.hero-section {
+  box-shadow: unset;
+  background: linear-gradient(135deg, #FFB74D 0%, #FFA726 50%, #FF9800 100%);
+  padding: 60px 0 100px;
+  position: relative;
+  overflow: hidden;
+}
+
+.wave-animation {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100px;
+  overflow: hidden;
+}
+
+.wave-animation::before,
+.wave-animation::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,50 Q150,20 300,50 T600,50 T900,50 T1200,50 L1200,120 L0,120 Z' fill='%23FFF5E6' fill-opacity='0.4'/%3E%3C/svg%3E") repeat-x;
+  background-size: 1200px 100%;
+  animation: wave-flow 20s linear infinite;
+}
+
+.wave-animation::after {
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,70 Q200,40 400,70 T800,70 T1200,70 L1200,120 L0,120 Z' fill='%23FFF5E6' fill-opacity='0.7'/%3E%3C/svg%3E") repeat-x;
+  background-size: 1200px 100%;
+  animation: wave-flow 15s linear infinite reverse;
+}
+
+@keyframes wave-flow {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-1200px);
   }
 }
 </style>
