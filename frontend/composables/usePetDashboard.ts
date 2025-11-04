@@ -37,6 +37,8 @@ type Post = {
   reaction_count: number
 }
 
+export const post_types = ["adoption", "sighting", "lost", "found"] as const
+
 type SortedPosts = Record<string, Post[]>
 
 import { ref, computed } from "vue"
@@ -47,24 +49,18 @@ export const usePetDashboard = async () => {
   const error = ref(null)
 
   const statistics = computed(() => {
-    const total = communities.value.length
-    const lost = communities.value.filter(p => p.status === 'lost').length
-    const found = communities.value.filter(p => p.status === 'found').length
-    const adopted = communities.value.filter(p => p.status === 'adopted').length
-    const available = communities.value.filter(p => p.status === 'available').length
-
-    const adoptionRate = total > 0 ? ((adopted / total) * 100).toFixed(1) : '0'
-    const lostRate = total > 0 ? ((lost / total) * 100).toFixed(1) : '0'
-
-    return {
-      total,
-      lost,
-      found,
-      adopted,
-      available,
-      adoptionRate,
-      lostRate
-    }
+    const stats = Object.fromEntries(
+      Object.entries(posts.value).map(([k, posts]) => [k, posts.reduce((accum, { post_type }) => {
+        accum[post_type]!++
+        return accum
+      }, Object.fromEntries(
+        post_types.map(type => [type, 0])
+      ))])
+    )
+    Object.entries(stats).forEach(([_, obj]) => {
+      obj.total = Object.entries(obj).reduce((accum, [_, v]) => accum + v, 0)
+    })
+    return stats
   })
 
   const fetchAllData = async () => {

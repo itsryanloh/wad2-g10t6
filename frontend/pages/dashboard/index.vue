@@ -29,15 +29,66 @@
 
         <div class="pets-section col-12">
           <h2 class="section-title">Recent Activity</h2>
-          <div class="pets-grid">
-            <ul class="position-relative">
-              <li class="btn btn-secondary" v-if="selectedCommunity" v-for="post in posts[selectedCommunity.id]">
-                <span class="post-badge" :style="{ background: categoryColor[post.post_type]! }">
-                  {{ post.post_type }}
-                </span>
-                <p class="d-inline-block">{{ post.title }}</p>
-              </li>
-            </ul>
+
+          <!-- Empty State -->
+          <div v-if="!selectedCommunity" class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <p>Select a community to view recent activities</p>
+          </div>
+
+          <!-- Activities List -->
+          <div v-else-if="posts[selectedCommunity.id]?.length" class="activities-list">
+            <div
+              v-for="({ id, post_type, created_at, title, content, users: { name, avatar_url }, view_count, comment_count, reaction_count }, idx) in posts[selectedCommunity.id]"
+              :key="idx" class="activity-card" @click="navigateTo(`/forum/${id}`)">
+              <div class="activity-icon" :style="{ background: postCategory[post_type]!.color }">
+                <i class="fas" :class="postCategory[post_type]!.icon" />
+              </div>
+
+              <div class="activity-content">
+                <div class="activity-header">
+                  <span class="post-type-badge" :style="{ background: postCategory[post_type]!.color }">
+                    {{ post_type }}
+                  </span>
+                  <span class="activity-time">{{ formatDate(created_at) }}</span>
+                </div>
+
+                <h3 class="activity-title">{{ title }}</h3>
+
+                <p class="activity-description">{{ truncateText(content, 100) }}</p>
+
+                <div class="activity-meta">
+                  <span class="meta-item">
+                    <img :src="avatar_url" class="rounded-circle ratio ratio-1x1"
+                      style="width: 2em; object-fit: cover;" />
+                    {{ name || 'Anonymous' }}
+                  </span>
+                  <span class="meta-item" v-for="{ classname, attribute } in [
+                    {
+                      classname: 'fa-eye',
+                      attribute: view_count || 0
+                    },
+                    {
+                      classname: 'fa-comment',
+                      attribute: comment_count || 0
+                    },
+                    {
+                      classname: 'fa-heart',
+                      attribute: reaction_count || 0
+                    }
+                  ]">
+                    <i class="fas" :class="classname" />
+                    {{ attribute }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- No Activities -->
+          <div v-else class="empty-state">
+            <i class="fas fa-cat"></i>
+            <p>No recent activities in this community</p>
           </div>
         </div>
       </div>
@@ -46,51 +97,58 @@
 </template>
 
 <script setup lang="ts">
-import type { ComponentInstance } from 'vue'
 import DashboardCard from '~/components/DashboardCard.vue'
 import type { Suggestion } from '~/components/Suggestion.vue'
+import type { post_types } from '~/composables/usePetDashboard'
+
+const suggestions = ref<Community[]>([])
+const selectedCommunity = ref<Community | null>()
 
 const { statistics, communities, posts, error, fetchAllData } = await usePetDashboard()
 
-const cards = ref<ComponentInstance<typeof DashboardCard>['$props'][]>([
+function getStatisticsValue(type: typeof post_types[number] | "total") {
+  return `${selectedCommunity.value ? statistics.value[selectedCommunity.value.id]?.[type] ?? 0 : 0}`
+}
+
+const cards = computed(() => [
   {
     label: "Total Pets",
-    value: `0`,
+    value: getStatisticsValue("total"),
     iconClass: "fa-paw",
     colorGradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
   },
   {
     label: "Available for Adoption",
-    value: `0`,
+    value: getStatisticsValue("adoption"),
     iconClass: "fa-heart",
-    colorGradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
+    colorGradient: "linear-gradient(135deg, #FF9800 0%, #F57C00 100%)"
   },
   {
     label: "Pet Sightings",
-    value: `0`,
+    value: getStatisticsValue("sighting"),
     iconClass: "fa-eye",
-    colorGradient: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"
+    colorGradient: "linear-gradient(135deg, #FFD700 0%, #FFA500 100%)"
   },
   {
     label: "Lost Pets",
-    value: `0`,
+    value: getStatisticsValue("lost"),
     iconClass: "fa-exclamation-triangle",
-    colorGradient: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)"
+    colorGradient: "linear-gradient(135deg, #FF6B6B 0%, #EE5A6F 100%)"
   },
   {
     label: "Found Pets",
-    value: `0`,
+    value: getStatisticsValue("found"),
     iconClass: "fa-check-circle",
-    colorGradient: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)"
+    colorGradient: "linear-gradient(135deg, #A8E6CF 0%, #88D8F7 100%)"
   }
 ])
 
-const categoryColor = ref<Record<string, string>>(
+const postCategory = ref<Record<string, { color: string, icon: string }>>(
   {
-    adoption: "linear-gradient(135deg, #FF9800 0%, #F57C00 100%)",
-    sighting: "linear-gradient(135deg, #FFD700 0%, #FFA500 100%)",
-    lost: "linear-gradient(135deg, #FF6B6B 0%, #EE5A6F 100%)",
-    found: "linear-gradient(135deg, #A8E6CF 0%, #88D8F7 100%)",
+    adoption: { color: "linear-gradient(135deg, #FF9800 0%, #F57C00 100%)", icon: 'fa-heart' },
+    sighting: { color: "linear-gradient(135deg, #FFD700 0%, #FFA500 100%)", icon: 'fa-eye' },
+    lost: { color: "linear-gradient(135deg, #FF6B6B 0%, #EE5A6F 100%)", icon: 'fa-exclamation-triangle' },
+    found: { color: "linear-gradient(135deg, #A8E6CF 0%, #88D8F7 100%)", icon: 'fa-check-circle' },
   }
 )
 
@@ -106,13 +164,6 @@ const formatDate = (dateString: string) => {
   return date.toLocaleDateString()
 }
 
-const suggestions = ref<Community[]>([])
-const selectedCommunity = ref<Community | null>({
-  "id": "b6d413f6-4114-444a-bccf-c7ef6a3eae0b",
-  "name": "Ang Mo Kio Cats",
-  "description": "AMK cat sightings, adoptions, and TNR"
-})
-
 async function keyDown(searchString: string, _: any): Promise<Suggestion[]> {
   const lowercaseSearch = searchString.toLowerCase()
   return (
@@ -127,6 +178,11 @@ async function keyDown(searchString: string, _: any): Promise<Suggestion[]> {
 function selectIdx(idx: number): string {
   selectedCommunity.value = suggestions.value[idx]!
   return (suggestions.value = [selectedCommunity.value])[0]!.name
+}
+
+const truncateText = (text: string, maxLength: number): string => {
+  if (!text) return ''
+  return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text
 }
 
 onBeforeMount(async () => {
@@ -208,6 +264,128 @@ onBeforeMount(async () => {
   margin-bottom: 24px;
 }
 
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6b7280;
+}
+
+.empty-state i {
+  font-size: 64px;
+  color: #d1d5db;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-state p {
+  font-size: 16px;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.activities-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.activity-card {
+  display: flex;
+  gap: 20px;
+  padding: 24px;
+  background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.activity-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  border-color: #d1d5db;
+}
+
+.activity-icon {
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 24px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.activity-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.activity-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.post-type-badge {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.activity-time {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.activity-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.activity-description {
+  font-size: 15px;
+  color: #4b5563;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.activity-meta {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.meta-item i {
+  color: #9ca3af;
+  font-size: 14px;
+}
+
 @media (max-width: 768px) {
   .dashboard-title {
     font-size: 36px;
@@ -224,6 +402,24 @@ onBeforeMount(async () => {
   .map-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .activity-card {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .activity-icon {
+    align-self: flex-start;
+  }
+
+  .activity-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .activity-meta {
+    gap: 12px;
   }
 }
 </style>
