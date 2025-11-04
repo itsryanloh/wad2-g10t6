@@ -1,6 +1,6 @@
 # WAD2-G10T6
 
-A web application for helping cats find a home.
+A web application for helping cats find a home. It is publicly accessible on adore-frontend.onrender.com
 
 ## Features
 
@@ -41,10 +41,15 @@ A web application for helping cats find a home.
     ```bash
     npm install
     ```
-3.  Create a `.env` file from the `.env.example` and fill in the required environment variables.
+3.  Ensure that the `.env` file is in the `backend` directory
 4.  Start the development server:
     ```bash
     npm run dev
+    ```
+    or
+    Build the frontend:
+    ```bash
+    npm run build && node .output/server/index.mjs
     ```
 
 ### Frontend
@@ -57,9 +62,15 @@ A web application for helping cats find a home.
     ```bash
     npm install
     ```
-3.  Start the development server:
+3.  Ensure that the `.env` file is in the `frontend` directory
+4.  Start the development server:
     ```bash
     npm run dev
+    ```
+    or
+    Build the backend:
+    ```bash
+    npm i && npm run start
     ```
 
 The frontend will be available at http://localhost:3001.
