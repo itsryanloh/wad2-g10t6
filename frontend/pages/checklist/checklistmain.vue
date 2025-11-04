@@ -679,7 +679,6 @@ onBeforeUnmount(() => {
   padding-bottom: 17px;
   padding-left: 20px;
   padding-right: 20px;
-  font-family: Georgia, serif;
   background: white;
   border-radius: 15px 15px 0 0;
   line-height: 1.2;
@@ -789,7 +788,6 @@ onBeforeUnmount(() => {
   font-weight: bold;
   margin: 0;
   margin-bottom: 30px;
-  font-family: Georgia, serif;
   padding-bottom: 18px;
   padding-left: 20px;
   padding-right: 20px;
