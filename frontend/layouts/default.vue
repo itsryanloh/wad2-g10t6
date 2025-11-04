@@ -39,7 +39,7 @@
               <NuxtLink to="/dashboard" style="text-decoration: none;">
                 <button class="btn nav-link" :class="{ active: $route.path.startsWith('/dashboard') }"
                   data-bs-toggle="collapse" data-bs-target="#navbarContent">
-                  <i class="fas fa-map-marked-alt me-2"></i>Dashboard
+                  <i class="fas fa-bar-chart me-2"></i>Dashboard
                 </button>
               </NuxtLink>
             </li>

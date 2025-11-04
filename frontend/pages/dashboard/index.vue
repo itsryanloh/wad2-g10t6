@@ -1,94 +1,101 @@
 <template>
-  <div class="dashboard-container">
-    <div class="dashboard-header">
-      <h1 class="dashboard-title">Pet Dashboard</h1>
-      <p class="dashboard-subtitle">Track lost pets and adoption statistics in real-time</p>
+  <div class="forum-page d-flex flex-column flex-grow-1">
+    <div class="hero-section position-absolute w-100">
+      <div class="wave-animation" />
     </div>
-
-    <div v-if="!communities!.length" class="loading-container">
-      <div class="spinner"></div>
-      <p>Loading dashboard data...</p>
-    </div>
-
-    <div v-else-if="error" class="error-container">
-      <i class="fas fa-exclamation-circle"></i>
-      <p>{{ error }}</p>
-    </div>
-
-    <div v-else>
-      <div class="container w-100">
-        <div>
-          <AutocompleteBar class="mb-4" placeholder="Select a community" suggestion-icon="fa-cat" :key-down="keyDown"
-            :select-idx="selectIdx" />
-        </div>
-        <div class="row mb-4 g-4">
-          <div v-for="(data, idx) in cards" class="col-12 col-md-6 col-lg-4">
-            <DashboardCard v-bind="data" :key="idx" />
-          </div>
+    <div class="align-items-center flex-grow-1 d-flex">
+      <div class="mx-auto mt-1" style="z-index: 1000;">
+        <div class="dashboard-header text-light" style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);">
+          <h1 class="dashboard-title"><i class="fas fa-bar-chart me-3" />Pet Dashboard</h1>
+          <p class="dashboard-subtitle">Track lost pets and adoption statistics in real-time</p>
         </div>
 
-        <div class="pets-section col-12">
-          <h2 class="section-title">Recent Activity</h2>
+        <div v-if="!communities!.length" class="loading-container">
+          <div class="spinner"></div>
+          <p>Loading dashboard data...</p>
+        </div>
 
-          <!-- Empty State -->
-          <div v-if="!selectedCommunity" class="empty-state">
-            <i class="fas fa-inbox"></i>
-            <p>Select a community to view recent activities</p>
-          </div>
+        <div v-else-if="error" class="error-container">
+          <i class="fas fa-exclamation-circle"></i>
+          <p>{{ error }}</p>
+        </div>
 
-          <!-- Activities List -->
-          <div v-else-if="posts[selectedCommunity.id]?.length" class="activities-list">
-            <div
-              v-for="({ id, post_type, created_at, title, content, users: { name, avatar_url }, view_count, comment_count, reaction_count }, idx) in posts[selectedCommunity.id]"
-              :key="idx" class="activity-card" @click="navigateTo(`/forum/${id}`)">
-              <div class="activity-icon" :style="{ background: postCategory[post_type]!.color }">
-                <i class="fas" :class="postCategory[post_type]!.icon" />
-              </div>
-
-              <div class="activity-content">
-                <div class="activity-header">
-                  <span class="post-type-badge" :style="{ background: postCategory[post_type]!.color }">
-                    {{ post_type }}
-                  </span>
-                  <span class="activity-time">{{ formatDate(created_at) }}</span>
-                </div>
-
-                <h3 class="activity-title">{{ title }}</h3>
-
-                <p class="activity-description">{{ truncateText(content, 100) }}</p>
-
-                <div class="activity-meta">
-                  <span class="meta-item">
-                    <img :src="avatar_url" class="rounded-circle ratio ratio-1x1"
-                      style="width: 2em; object-fit: cover;" />
-                    {{ name || 'Anonymous' }}
-                  </span>
-                  <span class="meta-item" v-for="{ classname, attribute } in [
-                    {
-                      classname: 'fa-eye',
-                      attribute: view_count || 0
-                    },
-                    {
-                      classname: 'fa-comment',
-                      attribute: comment_count || 0
-                    },
-                    {
-                      classname: 'fa-heart',
-                      attribute: reaction_count || 0
-                    }
-                  ]">
-                    <i class="fas" :class="classname" />
-                    {{ attribute }}
-                  </span>
-                </div>
+        <div v-else>
+          <div class="container w-100">
+            <div>
+              <AutocompleteBar class="mb-4" placeholder="Select a community" suggestion-icon="fa-cat"
+                :key-down="keyDown" :select-idx="selectIdx" />
+            </div>
+            <div class="row mb-4 g-4">
+              <div v-for="(data, idx) in cards" class="col-12 col-md-6 col-lg-4">
+                <DashboardCard v-bind="data" :key="idx" />
               </div>
             </div>
-          </div>
 
-          <!-- No Activities -->
-          <div v-else class="empty-state">
-            <i class="fas fa-cat"></i>
-            <p>No recent activities in this community</p>
+            <div class="pets-section col-12">
+              <h2 class="section-title">Recent Activity</h2>
+
+              <!-- Empty State -->
+              <div v-if="!selectedCommunity" class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <p>Select a community to view recent activities</p>
+              </div>
+
+              <!-- Activities List -->
+              <div v-else-if="posts[selectedCommunity.id]?.length" class="activities-list">
+                <div
+                  v-for="({ id, post_type, created_at, title, content, users: { name, avatar_url }, view_count, comment_count, reaction_count }, idx) in posts[selectedCommunity.id]"
+                  :key="idx" class="activity-card" @click="navigateTo(`/forum/${id}`)">
+                  <div class="activity-icon" :style="{ background: postCategory[post_type]!.color }">
+                    <i class="fas" :class="postCategory[post_type]!.icon" />
+                  </div>
+
+                  <div class="activity-content">
+                    <div class="activity-header">
+                      <span class="post-type-badge" :style="{ background: postCategory[post_type]!.color }">
+                        {{ post_type }}
+                      </span>
+                      <span class="activity-time">{{ formatDate(created_at) }}</span>
+                    </div>
+
+                    <h3 class="activity-title">{{ title }}</h3>
+
+                    <p class="activity-description">{{ truncateText(content, 100) }}</p>
+
+                    <div class="activity-meta">
+                      <span class="meta-item">
+                        <img :src="avatar_url" class="rounded-circle ratio ratio-1x1"
+                          style="width: 2em; object-fit: cover;" />
+                        {{ name || 'Anonymous' }}
+                      </span>
+                      <span class="meta-item" v-for="{ classname, attribute } in [
+                        {
+                          classname: 'fa-eye',
+                          attribute: view_count || 0
+                        },
+                        {
+                          classname: 'fa-comment',
+                          attribute: comment_count || 0
+                        },
+                        {
+                          classname: 'fa-heart',
+                          attribute: reaction_count || 0
+                        }
+                      ]">
+                        <i class="fas" :class="classname" />
+                        {{ attribute }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- No Activities -->
+              <div v-else class="empty-state">
+                <i class="fas fa-cat"></i>
+                <p>No recent activities in this community</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -193,12 +200,6 @@ onBeforeMount(async () => {
 </script>
 
 <style scoped>
-.dashboard-container {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  padding: 32px 24px;
-}
-
 .dashboard-header {
   text-align: center;
   margin-bottom: 48px;
@@ -207,14 +208,12 @@ onBeforeMount(async () => {
 .dashboard-title {
   font-size: 48px;
   font-weight: 700;
-  color: #1f2937;
   margin-bottom: 8px;
   letter-spacing: -0.5px;
 }
 
 .dashboard-subtitle {
   font-size: 18px;
-  color: #6b7280;
   font-weight: 400;
 }
 
@@ -420,6 +419,59 @@ onBeforeMount(async () => {
 
   .activity-meta {
     gap: 12px;
+  }
+}
+
+.forum-page {
+  background: linear-gradient(135deg, #FFF5E6 0%, #FFE8D6 50%, #FFF0E0 100%);
+  height: 100%;
+  min-height: fit-content;
+  padding-bottom: 0;
+}
+
+.hero-section {
+  box-shadow: unset;
+  background: linear-gradient(135deg, #FFB74D 0%, #FFA726 50%, #FF9800 100%);
+  padding: 60px 0 100px;
+  position: relative;
+  overflow: hidden;
+}
+
+.wave-animation {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100px;
+  overflow: hidden;
+}
+
+.wave-animation::before,
+.wave-animation::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,50 Q150,20 300,50 T600,50 T900,50 T1200,50 L1200,120 L0,120 Z' fill='%23FFF5E6' fill-opacity='0.4'/%3E%3C/svg%3E") repeat-x;
+  background-size: 1200px 100%;
+  animation: wave-flow 20s linear infinite;
+}
+
+.wave-animation::after {
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,70 Q200,40 400,70 T800,70 T1200,70 L1200,120 L0,120 Z' fill='%23FFF5E6' fill-opacity='0.7'/%3E%3C/svg%3E") repeat-x;
+  background-size: 1200px 100%;
+  animation: wave-flow 15s linear infinite reverse;
+}
+
+@keyframes wave-flow {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-1200px);
   }
 }
 </style>
