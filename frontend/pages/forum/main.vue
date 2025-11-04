@@ -14,11 +14,9 @@
     <!-- Main Content -->
     <div class="container content-container">
       <div class="forum-layout">
-        <!-- Left Sidebar - Communities -->
-
         <!-- Main Content Area -->
           <!-- Search & Filter Card -->
-          <div class="search-card">
+          <div class="search-card mb-4">
             <div class="row g-4">
               <!-- Community Info Banner (when community selected) -->
               <div v-if="selectedCommunity" class="col-12">
@@ -91,7 +89,8 @@
             </div>
           </div>
 
-        <div class="sidebar-column">
+        <!-- Left Sidebar - Communities -->
+        <div class="sidebar-column mb-4">
           <CommunitySidebar 
             :userCommunities="userCommunities"
             :loading="loadingCommunities"
@@ -112,7 +111,7 @@
           </div>
 
           <!-- Posts Grid -->
-          <div v-else-if="filteredPosts.length > 0" class="posts-grid mt-4">
+          <div v-else-if="filteredPosts.length > 0" class="posts-grid">
             <div
               v-for="(post, index) in filteredPosts"
               :key="post.id"
@@ -441,8 +440,7 @@ onActivated(async () => {
 
 .forum-layout {
   display: grid;
-  grid-template-columns: 320px 1fr;
-  gap: 25px;
+  grid-template-columns: 335px 1fr;
   align-items: start;
 }
 
