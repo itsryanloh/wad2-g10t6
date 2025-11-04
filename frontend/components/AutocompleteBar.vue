@@ -23,7 +23,7 @@ const { placeholder, keyDown, selectIdx, suggestionIcon } = defineProps<{
   selectIdx: (idx: number) => string
 }>()
 
-const name = ref("")
+const name = defineModel({ default: "" })
 
 const valuesToReplaceSearchbox = ref<Awaited<ReturnType<typeof keyDown>>>([])
 const showDropdown = ref(false)

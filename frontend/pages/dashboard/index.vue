@@ -3,14 +3,14 @@
     <div class="hero-section position-absolute w-100">
       <div class="wave-animation" />
     </div>
-    <div class="align-items-center flex-grow-1 d-flex">
-      <div class="mx-auto mt-1" style="z-index: 100;">
+    <div class="flex-grow-1 d-flex mt-1">
+      <div class="mx-auto" style="z-index: 100;">
         <div class="dashboard-header text-light" style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);">
           <h1 class="dashboard-title"><i class="fas fa-bar-chart me-3" />Pet Dashboard</h1>
           <p class="dashboard-subtitle">Track lost pets and adoption statistics in real-time</p>
         </div>
 
-        <div v-if="!communities!.length" class="loading-container">
+        <div v-if="!communities?.length" class="loading-container">
           <div class="spinner"></div>
           <p>Loading dashboard data...</p>
         </div>
@@ -22,9 +22,13 @@
 
         <div v-else>
           <div class="container w-100">
-            <div>
-              <AutocompleteBar class="mb-4" placeholder="Select a community" suggestion-icon="fa-cat"
-                :key-down="keyDown" :select-idx="selectIdx" />
+            <div class="d-flex mb-4 gap-2">
+              <AutocompleteBar class="flex-grow-1 d-block" placeholder="Select a community" suggestion-icon="fa-cat"
+                :key-down="keyDown" :select-idx="selectIdx" v-model="searchBar" />
+              <div role="button" title="Get newest data from server" class="ratio ratio-1x1 bg-white m-auto rounded-5"
+                style="width: 3rem; height: 3rem;box-shadow: 0 4px 20px rgba(255, 152, 0, 0.3);" @click="refreshData">
+                <i class="fas fa-arrows-rotate text-center" style="margin-top: 35%;" />
+              </div>
             </div>
             <div class="row mb-4 g-4">
               <div v-for="(data, idx) in cards" class="col-12 col-md-6 col-lg-4">
@@ -46,13 +50,15 @@
                 <div
                   v-for="({ id, post_type, created_at, title, content, users: { name, avatar_url }, view_count, comment_count, reaction_count }, idx) in posts[selectedCommunity.id]"
                   :key="idx" class="activity-card" @click="navigateTo(`/forum/${id}`)">
-                  <div class="activity-icon" :style="{ background: postCategory[post_type]!.color }">
-                    <i class="fas" :class="postCategory[post_type]!.icon" />
+                  <div class="activity-icon"
+                    :style="{ background: cards.find(({ post_type: type }) => type === post_type)!.colorGradient }">
+                    <i class="fas" :class="cards.find(({ post_type: type }) => type === post_type)!.iconClass" />
                   </div>
 
                   <div class="activity-content">
                     <div class="activity-header">
-                      <span class="post-type-badge" :style="{ background: postCategory[post_type]!.color }">
+                      <span class="post-type-badge"
+                        :style="{ background: cards.find(({ post_type: type }) => type === post_type)!.colorGradient }">
                         {{ post_type }}
                       </span>
                       <span class="activity-time">{{ formatDate(created_at) }}</span>
@@ -108,7 +114,6 @@ import DashboardCard from '~/components/DashboardCard.vue'
 import type { Suggestion } from '~/components/Suggestion.vue'
 import type { post_types } from '~/composables/usePetDashboard'
 
-const suggestions = ref<Community[]>([])
 const selectedCommunity = ref<Community | null>()
 
 const { statistics, communities, posts, error, fetchAllData } = await usePetDashboard()
@@ -122,42 +127,38 @@ const cards = computed(() => [
     label: "Total Pets",
     value: getStatisticsValue("total"),
     iconClass: "fa-paw",
+    post_type: "total",
     colorGradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
   },
   {
     label: "Available for Adoption",
     value: getStatisticsValue("adoption"),
     iconClass: "fa-heart",
+    post_type: "adoption",
     colorGradient: "linear-gradient(135deg, #FF9800 0%, #F57C00 100%)"
   },
   {
     label: "Pet Sightings",
     value: getStatisticsValue("sighting"),
     iconClass: "fa-eye",
+    post_type: "sighting",
     colorGradient: "linear-gradient(135deg, #FFD700 0%, #FFA500 100%)"
   },
   {
     label: "Lost Pets",
     value: getStatisticsValue("lost"),
     iconClass: "fa-exclamation-triangle",
+    post_type: "lost",
     colorGradient: "linear-gradient(135deg, #FF6B6B 0%, #EE5A6F 100%)"
   },
   {
     label: "Found Pets",
     value: getStatisticsValue("found"),
     iconClass: "fa-check-circle",
+    post_type: "found",
     colorGradient: "linear-gradient(135deg, #A8E6CF 0%, #88D8F7 100%)"
   }
 ])
-
-const postCategory = ref<Record<string, { color: string, icon: string }>>(
-  {
-    adoption: { color: "linear-gradient(135deg, #FF9800 0%, #F57C00 100%)", icon: 'fa-heart' },
-    sighting: { color: "linear-gradient(135deg, #FFD700 0%, #FFA500 100%)", icon: 'fa-eye' },
-    lost: { color: "linear-gradient(135deg, #FF6B6B 0%, #EE5A6F 100%)", icon: 'fa-exclamation-triangle' },
-    found: { color: "linear-gradient(135deg, #A8E6CF 0%, #88D8F7 100%)", icon: 'fa-check-circle' },
-  }
-)
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString)
@@ -170,6 +171,8 @@ const formatDate = (dateString: string) => {
   if (days < 7) return `${days} days ago`
   return date.toLocaleDateString()
 }
+
+const suggestions = ref<Community[]>([])
 
 async function keyDown(searchString: string, _: any): Promise<Suggestion[]> {
   const lowercaseSearch = searchString.toLowerCase()
@@ -192,11 +195,16 @@ const truncateText = (text: string, maxLength: number): string => {
   return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text
 }
 
-onBeforeMount(async () => {
+const searchBar = ref("")
+
+async function refreshData() {
   await fetchAllData()
   suggestions.value = communities.value!
+  selectedCommunity.value = null
+  searchBar.value = ""
+}
 
-})
+onBeforeMount(refreshData)
 </script>
 
 <style scoped>

@@ -42,6 +42,7 @@ export const post_types = ["adoption", "sighting", "lost", "found"] as const
 type SortedPosts = Record<string, Post[]>
 
 import { ref, computed } from "vue"
+import { useFetch } from "#app";
 
 export const usePetDashboard = async () => {
   const communities = (await useFetch<Community[]>(`${VITE_BASE_URL}/communities`)).data
