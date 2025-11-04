@@ -4,7 +4,7 @@
     <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
       <div class="container-fluid px-4">
         <!-- Logo & Brand -->
-        <NuxtLink to="/" class="navbar-brand d-flex align-items-center">
+        <NuxtLink to="/" class="navbar-brand d-flex">
           <div class="logo-container">
             <i class="fas fa-paw"></i>
           </div>
@@ -20,28 +20,43 @@
         <div class="collapse navbar-collapse" id="navbarContent">
           <ul class="navbar-nav mx-auto">
             <li class="nav-item">
-              <NuxtLink to="/" class="nav-link" active-class="active">
-                <i class="fas fa-home me-2"></i>Home
+              <NuxtLink to="/" style="text-decoration: none;">
+                <button class="btn nav-link" :class="{ active: $route.path == '/' }" data-bs-toggle="collapse"
+                  data-bs-target="#navbarContent" @click="handlePageChange('home')">
+                  <i class="fas fa-home me-2"></i>Home
+                </button>
               </NuxtLink>
             </li>
             <li class="nav-item">
-              <NuxtLink to="/forum/main" class="nav-link" active-class="active">
-                <i class="fas fa-comments me-2"></i>Forum
+              <NuxtLink to="/forum/main" style="text-decoration: none;">
+                <button class="btn nav-link" :class="{ active: $route.path.startsWith('/forum') }"
+                  data-bs-toggle="collapse" data-bs-target="#navbarContent" @click="handlePageChange('forum')">
+                  <i class="fas fa-comments me-2"></i>Forum
+                </button>
               </NuxtLink>
             </li>
             <li class="nav-item">
-              <NuxtLink to="/dashboard" class="nav-link" active-class="active">
-                <i class="fas fa-map-marked-alt me-2"></i>Dashboard
+              <NuxtLink to="/dashboard" style="text-decoration: none;">
+                <button class="btn nav-link" :class="{ active: $route.path.startsWith('/dashboard') }"
+                  data-bs-toggle="collapse" data-bs-target="#navbarContent">
+                  <i class="fas fa-map-marked-alt me-2"></i>Dashboard
+                </button>
               </NuxtLink>
             </li>
             <li class="nav-item">
-              <NuxtLink to="/checklist/checklistmain" class="nav-link" active-class="active">
-                <i class="fas fa-list-check me-2"></i>Checklist
+              <NuxtLink to="/checklist/checklistmain" style="text-decoration: none;">
+                <button class="btn nav-link" :class="{ active: $route.path.startsWith('/checklist') }"
+                  data-bs-toggle="collapse" data-bs-target="#navbarContent">
+                  <i class="fas fa-list-check me-2"></i>Checklist
+                </button>
               </NuxtLink>
             </li>
             <li class="nav-item">
-              <NuxtLink to="/profile" class="nav-link" active-class="active">
-                <i class="fas fa-user me-2"></i>Profile
+              <NuxtLink to="/profile" style="text-decoration: none;">
+                <button class="btn nav-link" :class="{ active: $route.path.startsWith('/profile') }"
+                  data-bs-toggle="collapse" data-bs-target="#navbarContent">
+                  <i class="fas fa-user me-2"></i>Profile
+                </button>
               </NuxtLink>
             </li>
           </ul>
@@ -125,14 +140,13 @@ const handleLogin = async () => {
 .navbar-custom {
   background: linear-gradient(135deg, #FF9800 0%, #FFC107 100%);
   box-shadow: 0 4px 20px rgba(255, 152, 0, 0.3);
-  padding: 15px 0;
   backdrop-filter: blur(10px);
   z-index: 1000;
 }
 
 .logo-container {
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
   background: white;
   border-radius: 50%;
   display: flex;
@@ -234,7 +248,6 @@ const handleLogin = async () => {
   background: rgba(255, 255, 255, 0.2);
   color: white;
   border: 2px solid rgba(255, 255, 255, 0.3);
-  padding: 10px 25px;
   border-radius: 50px;
   font-weight: 600;
   transition: all 0.3s ease;
@@ -254,6 +267,14 @@ const handleLogin = async () => {
 
 .navbar-toggler-icon {
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 255, 255, 1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+.collapse {
+  transition: height 0.2s ease;
+}
+
+.collapsing {
+  transition: height 0.2s ease;
 }
 
 .main-content {

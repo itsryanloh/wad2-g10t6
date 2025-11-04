@@ -25,9 +25,16 @@
         </div>
         <div id="error" class="form-text text-danger mb-2" v-text="error"></div>
         <div id="success" class="form-text text-success mb-2" v-text="success"></div>
-        <button type="submit" class="btn btn-save w-100" :disabled="isLoading">
-          {{ isLoading ? 'Creating Account...' : 'Create Account' }}
-        </button>
+        <div class="text-center mb-3 singpass-btn btn-save">
+          <button class="btn w-75 p-0 border-0">
+            <img src="/singpass-myinfo.svg" class="w-100"/>
+          </button>
+        </div>
+        <div class="text-center">
+          <button type="submit" class="btn btn-save w-75" :disabled="isLoading">
+            {{ isLoading ? 'Creating Account...' : 'Create Account' }}
+          </button>
+        </div>
       </form>
       <div class="text-center mt-3">
         <NuxtLink href="/register"  @click="$emit('setFormType', '')" class="link-secondary">Back to account type selection</NuxtLink>
@@ -47,7 +54,7 @@ const schema = z.object({
   avatar_url: z.string(),
   role: z.literal("org"),
   age: z.number(),
-  gender: z.string(),
+  gender: z.string().nullable(),
   has_2fa_enabled: z.boolean()
 });
 
@@ -62,7 +69,7 @@ const state = reactive<Partial<Schema>>({
   avatar_url: "https://i.pravatar.cc/150?img=68",
   role: "org",
   age: 0,
-  gender: "organisation",
+  gender: null,
   has_2fa_enabled: false
 });
 
@@ -70,6 +77,7 @@ const confirmPassword = ref("");
 const error = ref("");
 const success = ref("");
 const isLoading = ref(false);
+const showPasswordModal = ref(true);
 
 async function onSubmit(_: Event) {
   error.value = "";
@@ -82,7 +90,7 @@ async function onSubmit(_: Event) {
 
   const validation = schema.safeParse(state);
   if (!validation.success) {
-    error.value = validation.error.errors[0].message;
+    error.value = validation.error.message;
     return;
   }
 
@@ -105,7 +113,7 @@ async function onSubmit(_: Event) {
         navigateTo("/login");
       }, 2000);
     } else {
-      error.value = data.error || data.message || "Registration failed";
+      error.value = data.error || data[0].message || "Registration failed";
     }
   } catch (err) {
     error.value = "An error occurred during registration";
@@ -117,6 +125,109 @@ async function onSubmit(_: Event) {
 </script>
 
 <style scoped>
+.singpass-btn {
+  background: unset !important;
+  box-shadow: unset !important;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 20px;
+  padding: 30px;
+  max-width: 500px;
+  width: 90%;
+  animation: slideUp 0.3s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-header h3 {
+  color: #5D4E37;
+  margin: 0;
+}
+
+.modal-body {
+  margin-bottom: 20px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #7A7265;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.close-btn:hover {
+  color: #FF6B6B;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px 18px;
+  border: 2px solid #FFB74D;
+  border-radius: 10px;
+  font-size: 15px;
+  transition: all 0.3s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #FF9800;
+  box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
+}
+
+.section-label {
+  display: flex;
+  align-items: center;
+  font-weight: 700;
+  color: #5D4E37;
+  margin-bottom: 10px;
+  font-size: 1rem;
+}
+
 .btn-save {
   background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
   color: white;
