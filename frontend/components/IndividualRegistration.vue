@@ -80,7 +80,7 @@ const state = reactive<Partial<Schema>>({
   gender: "",
   password: "",
   contact_no: "",
-  avatar_url: "https://i.pravatar.cc/150",
+  avatar_url: "https://cat-avatars.vercel.app/api/cat?name=",
   role: "user",
   has_2fa_enabled: false
 });
@@ -104,6 +104,8 @@ async function onSubmit(_: Event) {
     error.value = validation.error.message;
     return;
   }
+
+  if (state.avatar_url) state.avatar_url += state.username;
 
   isLoading.value = true;
 

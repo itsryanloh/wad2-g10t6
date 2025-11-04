@@ -66,7 +66,7 @@ const state = reactive<Partial<Schema>>({
   username: "",
   password: "",
   contact_no: "",
-  avatar_url: "https://i.pravatar.cc/150?img=68",
+  avatar_url: "https://cat-avatars.vercel.app/api/cat?name=",
   role: "org",
   age: 0,
   gender: null,
@@ -77,7 +77,6 @@ const confirmPassword = ref("");
 const error = ref("");
 const success = ref("");
 const isLoading = ref(false);
-const showPasswordModal = ref(true);
 
 async function onSubmit(_: Event) {
   error.value = "";
@@ -93,6 +92,8 @@ async function onSubmit(_: Event) {
     error.value = validation.error.message;
     return;
   }
+
+  if (state.avatar_url) state.avatar_url += state.username;
 
   isLoading.value = true;
 
