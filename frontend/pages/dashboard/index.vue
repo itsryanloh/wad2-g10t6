@@ -22,9 +22,11 @@
 
         <div v-else>
           <div class="container w-100">
-            <div>
-              <AutocompleteBar class="mb-4" placeholder="Select a community" suggestion-icon="fa-cat"
+            <div class="d-flex mb-4">
+              <AutocompleteBar class="flex-grow-1 d-block" placeholder="Select a community" suggestion-icon="fa-cat"
                 :key-down="keyDown" :select-idx="selectIdx" />
+              <i role="button" class="fas fa-arrows-rotate ratio ratio-1x1 bg-white m-auto rounded-5 align-self-center"
+                style="width: 1rem; height: 1rem;" @click="refreshData" />
             </div>
             <div class="row mb-4 g-4">
               <div v-for="(data, idx) in cards" class="col-12 col-md-6 col-lg-4">
@@ -106,6 +108,7 @@
 </template>
 
 <script setup lang="ts">
+import { select } from '#build/ui'
 import DashboardCard from '~/components/DashboardCard.vue'
 import type { Suggestion } from '~/components/Suggestion.vue'
 import type { post_types } from '~/composables/usePetDashboard'
@@ -191,11 +194,13 @@ const truncateText = (text: string, maxLength: number): string => {
   return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text
 }
 
-onBeforeMount(async () => {
+async function refreshData() {
   await fetchAllData()
   suggestions.value = communities.value!
+  selectedCommunity.value = null
+}
 
-})
+onBeforeMount(refreshData)
 </script>
 
 <style scoped>
