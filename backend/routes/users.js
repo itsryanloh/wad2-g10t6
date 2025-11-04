@@ -2,6 +2,7 @@ import express from "express";
 import supabase from "../database.js";
 import twilio from "twilio";
 import { User } from "../schemas/user.js"
+import jwt from "jsonwebtoken";
 
 const router = express.Router();
 const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH)
@@ -82,6 +83,137 @@ router.post("/verify-code", async (req, res) => {
     res.json({ success: true });
   } else {
     res.status(401).json({ success: false });
+  }
+});
+
+// Get current user's checklist (protected)
+router.get("/me/checklist", async (req, res) => {
+  console.log('✅ Checklist route hit');
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).send({ error: 'Unauthorized' });
+  }
+  
+  const token = authHeader.split(' ')[1];
+  
+  try {
+    // console.log('🔑 Received token:', req.headers.authorization);
+    const payload = jwt.verify(token, process.env.TOKEN_SECRET);
+    
+    // Get user ID from database
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("username", payload.username)
+      .single();
+    
+    if (userError || !userData) {
+      return res.status(401).send({ error: 'User not found' });
+    }
+    
+    // Get checklist items
+    const { error, data } = await supabase
+      .from("checklist_items")
+      .select("item_index")
+      .eq("user_id", userData.id);
+    
+    if (error) {
+      return res.status(400).send(error.message);
+    }
+    
+    res.send(data);
+  } catch (error) {
+    return res.status(401).send({ error: 'Invalid token' });
+  }
+});
+
+// Add checklist item (protected)
+router.post("/me/checklist/:itemIndex", async (req, res) => {
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).send({ error: 'Unauthorized' });
+  }
+  
+  const token = authHeader.split(' ')[1];
+  
+  try {
+    const payload = jwt.verify(token, process.env.TOKEN_SECRET);
+    
+    // Get user ID
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("username", payload.username)
+      .single();
+    
+    if (userError || !userData) {
+      return res.status(401).send({ error: 'User not found' });
+    }
+    
+    const { itemIndex } = req.params;
+    
+    // Insert checklist item
+    const { error, data } = await supabase
+      .from("checklist_items")
+      .insert({ 
+        user_id: userData.id, 
+        item_index: parseInt(itemIndex) 
+      })
+      .select();
+    
+    if (error && error.code !== '23505') {
+      return res.status(400).send(error.message);
+    }
+    
+    return res.status(201).send(data || { message: "Item already checked" });
+  } catch (error) {
+    return res.status(401).send({ error: 'Invalid token' });
+  }
+});
+
+// Delete checklist item (protected)
+router.delete("/me/checklist/:itemIndex", async (req, res) => {
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).send({ error: 'Unauthorized' });
+  }
+  
+  const token = authHeader.split(' ')[1];
+  
+  try {
+    const payload = jwt.verify(token, process.env.TOKEN_SECRET);
+    
+    // Get user ID
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("username", payload.username)
+      .single();
+    
+    if (userError || !userData) {
+      return res.status(401).send({ error: 'User not found' });
+    }
+    
+    const { itemIndex } = req.params;
+    
+    // Delete checklist item
+    const { error } = await supabase
+      .from("checklist_items")
+      .delete()
+      .eq("user_id", userData.id)
+      .eq("item_index", parseInt(itemIndex));
+    
+    if (error) {
+      return res.status(400).send(error.message);
+    }
+    
+    return res.send({ message: "Item unchecked" });
+  } catch (error) {
+    return res.status(401).send({ error: 'Invalid token' });
+    console.error('❌ Checklist error:', err.message);
   }
 });
 
