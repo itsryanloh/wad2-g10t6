@@ -25,7 +25,7 @@
             <div class="d-flex mb-4 gap-2">
               <AutocompleteBar class="flex-grow-1 d-block" placeholder="Select a community" suggestion-icon="fa-cat"
                 :key-down="keyDown" :select-idx="selectIdx" v-model="searchBar" />
-              <div role="button" class="ratio ratio-1x1 bg-white m-auto rounded-5"
+              <div role="button" title="Get newest data from server" class="ratio ratio-1x1 bg-white m-auto rounded-5"
                 style="width: 3rem; height: 3rem;box-shadow: 0 4px 20px rgba(255, 152, 0, 0.3);" @click="refreshData">
                 <i class="fas fa-arrows-rotate text-center" style="margin-top: 35%;" />
               </div>
