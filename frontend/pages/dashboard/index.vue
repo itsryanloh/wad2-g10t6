@@ -22,11 +22,13 @@
 
         <div v-else>
           <div class="container w-100">
-            <div class="d-flex mb-4">
+            <div class="d-flex mb-4 gap-2">
               <AutocompleteBar class="flex-grow-1 d-block" placeholder="Select a community" suggestion-icon="fa-cat"
                 :key-down="keyDown" :select-idx="selectIdx" />
-              <i role="button" class="fas fa-arrows-rotate ratio ratio-1x1 bg-white m-auto rounded-5 align-self-center"
-                style="width: 1rem; height: 1rem;" @click="refreshData" />
+              <div role="button" class="ratio ratio-1x1 bg-white m-auto rounded-5"
+                style="width: 3rem; height: 3rem;box-shadow: 0 4px 20px rgba(255, 152, 0, 0.3);" @click="refreshData">
+                <i class="fas fa-arrows-rotate text-center" style="margin-top: 35%;" />
+              </div>
             </div>
             <div class="row mb-4 g-4">
               <div v-for="(data, idx) in cards" class="col-12 col-md-6 col-lg-4">
@@ -108,7 +110,6 @@
 </template>
 
 <script setup lang="ts">
-import { select } from '#build/ui'
 import DashboardCard from '~/components/DashboardCard.vue'
 import type { Suggestion } from '~/components/Suggestion.vue'
 import type { post_types } from '~/composables/usePetDashboard'
