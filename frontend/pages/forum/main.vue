@@ -15,23 +15,8 @@
     <div class="container content-container">
       <div class="forum-layout">
         <!-- Left Sidebar - Communities -->
-        <div class="sidebar-column">
-          <CommunitySidebar 
-            :userCommunities="userCommunities"
-            :loading="loadingCommunities"
-            :selectedId="selectedCommunityId"
-            @select-community="handleCommunitySelect"
-          />
-          
-          <!-- Find More Communities Button -->
-          <button class="find-communities-btn" @click="showCommunityBrowser = true">
-            <i class="fas fa-search me-2"></i>
-            Find More Communities
-          </button>
-        </div>
 
         <!-- Main Content Area -->
-        <div class="main-column">
           <!-- Search & Filter Card -->
           <div class="search-card">
             <div class="row g-4">
@@ -105,6 +90,21 @@
               </div>
             </div>
           </div>
+
+        <div class="sidebar-column">
+          <CommunitySidebar 
+            :userCommunities="userCommunities"
+            :loading="loadingCommunities"
+            :selectedId="selectedCommunityId"
+            @select-community="handleCommunitySelect"
+          />
+          
+          <!-- Find More Communities Button -->
+          <button class="find-communities-btn" @click="showCommunityBrowser = true">
+            <i class="fas fa-search me-2"></i>
+            Find More Communities
+          </button>
+        </div>
 
           <!-- Loading State -->
           <div v-if="loading" class="posts-grid mt-4">
@@ -212,7 +212,6 @@
               <i class="fas fa-plus me-2"></i>Create First Post
             </button>
           </div>
-        </div>
       </div>
     </div>
 
@@ -448,7 +447,8 @@ onActivated(async () => {
 }
 
 .sidebar-column {
-  position: relative;
+  position: absolute;
+  grid-row: 1;
 }
 
 .main-column {
@@ -550,6 +550,7 @@ onActivated(async () => {
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
   animation: slideUp 0.8s ease;
   border: 2px solid rgba(255, 152, 0, 0.1);
+  grid-column: 2;
 }
 
 @keyframes slideUp {
@@ -688,6 +689,7 @@ onActivated(async () => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 25px;
+  grid-column: 2;
 }
 
 .post-col {
@@ -992,7 +994,7 @@ onActivated(async () => {
 /* Responsiveness related */
 @media (max-width: 1024px) {
   .forum-layout { grid-template-columns: 1fr; }
-  .sidebar-column { position: static; order: 2; }
+  .sidebar-column { position: relative; grid-column: 2; grid-row: 2; }
   .main-column { order: 1; }
 }
 
