@@ -12,7 +12,7 @@
     <div class="flex-grow-1 d-flex mt-2">
       <div class="mx-auto" style="z-index: 100;">
         <div v-if="!communities?.length" class="loading-container">
-          <div class="spinner"></div>
+          <div class="spinner">🐾</div>
           <p>Loading dashboard data...</p>
         </div>
 
@@ -242,18 +242,19 @@ onBeforeMount(refreshData)
 }
 
 .spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid #e5e7eb;
-  border-top-color: #3b82f6;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 16px;
+  font-size: 3em;
+  animation: bounce 1s infinite;
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
+@keyframes bounce {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-20px);
   }
 }
 

@@ -12,8 +12,8 @@
     <div class="d-flex justify-content-center">
       <!-- Loading State -->
       <div v-if="loading" class="text-center py-5 d-flex flex-column">
-        <div class="spinner align-self-center" />
-        <p>Loading your checklist...</p>
+        <div class="spinner">🐾</div>
+        <p>Loading your checklists...</p>
       </div>
 
       <div v-else style="width: 90%;">
@@ -160,12 +160,19 @@ onMounted(loadUserData);
 }
 
 .spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid #e5e7eb;
-  border-top-color: #3b82f6;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 16px;
+  font-size: 3em;
+  animation: bounce 1s infinite;
+}
+
+@keyframes bounce {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
 }
 </style>
