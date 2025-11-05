@@ -779,7 +779,8 @@ const handleLogout = () => {
   font-size: 1.3rem;
   line-height: 1;
   position: relative;
-  top: 11px;                        
+  top: 11px;      
+  color:white;                  
 }
 
 .btn-primary span {

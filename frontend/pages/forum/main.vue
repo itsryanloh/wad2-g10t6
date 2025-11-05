@@ -207,8 +207,9 @@
               No posts found in {{ selectedCommunity.name }}. Try selecting a different community or create a post!
             </p>
             <p v-else>Try adjusting your filters or create a new post</p>
-            <button class="btn btn-primary-custom" @click="navigateTo('/forum/createPost')">
-              <i class="fas fa-plus me-2"></i>Create First Post
+            <button class="btn-primary" @click="navigateTo('/forum/createPost')">
+              <i class="fas fa-plus"></i>
+              <span>Create First Post</span>
             </button>
           </div>
       </div>
@@ -922,7 +923,7 @@ onActivated(async () => {
   grid-column: 2;
 }
 
-.empty-state i {
+.empty-state > i {
   font-size: 5rem;
   background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
   -webkit-background-clip: text;
@@ -943,23 +944,39 @@ onActivated(async () => {
   margin-bottom: 30px;
 }
 
-.btn-primary-custom {
+.btn-primary {
   background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
   color: white;
   border: none;
-  padding: 15px 40px;
-  border-radius: 50px;
-  font-weight: 700;
-  font-size: 16px;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  box-shadow: 0 10px 30px rgba(255, 152, 0, 0.3);
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  padding: 14px 28px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 5px 15px rgba(255, 152, 0, 0.3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 }
 
-.btn-primary-custom:hover {
-  transform: translateY(-5px) scale(1.05);
-  box-shadow: 0 15px 40px rgba(255, 152, 0, 0.5);
+.btn-primary i {
+  font-size: 1.3rem;
+  line-height: 1;
+  position: relative;
+  top: 1px;     
+  color: white;                   
+}
+
+.btn-primary span {
+  font-size: 1.05rem;
+  line-height: 1.05rem;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(255, 152, 0, 0.4);
 }
 
 /* Floating Action Button (FAB +) */
