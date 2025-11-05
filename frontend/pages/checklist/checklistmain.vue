@@ -12,69 +12,59 @@
     </div>
 
     <div class="container content-container">
-      <!-- Progress Section -->
-      <div class="card mb-4 progress-card">
-        <div class="progress-card-header">
-          <i class="fas fa-paw me-2"></i>
-          Your Progress
-        </div>
-        <div class="card-body">
-          <div class="progress-section">
-            <!-- Rive Cat Animation -->
-            <div 
-              class="cat-container" 
-              ref="catContainer"
-              :style="{ left: catPosition + 'px' }"
-            >
-              <canvas ref="canvas" class="cat-canvas"></canvas>
-            </div>
-            
-            <div class="progress-container">
-              <div class="progress-bar-custom">
-                <div 
-                  class="progress-fill" 
-                  :style="{ 
-                    width: progress + '%',
-                    opacity: progress > 0 ? 1 : 0
-                  }"
-                >
-                  {{ Math.round(progress) }}%
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Loading State -->
+      <!-- Main Content -->
       <div v-if="loading" class="text-center py-5">
         <div class="spinner">🐾</div>
         <p>Loading your checklist...</p>
       </div>
 
-      <!-- Column Layout -->
-      <div v-else class="row g-4">
-        <!-- Left Column: Checklist -->
-        <div class="col-lg-7">
-          <div class="card h-100 checklist-card">
-            <div class="card-header-orange">
-              <i class="fas fa-clipboard-check me-2"></i>
-              Adoption Checklist
+      <div v-else class="checklist-content">
+        <!-- Progress Section -->
+        <div class="card mb-4 progress-card">
+          <div class="progress-card-header">
+            <div class="header-left">
+              <i class="fas fa-paw me-2"></i>
+              Current Adoption Paw-gress
             </div>
-            <div class="card-body">
-              <div class="checklist-area">
-                <div class="checklist-items">
+            <div class="adoption-counter">
+              <i class="fas fa-heart me-1"></i>
+              {{ totalAdoptedCats }} {{ totalAdoptedCats === 1 ? 'cat' : 'cats' }} adopted
+            </div>
+
+          </div>
+          <div class="card-body">
+            <!-- Cat Info Section -->
+            <div v-if="catPostData.title" class="cat-info-section">
+              <img :src="catPostData.image" alt="Cat" class="cat-thumbnail-progress">
+              <div class="cat-details-progress">
+                <h3 class="cat-title-progress">{{ catPostData.title }}</h3>
+                <p class="cat-location-progress">
+                  <i class="fas fa-map-marker-alt"></i>
+                  {{ catPostData.location }}
+                </p>
+              </div>
+            </div>
+
+            <div class="progress-section">
+              <!-- Rive Cat Animation -->
+              <div 
+                class="cat-container" 
+                ref="catContainer"
+                :style="{ left: catPosition + 'px' }"
+              >
+                <canvas ref="canvas" class="cat-canvas"></canvas>
+              </div>
+              
+              <div class="progress-container">
+                <div class="progress-bar-custom">
                   <div 
-                    v-for="(item, index) in checklistItems" 
-                    :key="index"
-                    class="checklist-item"
-                    :class="{ completed: item.completed }"
-                    @click="toggleItem(index)"
+                    class="progress-fill" 
+                    :style="{ 
+                      width: progress + '%',
+                      opacity: progress > 0 ? 1 : 0
+                    }"
                   >
-                    <div class="checkbox" :class="{ checked: item.completed }"></div>
-                    <div class="item-text">
-                      {{ item.text }}
-                    </div>
+                    {{ Math.round(progress) }}%
                   </div>
                 </div>
               </div>
@@ -82,19 +72,78 @@
           </div>
         </div>
 
-        <!-- Right Column: Trophy Case -->
-        <div class="col-lg-5">
-          <div class="card h-100 trophy-card">
-            <div class="card-header-orange">
-              <i class="fas fa-trophy me-2"></i>
-              Your Adoption Badges
+        <!-- Two Column Layout -->
+        <div class="row g-4">
+          <!-- Left Column: Checklist -->
+          <div class="col-lg-7">
+            <div class="card h-100 checklist-card">
+              <div class="card-header-orange">
+                <div class="header-left">
+                  <i class="fas fa-clipboard-check me-2"></i>
+                  Adoption Checklist
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="checklist-area">
+                  <div class="checklist-items">
+                    <div 
+                      v-for="(item, index) in checklistItems" 
+                      :key="index"
+                      class="checklist-item"
+                      :class="{ completed: item.completed }"
+                      @click="toggleItem(index)"
+                    >
+                      <div class="checkbox" :class="{ checked: item.completed }"></div>
+                      <div class="item-text">
+                        {{ item.text }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Finish Adoption Button -->
+                  <div v-if="isChecklistComplete" class="finish-adoption-section">
+                    <button 
+                      class="finish-adoption-btn" 
+                      @click="handleFinishAdoption"
+                      :disabled="finishingAdoption"
+                    >
+                      <i class="fas fa-heart me-2"></i>
+                      {{ finishingAdoption ? 'Processing...' : 'Finish Adoption' }}
+                      <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="card-body">
-              <BadgeDisplay 
-                :all-badges="allBadges" 
-                :next-badge="nextBadge" 
-              />
+          </div>
+
+          <!-- Right Column: Trophy Case -->
+          <div class="col-lg-5">
+            <div class="card h-100 trophy-card">
+              <div class="card-header-orange">
+                <i class="fas fa-trophy me-2"></i>
+                Your Adoption Badges
+              </div>
+              <div class="card-body">
+                <BadgeDisplay 
+                  :all-badges="allBadges" 
+                  :next-badge="nextBadge" 
+                />
+              </div>
             </div>
+          </div>
+        </div>
+
+        <!-- Login Required Overlay -->
+        <div v-if="!isLoggedIn" class="checklist-overlay">
+          <div class="overlay-content">
+            <i class="fas fa-lock"></i>
+            <h2>Login Required</h2>
+            <p>Please log in to track your adoption journey</p>
+            <button class="btn-login" @click="goToLogin">
+              <i class="fas fa-sign-in-alt me-2"></i>
+              Log In Now
+            </button>
           </div>
         </div>
       </div>
@@ -119,11 +168,49 @@
         </div>
       </div>
     </div>
+
+    <!-- Congratulations Modal -->
+    <div v-if="showCongratulationsModal" class="modal-overlay congratulations-overlay">
+      <div class="congratulations-modal" @click.stop>
+        <!-- Confetti Animation -->
+        <div class="confetti-container">
+          <div v-for="i in 50" :key="i" class="confetti" :style="getConfettiStyle(i)"></div>
+        </div>
+
+        <!-- Modal Content -->
+        <div class="congrats-content">
+          <div class="congrats-icon">
+            <i class="fas fa-trophy"></i>
+          </div>
+          
+          <h2 class="congrats-title">Congratulations! 🎉</h2>
+          
+          <p class="congrats-message">
+            You've successfully completed the adoption checklist and welcomed your new furry friend into your home!
+          </p>
+          
+          <div class="congrats-highlight">
+            <i class="fas fa-paw me-2"></i>
+            <span>This is your <strong>{{ totalAdoptedCats }}{{ getOrdinalSuffix(totalAdoptedCats) }}</strong> successful adoption! You've contributed to reducing the stray cat population and given loving homes to cats in need.</span>
+          </div>
+          
+          <p class="congrats-submessage">
+            Your kindness and dedication make the world a better place for our feline friends. Thank you for choosing adoption!
+          </p>
+
+          <button class="congrats-close-btn" @click="closeCongratulationsModal">
+            <i class="fas fa-home me-2"></i>
+            Return to Forum
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { useRoute } from 'vue-router'
 import { Rive } from '@rive-app/canvas'
 import BadgeDisplay from './badgedisplay.vue'
 import BadgeNotification from './badgenotification.vue'
@@ -193,6 +280,9 @@ const notificationRef = ref(null)
 const showLoginModal = ref(false)
 const userDismissedWarning = ref(false)
 const windowWidth = ref(0)
+const showCongratulationsModal = ref(false)
+const finishingAdoption = ref(false)
+const totalAdoptedCats = ref(0) // load from API
 
 const canvas = ref(null)
 const catContainer = ref(null)
@@ -200,6 +290,11 @@ let riveInstance = null
 let onResize = null
 const token = useCookie("token")
 const route = useRoute()
+const catPostData = ref({
+  title: '',
+  location: '',
+  image: ''
+})
 
 const checklistItems = ref([
   { text: 'Research cat breeds and temperament to match your lifestyle.', completed: false},
@@ -245,18 +340,26 @@ const progress = computed(() => {
   return (completed / total) * 100
 })
 
+const isChecklistComplete = computed(() => {
+  return checklistItems.value.every(item => item.completed)
+})
+
+const isLoggedIn = computed(() => {
+  return !!token.value;
+})
+
 // Base positions
 const desktopPositions = {
-  0: -175,
-  1: -40,
-  2: 160, 
-  3: 350, 
-  4: 550, 
-  5: 740,   
-  6: 930    
+  0: -175,  // 0 items completed
+  1: -40,   // 1 item completed
+  2: 160,   // 2 items completed
+  3: 350,   // 3 items completed
+  4: 550,   // 4 items completed
+  5: 740,   // 5 items completed
+  6: 930    // All items completed
 }
 
-// Scaling factors
+// Scaling factors for different screen sizes
 const scalingFactors = {
   lg: 1.0,
   md: 0.55,
@@ -316,9 +419,9 @@ async function loadUserData() {
     const headers = getAuthHeaders();
     
     if (!headers.Authorization) {
-      console.log('No user logged in - checklist available but not saved');
-      loading.value = false
-      return
+      console.log('No user logged in - access restricted');
+      loading.value = false;
+      return;
     }
     
     console.log('Fetching from:', `${base_url}/users/me/checklist`);
@@ -331,6 +434,8 @@ async function loadUserData() {
     
     if (response.status === 401) {
       console.log('Session expired');
+      // Load mock adoption count
+      totalAdoptedCats.value = 3
       loading.value = false
       return
     }
@@ -357,6 +462,14 @@ async function loadUserData() {
       
       rebuildBadges()
     }
+    
+    // Fetch actual adoption count from API
+    // const countResponse = await fetch(`${base_url}/users/me/adoptions/count`, { headers })
+    // const countData = await countResponse.json()
+    // totalAdoptedCats.value = countData.count
+    
+    // Mock data
+    totalAdoptedCats.value = 3
     
     error.value = ''
     
@@ -461,6 +574,11 @@ async function showBadgeNotifications(badges) {
 }
 
 const toggleItem = async (index) => {
+  if (!isLoggedIn.value) {
+    goToLogin();
+    return;
+  }
+  
   const headers = getAuthHeaders();
   
   // Check if user is logged in
@@ -483,6 +601,71 @@ function continueWithoutSaving() {
   showLoginModal.value = false
 }
 
+const handleFinishAdoption = async () => {
+  finishingAdoption.value = true
+  
+  try {
+    // Replace with actual API calls later
+    // const postId = route.params.postId // Get from route
+    // await fetch(`${base_url}/posts/${postId}/mark-adopted`, {
+    //   method: 'POST',
+    //   headers: getAuthHeaders()
+    // })
+    // await fetch(`${base_url}/users/me/adoptions/increment`, {
+    //   method: 'POST',
+    //   headers: getAuthHeaders()
+    // })
+    
+    // Mock: Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    // Update adoption count
+    totalAdoptedCats.value++
+    
+    // Show congratulations
+    showCongratulationsModal.value = true
+    
+    // Reset checklist for next adoption (after modal closes)
+    
+  } catch (error) {
+    console.error('Error finishing adoption:', error)
+    alert('Failed to complete adoption. Please try again.')
+  } finally {
+    finishingAdoption.value = false
+  }
+}
+
+const closeCongratulationsModal = () => {
+  showCongratulationsModal.value = false
+  
+  // Reset checklist
+  checklistItems.value.forEach(item => item.completed = false)
+  earnedBadges.value = []
+  
+  // Navigate back to forum or post page
+  // navigateTo('/forum/main')
+  
+  // For demo, just log
+  console.log('Returning to forum...')
+}
+
+const getConfettiStyle = (index) => {
+  return {
+    left: `${Math.random() * 100}%`,
+    animationDelay: `${Math.random() * 3}s`,
+    backgroundColor: ['#FFB74D', '#FF9800', '#F57C00', '#E91E63', '#9C27B0', '#2196F3'][Math.floor(Math.random() * 6)]
+  }
+}
+
+const getOrdinalSuffix = (num) => {
+  const j = num % 10
+  const k = num % 100
+  if (j === 1 && k !== 11) return 'st'
+  if (j === 2 && k !== 12) return 'nd'
+  if (j === 3 && k !== 13) return 'rd'
+  return 'th'
+}
+
 onMounted(async () => {
   if (typeof window === 'undefined') return;
 
@@ -491,6 +674,13 @@ onMounted(async () => {
   
   // Set initial window width
   windowWidth.value = window.innerWidth
+  
+  // mock data for testing
+  catPostData.value = {
+    title: route.query.title || 'Friendly Orange Tabby Looking for Home',
+    location: route.query.location || 'Block 123 Ang Mo Kio Ave 3',
+    image: route.query.image || '/uniform_cat1.png'
+  }
   
   // --- Load user data ---
   await loadUserData();
@@ -508,7 +698,7 @@ onMounted(async () => {
       },
     });
 
-    // --- Handle window resize with debounce for performance ---
+    // Handle window resize with debounce for performance
     let resizeTimeout;
     onResize = () => {
       clearTimeout(resizeTimeout);
@@ -541,7 +731,7 @@ onBeforeUnmount(() => {
   padding-bottom: 40px;
 }
 
-/* Hero Section */
+/* match forum landing page UI */
 .hero-section {
   background: linear-gradient(135deg, #FFB74D 0%, #FFA726 50%, #FF9800 100%);
   padding: 40px 0 70px;
@@ -599,7 +789,7 @@ onBeforeUnmount(() => {
   left: 0;
   width: 200%;
   height: 100%;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,50 Q150,20 300,50 T600,50 T900,50 T1200,50 L1200,120 L0,120 Z' fill='%23FFF5E6' fill-opacity='0.4'/%3E%3C/svg%3E") repeat-x;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRas='none'%3E%3Cpath d='M0,50 Q150,20 300,50 T600,50 T900,50 T1200,50 L1200,120 L0,120 Z' fill='%23FFF5E6' fill-opacity='0.4'/%3E%3C/svg%3E") repeat-x;
   background-size: 1200px 100%;
   animation: wave-flow 20s linear infinite;
 }
@@ -626,14 +816,6 @@ onBeforeUnmount(() => {
   margin-top: -40px;
   position: relative;
   z-index: 10;
-}
-
-/* Alert */
-.alert {
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 10px;
-  padding: 20px;
-  margin-bottom: 20px;
 }
 
 /* Modal Overlay */
@@ -749,6 +931,185 @@ onBeforeUnmount(() => {
   background: #e0e0e0;
 }
 
+/* Congratulations Modal */
+.congratulations-overlay {
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(5px);
+}
+
+.congratulations-modal {
+  position: relative;
+  background: white;
+  border-radius: 30px;
+  padding: 0;
+  max-width: 600px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  animation: modalZoomIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  overflow: hidden;
+}
+
+@keyframes modalZoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.5) rotate(-5deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.confetti-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.confetti {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  top: -10px;
+  opacity: 0;
+  animation: confettiFall 3s ease-in-out infinite;
+}
+
+@keyframes confettiFall {
+  0% {
+    top: -10px;
+    opacity: 1;
+    transform: rotate(0deg);
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+    transform: rotate(720deg);
+  }
+}
+
+.congrats-content {
+  padding: 50px 40px;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.congrats-icon {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 30px;
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 40px rgba(255, 215, 0, 0.4);
+  animation: iconBounce 0.8s ease 0.3s;
+}
+
+@keyframes iconBounce {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.2); }
+  50% { transform: scale(0.9); }
+  75% { transform: scale(1.1); }
+}
+
+.congrats-icon i {
+  font-size: 4rem;
+  color: white;
+  animation: iconSpin 2s ease-in-out infinite;
+}
+
+@keyframes iconSpin {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(20deg); }
+}
+
+.congrats-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 20px;
+  animation: titlePulse 2s ease-in-out infinite;
+}
+
+@keyframes titlePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.congrats-message {
+  font-size: 1.2rem;
+  color: #5D4E37;
+  line-height: 1.6;
+  margin-bottom: 25px;
+}
+
+.congrats-highlight {
+  background: linear-gradient(135deg, #FFF4E6 0%, #FFE8D6 100%);
+  border-left: 5px solid #4CAF50;
+  padding: 20px;
+  border-radius: 15px;
+  margin: 25px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+  color: #4CAF50;
+  font-weight: 600;
+  text-align: left;
+}
+
+.congrats-highlight i {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.congrats-submessage {
+  font-size: 1rem;
+  color: #7A7265;
+  line-height: 1.6;
+  margin-bottom: 30px;
+}
+
+.congrats-close-btn {
+  background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+  color: white;
+  border: none;
+  padding: 18px 45px;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 30px rgba(255, 152, 0, 0.4);
+  display: inline-flex;
+  align-items: center;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.congrats-close-btn:hover {
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 15px 40px rgba(255, 152, 0, 0.6);
+  background: linear-gradient(135deg, #F57C00 0%, #E65100 100%);
+}
+
+.congrats-close-btn i {
+  transition: transform 0.3s;
+}
+
+.congrats-close-btn:hover i {
+  transform: scale(1.2);
+}
+
 /* Loading spinner */
 .spinner {
   font-size: 3em;
@@ -758,6 +1119,56 @@ onBeforeUnmount(() => {
 @keyframes bounce {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-20px); }
+}
+
+/* Cat Info in Progress Card */
+.cat-info-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px;
+  background: linear-gradient(135deg, #FFF8F0 0%, #FFE8D6 100%);
+  border-radius: 12px;
+  margin-bottom: 20px;
+  border-left: 5px solid #FF9800;
+  box-shadow: 0 2px 8px rgba(255, 152, 0, 0.1);
+}
+
+.cat-thumbnail-progress {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 3px solid #FFB74D;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.cat-details-progress {
+  flex: 1;
+  min-width: 0;
+}
+
+.cat-title-progress {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #5D4E37;
+  margin: 0 0 6px 0;
+  line-height: 1.3;
+}
+
+.cat-location-progress {
+  color: #FF6B6B;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.95rem;
+}
+
+.cat-location-progress i {
+  font-size: 0.9rem;
 }
 
 /* Cards */
@@ -779,11 +1190,35 @@ onBeforeUnmount(() => {
   font-size: 1.2rem;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   box-shadow: 0 2px 5px rgba(255, 152, 0, 0.2);
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .card-header-orange i {
   font-size: 1.1rem;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.cat-name-badge {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.25);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(10px);
+}
+
+.cat-name-badge i {
+  font-size: 1rem;
 }
 
 .checklist-card .card-body,
@@ -796,7 +1231,7 @@ onBeforeUnmount(() => {
   padding: 20px 20px 15px 20px;
 }
 
-/* Progress Card */
+/* Progress Card with Orange Header */
 .progress-card {
   overflow: hidden;
 }
@@ -804,16 +1239,37 @@ onBeforeUnmount(() => {
 .progress-card-header {
   background: linear-gradient(135deg, #FFB74D 0%, #FFA726 100%);
   color: white;
-  padding: 15px 20px;
+  padding: 18px 20px;
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   box-shadow: 0 2px 5px rgba(255, 152, 0, 0.2);
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .progress-card-header i {
   font-size: 1rem;
+}
+
+.adoption-counter {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  animation: fadeIn 0.6s ease;
+  background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+  color: white;
+}
+
+.adoption-counter i {
+  color: #f21010;
+  animation: heartBeat 1.5s ease-in-out infinite;
 }
 
 .progress-card .card-body {
@@ -833,10 +1289,6 @@ onBeforeUnmount(() => {
 
 .mb-4 {
   margin-bottom: 1.5rem;
-}
-
-.mb-4 .card-body {
-  padding: 20px 20px 15px 20px;
 }
 
 /* Progress Section */
@@ -860,7 +1312,6 @@ onBeforeUnmount(() => {
   transition: left 0.5s ease;
 }
 
-/* Tablet (768px - 992px) */
 @media (max-width: 991px) {
   .cat-container {
     width: 300px;
@@ -869,7 +1320,6 @@ onBeforeUnmount(() => {
   }
 }
 
-/* Mobile (<768px) */
 @media (max-width: 767px) {
   .cat-container {
     width: 200px;
@@ -888,14 +1338,12 @@ onBeforeUnmount(() => {
   margin-top: 60px;
 }
 
-/* Tablet (768px - 992px) */
 @media (max-width: 991px) {
   .progress-container {
     margin-top: 45px;
   }
 }
 
-/* Mobile (<768px) */
 @media (max-width: 767px) {
   .progress-container {
     margin-top: 35px;
@@ -915,8 +1363,8 @@ onBeforeUnmount(() => {
   background: linear-gradient(90deg, #FF8243 0%, #FFA566 100%);
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  padding-right: 20px;
+  justify-content: center;
+  padding: 0 20px;
   color: white;
   font-weight: bold;
   font-size: 18px;
@@ -1026,6 +1474,72 @@ onBeforeUnmount(() => {
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
 }
 
+/* Finish Adoption Section */
+.finish-adoption-section {
+  margin-top: 30px;
+  text-align: center;
+  animation: slideIn 0.6s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.finish-adoption-btn {
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  color: white;
+  border: none;
+  padding: 18px 40px;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.4s ease;
+  box-shadow: 0 10px 30px rgba(76, 175, 80, 0.4);
+  display: inline-flex;
+  align-items: center;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.finish-adoption-btn:hover:not(:disabled) {
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 15px 40px rgba(76, 175, 80, 0.6);
+  background: linear-gradient(135deg, #45a049 0%, #388e3c 100%);
+}
+
+.finish-adoption-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.finish-adoption-btn i:first-child {
+  animation: heartBeat 1.5s ease-in-out infinite;
+}
+
+.finish-adoption-btn i:last-child {
+  transition: transform 0.3s;
+}
+
+.finish-adoption-btn:hover:not(:disabled) i:last-child {
+  transform: translateX(5px);
+}
+
+@keyframes heartBeat {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.2); }
+  50% { transform: scale(1); }
+  75% { transform: scale(1.2); }
+}
+
 /* Responsive */
 .row { 
   display: flex; 
@@ -1073,13 +1587,21 @@ onBeforeUnmount(() => {
   margin-right: 0.5rem;
 }
 
+.me-1 {
+  margin-right: 0.25rem;
+}
+
+.ms-2 {
+  margin-left: 0.5rem;
+}
+
 @media (max-width: 768px) {
   .hero-section {
     padding: 20px 0 60px;
   }
 
   .hero-title {
-    font-size: 2rem; 
+    font-size: 2rem;
   }
 
   .hero-subtitle {
@@ -1092,6 +1614,253 @@ onBeforeUnmount(() => {
 
   .card-body {
     padding: 20px;
+  }
+
+  .congrats-content {
+    padding: 30px 20px;
+  }
+
+  .congrats-icon {
+    width: 100px;
+    height: 100px;
+  }
+
+  .congrats-icon i {
+    font-size: 3rem;
+  }
+
+  .congrats-title {
+    font-size: 2rem;
+  }
+
+  .congrats-message {
+    font-size: 1rem;
+  }
+
+  .congrats-highlight {
+    padding: 15px;
+    font-size: 0.9rem;
+  }
+
+  .congrats-close-btn {
+    padding: 15px 35px;
+    font-size: 1rem;
+  }
+
+  .finish-adoption-btn {
+    padding: 15px 30px;
+    font-size: 1rem;
+  }
+  
+  .adoption-counter,
+  .cat-name-badge {
+    font-size: 0.85rem;
+    padding: 6px 12px;
+  }
+  
+  .cat-info-section {
+    gap: 12px;
+    padding: 12px;
+    margin-bottom: 15px;
+  }
+  
+  .cat-thumbnail-progress {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .cat-title-progress {
+    font-size: 1rem;
+  }
+  
+  .cat-location-progress {
+    font-size: 0.85rem;
+  }
+}
+
+/* Login Required Overlay */
+.login-required-overlay {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.login-required-card {
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  max-width: 500px;
+  margin: 0 auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.login-required-card i {
+  font-size: 3rem;
+  color: #FF8243;
+  margin-bottom: 20px;
+  display: block;
+}
+
+.login-required-card h2 {
+  font-size: 1.8rem;
+  color: #5D4E37;
+  margin-bottom: 15px;
+}
+
+.login-required-card p {
+  color: #666;
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.login-required-card .text-muted {
+  color: #999;
+  font-size: 0.9rem;
+}
+
+.login-required-card .btn-login {
+  background: linear-gradient(135deg, #FF8243 0%, #FFA566 100%);
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 20px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.login-required-card .btn-login:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(255, 130, 67, 0.4);
+}
+
+/* Content Wrapper and Overlay */
+.content-wrapper {
+  position: relative;
+}
+
+.login-required-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 15px;
+}
+
+.login-required-content {
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  max-width: 400px;
+  margin: 0 20px;
+}
+
+.login-required-content i {
+  font-size: 2.5rem;
+  color: #FF8243;
+  margin-bottom: 15px;
+}
+
+.login-required-content h2 {
+  margin-bottom: 10px;
+  color: #5D4E37;
+}
+
+.login-required-content p {
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.disabled {
+  display: none;
+}
+
+.checklist-content {
+  position: relative;
+}
+
+.checklist-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.overlay-content {
+  background: white;
+  padding: 40px;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 400px;
+  width: 100%;
+  animation: fadeInUp 0.4s ease;
+}
+
+.overlay-content i {
+  font-size: 3rem;
+  color: #FF8243;
+  margin-bottom: 20px;
+  display: block;
+}
+
+.overlay-content h2 {
+  font-size: 1.8rem;
+  color: #5D4E37;
+  margin-bottom: 15px;
+}
+
+.overlay-content p {
+  color: #666;
+  margin-bottom: 25px;
+  line-height: 1.6;
+}
+
+.overlay-content .btn-login {
+  background: linear-gradient(135deg, #FF8243 0%, #FFA566 100%);
+  color: white;
+  border: none;
+  padding: 15px 35px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.overlay-content .btn-login:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(255, 130, 67, 0.4);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 </style>
