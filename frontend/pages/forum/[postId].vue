@@ -9,8 +9,8 @@
       <!-- Post Content -->
       <div v-else-if="currentPost" class="post-wrapper">
         <!-- Back Button -->
-        <button class="back-btn" @click="navigateTo('/forum/main')">
-          <i class="fas fa-arrow-left me-2"></i>Back to Forum
+        <button class="back-btn" @click="router.back">
+          <i class="fas fa-arrow-left me-2"></i>Back to Previous Page
         </button>
 
         <!-- Main Post Card -->
@@ -79,11 +79,10 @@
             <div v-if="currentPost.location_name" class="location-card" @click="showMapModal = true" role="button">
               <Teleport to=".post-details-page">
                 <div v-if="showMapModal">
-                  <div class="position-fixed top-50 start-50 translate-middle vw-100 vh-100 popupdiv" @click.self="() => {
-                    showMapModal = false
-                  }">
+                  <div class="position-fixed top-0 start-0 vw-100 vh-100 d-flex popupdiv"
+                    @click.self="showMapModal = false">
                     <PetMap :lat="currentPost.location_lat" :lng="currentPost.location_lng"
-                      :passedDownClass="['w-50', 'h-50', 'm-auto']" />
+                      :passedDownClass="['map-width', 'h-50', 'm-auto']" />
                   </div>
                 </div>
               </Teleport>
@@ -107,31 +106,22 @@
             <div class="engagement-bar">
               <div class="reaction-buttons">
                 <!-- Like Button (Thumbs Up) -->
-                <button 
-                  @click.stop="handleReaction('like')" 
-                  :class="['reaction-btn', { active: userReactions.like }]"
-                  title="Like"
-                >
+                <button @click.stop="handleReaction('like')" :class="['reaction-btn', { active: userReactions.like }]"
+                  title="Like">
                   <i :class="userReactions.like ? 'fas fa-thumbs-up' : 'far fa-thumbs-up'"></i>
                   <span>{{ reactionCounts.like }}</span>
                 </button>
 
                 <!-- Heart Button -->
-                <button 
-                  @click.stop="handleReaction('heart')" 
-                  :class="['reaction-btn', 'heart-btn', { active: userReactions.heart }]"
-                  title="Love"
-                >
+                <button @click.stop="handleReaction('heart')"
+                  :class="['reaction-btn', 'heart-btn', { active: userReactions.heart }]" title="Love">
                   <i :class="userReactions.heart ? 'fas fa-heart' : 'far fa-heart'"></i>
                   <span>{{ reactionCounts.heart }}</span>
                 </button>
 
                 <!-- Helpful Button (Star) -->
-                <button 
-                  @click.stop="handleReaction('helpful')" 
-                  :class="['reaction-btn', 'helpful-btn', { active: userReactions.helpful }]"
-                  title="Helpful"
-                >
+                <button @click.stop="handleReaction('helpful')"
+                  :class="['reaction-btn', 'helpful-btn', { active: userReactions.helpful }]" title="Helpful">
                   <i :class="userReactions.helpful ? 'fas fa-star' : 'far fa-star'"></i>
                   <span>{{ reactionCounts.helpful }}</span>
                 </button>
@@ -340,6 +330,7 @@ import { useRoute } from 'vue-router'
 import { useForum } from '~/composables/useForum'
 
 const route = useRoute()
+const router = useRouter()
 const {
   currentPost,
   loading,
@@ -507,10 +498,10 @@ const handleReaction = async (reactionType) => {
 
   try {
     await toggleReaction(route.params.postId, currentUserId.value, reactionType)
-    
+
     // Toggle the reaction state
     userReactions.value[reactionType] = !userReactions.value[reactionType]
-    
+
     // Update count
     reactionCounts.value[reactionType] += userReactions.value[reactionType] ? 1 : -1
   } catch (error) {
@@ -521,18 +512,18 @@ const handleReaction = async (reactionType) => {
 // Check user's existing reactions (restored on page load)
 const checkUserReactions = async () => {
   if (!currentUserId.value || !route.params.postId) return
-  
+
   try {
     const response = await fetch(
       `${base_url}/posts/${route.params.postId}/reactions?user_id=${currentUserId.value}`
     )
-    
+
     if (response.ok) {
       const reactions = await response.json()
-      
+
       // Reset all reactions
       userReactions.value = { like: false, heart: false, helpful: false }
-      
+
       // Set user's existing reactions
       reactions.forEach(reaction => {
         if (userReactions.value.hasOwnProperty(reaction.reaction_type)) {
@@ -548,13 +539,13 @@ const checkUserReactions = async () => {
 // Get all reaction counts for the post
 const getAllReactionCounts = async () => {
   if (!route.params.postId) return
-  
+
   try {
     const response = await fetch(`${base_url}/posts/${route.params.postId}/reactions/counts`)
-    
+
     if (response.ok) {
       const counts = await response.json()
-      
+
       reactionCounts.value = {
         like: counts.like || 0,
         heart: counts.heart || 0,
@@ -571,21 +562,20 @@ const getAllReactionCounts = async () => {
 const loadCurrentUser = async () => {
   try {
     const token = useCookie("token")
-    
+
     if (!token.value) {
       return
     }
 
-    const tokenResponse = await fetch(`${base_url}/auth/me`, { 
-      headers: { Authorization: `Bearer ${token.value}` } 
+    const tokenResponse = await fetch(`${base_url}/auth/me`, {
+      headers: { Authorization: `Bearer ${token.value}` }
     })
     const tokenData = await tokenResponse.json()
 
-    if (tokenData.user_id) 
-    {
+    if (tokenData.user_id) {
       currentUserId.value = tokenData.user_id
-    } 
-    
+    }
+
   } catch (error) {
     console.error('Error loading user:', error)
   }
@@ -596,7 +586,7 @@ onMounted(async () => {
   await fetchPostById(route.params.postId)
   await loadComments()
   await incrementViewCount(route.params.postId)
-  
+
   // Load reaction data - this restores user's previous reactions
   await getAllReactionCounts()
   await checkUserReactions()
@@ -658,6 +648,7 @@ onMounted(async () => {
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1054,21 +1045,49 @@ onMounted(async () => {
 
 /* Reaction animations */
 @keyframes reactionPop {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.15); }
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.15);
+  }
 }
 
 @keyframes heartBeat {
-  0%, 100% { transform: scale(1); }
-  25% { transform: scale(1.2); }
-  50% { transform: scale(1); }
-  75% { transform: scale(1.2); }
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  25% {
+    transform: scale(1.2);
+  }
+
+  50% {
+    transform: scale(1);
+  }
+
+  75% {
+    transform: scale(1.2);
+  }
 }
 
 @keyframes starSpin {
-  0% { transform: rotate(0deg) scale(1); }
-  50% { transform: rotate(180deg) scale(1.2); }
-  100% { transform: rotate(360deg) scale(1); }
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+
+  50% {
+    transform: rotate(180deg) scale(1.2);
+  }
+
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
 }
 
 /* Stats display */
@@ -1370,6 +1389,7 @@ onMounted(async () => {
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1510,8 +1530,13 @@ onMounted(async () => {
 }
 
 @keyframes loading {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 /* ===========================
@@ -1573,6 +1598,10 @@ onMounted(async () => {
 .popupdiv {
   z-index: 2000;
   background-color: rgba(0, 0, 0, 0.5);
+}
+
+.map-width {
+  width: 50vw
 }
 
 /* ===========================
@@ -1638,6 +1667,10 @@ onMounted(async () => {
   .small-avatar {
     width: 35px;
     height: 35px;
+  }
+
+  .map-width {
+    width: 100vw
   }
 }
 

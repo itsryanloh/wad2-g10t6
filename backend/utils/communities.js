@@ -36,7 +36,7 @@ export async function removeUserFromCommunity({ user_id, community_id }) {
  * @param {string} areaName
  */
 export async function getCommunityIdByAreaName(areaName) {
-  return communities().select("id").ilike('location_name', areaName).limit(1).maybeSingle();
+  return communities().select("id,name").ilike('location_name', areaName).limit(1).maybeSingle();
 }
 
 /**

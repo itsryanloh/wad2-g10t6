@@ -1,12 +1,12 @@
 // @ts-check
 import inside from "point-in-polygon-hao"
 
-/** @typedef {[number, number, 0] | [number, number]} LatLng */
-/** @typedef {LatLng[][]} PolygonBounds */
+/** @typedef {[number, number, 0] | [number, number]} LngLat */
+/** @typedef {LngLat[][]} PolygonBounds */
 
 class AbstractBounds {
   /**
-   * @param {LatLng} _coord
+   * @param {LngLat} _coord
    * @returns {boolean}
    */
   inBoundary(_coord) {
@@ -25,7 +25,7 @@ class Polygon extends AbstractBounds {
 
   /**
    * @override
-   * @param {LatLng} coord
+   * @param {LngLat} coord
    * @returns {boolean}
    */
   inBoundary(coord) {
@@ -44,7 +44,7 @@ class MultiPolygon extends AbstractBounds {
 
   /**
    * @override
-   * @param {LatLng} coord
+   * @param {LngLat} coord
    * @returns {boolean}
    */
   inBoundary(coord) {
@@ -53,6 +53,7 @@ class MultiPolygon extends AbstractBounds {
 }
 
 import { env } from "node:process"
+import { getCommunityIdByAreaName } from "./communities.js"
 const { ONEMAP_EMAIL, ONEMAP_PASSWORD } = env
 
 const ONEMAP_API_KEY = await fetch("https://www.onemap.gov.sg/api/auth/post/getToken", {
@@ -97,7 +98,7 @@ const polygons = fetch("https://www.onemap.gov.sg/api/public/popapi/getAllPlanni
   )
 
 /**
- * @param {LatLng} coords
+ * @param {LngLat} coords
  * @returns {Promise<string | undefined>}
  */
 export async function findAreaName(coords) {
@@ -130,6 +131,13 @@ export async function searchLocation(searchVal, pageNum = 1) {
         )
       })
     )
+}
+
+/**
+ * @param {LngLat} coords
+ */
+export async function coordsToCommunity(coords) {
+  return findAreaName(coords).then(async area => area ? (await getCommunityIdByAreaName(area)).data : null)
 }
 
 /**
