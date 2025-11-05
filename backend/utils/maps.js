@@ -137,7 +137,7 @@ export async function searchLocation(searchVal, pageNum = 1) {
  * @param {LngLat} coords
  */
 export async function coordsToCommunity(coords) {
-  return findAreaName(coords).then(async area => area ? (await getCommunityIdByAreaName(area)).data : undefined)
+  return findAreaName(coords).then(async area => area ? (await getCommunityIdByAreaName(area)).data : null)
 }
 
 /**

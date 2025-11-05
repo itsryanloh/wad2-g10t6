@@ -1,3 +1,4 @@
+// @ts-check
 import express from 'express';
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
@@ -214,7 +215,7 @@ router.post('/posts', async (req, res) => {
         location_lng,
         image_urls: image_urls || [],
         tags: tags || [],
-        community_id: (await coordsToCommunity(location_lng, location_lat)).data?.id
+        community_id: (await coordsToCommunity([location_lng, location_lat]))?.id
       }])
       .select(`
         *,
@@ -237,7 +238,7 @@ router.put('/posts/:id', async (req, res) => {
     const { title, content, location_name, location_lat, location_lng, is_resolved, image_urls, tags } = req.body;
 
     const updates = {
-      community_id: (await coordsToCommunity(location_lng, location_lat)).data?.id
+      community_id: (await coordsToCommunity([location_lng, location_lat]))?.id
     };
     if (title !== undefined) updates.title = title;
     if (content !== undefined) updates.content = content;
