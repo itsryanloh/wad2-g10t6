@@ -122,8 +122,6 @@ router.get("/me/checklist", async (req, res) => {
         .select("item_index,post_id,posts(title)")
         .eq("user_id", userData.id)
       if (post_id) query = query.eq("post_id", post_id)
-        .limit(1)
-        .maybeSingle()
       return query
     })();
 
