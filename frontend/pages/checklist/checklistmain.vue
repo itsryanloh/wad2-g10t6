@@ -1,8 +1,23 @@
 <template>
   <div class="checklist-page">
-    <div class="container">
-      <!-- Progress Section (Full Width) -->
-      <div class="card mb-4">
+    <!-- Hero Section -->
+    <div class="hero-section">
+      <div class="container">
+        <h1 class="hero-title">
+          <i class="fas fa-clipboard-check me-3"></i>Adoption Checklist
+        </h1>
+        <p class="hero-subtitle">Track your journey to becoming a cat parent</p>
+      </div>
+      <div class="wave-decoration"></div>
+    </div>
+
+    <div class="container content-container">
+      <!-- Progress Section -->
+      <div class="card mb-4 progress-card">
+        <div class="progress-card-header">
+          <i class="fas fa-paw me-2"></i>
+          Your Progress
+        </div>
         <div class="card-body">
           <div class="progress-section">
             <!-- Rive Cat Animation -->
@@ -37,14 +52,16 @@
         <p>Loading your checklist...</p>
       </div>
 
-      <!-- Two Column Layout -->
+      <!-- Column Layout -->
       <div v-else class="row g-4">
         <!-- Left Column: Checklist -->
         <div class="col-lg-7">
-          <div class="card h-100">
+          <div class="card h-100 checklist-card">
+            <div class="card-header-orange">
+              <i class="fas fa-clipboard-check me-2"></i>
+              Adoption Checklist
+            </div>
             <div class="card-body">
-              <h1 class="checklist-title">Adoption Checklist</h1>
-              
               <div class="checklist-area">
                 <div class="checklist-items">
                   <div 
@@ -68,7 +85,10 @@
         <!-- Right Column: Trophy Case -->
         <div class="col-lg-5">
           <div class="card h-100 trophy-card">
-            <h3>Your Adoption Badges</h3>
+            <div class="card-header-orange">
+              <i class="fas fa-trophy me-2"></i>
+              Your Adoption Badges
+            </div>
             <div class="card-body">
               <BadgeDisplay 
                 :all-badges="allBadges" 
@@ -225,16 +245,16 @@ const progress = computed(() => {
 
 // Base positions
 const desktopPositions = {
-  0: -175,  // 0 items completed
-  1: -40,   // 1 item completed
-  2: 160,   // 2 items completed
-  3: 350,   // 3 items completed
-  4: 550,   // 4 items completed
-  5: 740,   // 5 items completed
-  6: 930    // All items completed
+  0: -175,
+  1: -40,
+  2: 160, 
+  3: 350, 
+  4: 550, 
+  5: 740,   
+  6: 930    
 }
 
-// Scaling factors for different screen sizes
+// Scaling factors
 const scalingFactors = {
   lg: 1.0,
   md: 0.55,
@@ -267,7 +287,6 @@ const catPosition = computed(() => {
   const breakpoint = currentBreakpoint.value
   const position = catPositionMaps.value[breakpoint][completed] || catPositionMaps.value[breakpoint][0]
   
-  // Debug: Log position changes
   console.log(`Cat Position - Breakpoint: ${breakpoint}, Items: ${completed}, Position: ${position}px`)
   
   return position
@@ -388,7 +407,6 @@ async function saveChecklistItem(index, completed) {
   } catch (err) {
     console.error('Error saving:', err)
     error.value = 'Failed to save. Please try again.'
-    // Revert the change
     checklistItems.value[index].completed = !completed
   }
 }
@@ -484,13 +502,10 @@ onMounted(async () => {
     // --- Handle window resize with debounce for performance ---
     let resizeTimeout;
     onResize = () => {
-      // Clear previous timeout
       clearTimeout(resizeTimeout);
       
-      // Update immediately for cat position (smooth)
       windowWidth.value = window.innerWidth;
       
-      // Debounce canvas resize for performance
       resizeTimeout = setTimeout(() => {
         riveInstance?.resizeDrawingSurfaceToCanvas();
       }, 100);
@@ -514,11 +529,94 @@ onBeforeUnmount(() => {
 .checklist-page {
   background: linear-gradient(135deg, #FFF5E6 0%, #FFE8D6 50%, #FFF0E0 100%);
   min-height: 100vh;
-  padding: 40px 20px;
+  padding-bottom: 40px;
 }
 
+/* Hero Section */
+.hero-section {
+  background: linear-gradient(135deg, #FFB74D 0%, #FFA726 50%, #FF9800 100%);
+  padding: 40px 0 70px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(255, 183, 77, 0.3);
+}
+
+.hero-title {
+  color: white;
+  font-size: 2.5rem;
+  font-weight: 800;
+  text-align: center;
+  margin-bottom: 10px;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
+  animation: fadeInDown 1s ease;
+  letter-spacing: 1px;
+}
+
+.hero-subtitle {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 1.1rem;
+  text-align: center;
+  margin: 0;
+  font-weight: 500;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Wave Decoration */
+.wave-decoration {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 80px;
+  overflow: hidden;
+}
+
+.wave-decoration::before,
+.wave-decoration::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,50 Q150,20 300,50 T600,50 T900,50 T1200,50 L1200,120 L0,120 Z' fill='%23FFF5E6' fill-opacity='0.4'/%3E%3C/svg%3E") repeat-x;
+  background-size: 1200px 100%;
+  animation: wave-flow 20s linear infinite;
+}
+
+.wave-decoration::after {
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,70 Q200,40 400,70 T800,70 T1200,70 L1200,120 L0,120 Z' fill='%23FFF5E6' fill-opacity='0.7'/%3E%3C/svg%3E") repeat-x;
+  background-size: 1200px 100%;
+  animation: wave-flow 15s linear infinite reverse;
+}
+
+@keyframes wave-flow {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-1200px); }
+}
+
+/* Container */
 .container {
   max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.content-container {
+  margin-top: -40px;
+  position: relative;
+  z-index: 10;
 }
 
 /* Alert */
@@ -659,40 +757,77 @@ onBeforeUnmount(() => {
   border-radius: 15px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
   border: none;
+  animation: cardFadeIn 0.6s ease;
+  overflow: hidden;
+}
+
+/* Orange Header for Cards */
+.card-header-orange {
+  background: linear-gradient(135deg, #FFB74D 0%, #FFA726 100%);
+  color: white;
+  padding: 18px 20px;
+  font-weight: 700;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(255, 152, 0, 0.2);
+}
+
+.card-header-orange i {
+  font-size: 1.1rem;
+}
+
+.checklist-card .card-body,
+.trophy-card .card-body {
+  background: white;
+  padding: 25px;
+}
+
+.progress-card .card-body {
+  padding: 20px 20px 15px 20px;
+}
+
+/* Progress Card */
+.progress-card {
+  overflow: hidden;
+}
+
+.progress-card-header {
+  background: linear-gradient(135deg, #FFB74D 0%, #FFA726 100%);
+  color: white;
+  padding: 15px 20px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(255, 152, 0, 0.2);
+}
+
+.progress-card-header i {
+  font-size: 1rem;
+}
+
+.progress-card .card-body {
+  background: white;
+}
+
+@keyframes cardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mb-4 {
+  margin-bottom: 1.5rem;
 }
 
 .mb-4 .card-body {
   padding: 20px 20px 15px 20px;
-}
-
-.trophy-card {
-  background: white;
-}
-
-.trophy-card h3 {
-  text-align: center;
-  color: #FF8243;
-  font-size: 32px;
-  font-weight: bold;
-  margin: 0;
-  padding-top: 17px;
-  padding-bottom: 17px;
-  padding-left: 20px;
-  padding-right: 20px;
-  background: white;
-  border-radius: 15px 15px 0 0;
-  line-height: 1.2;
-  position: relative;
-}
-
-.trophy-card h3::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 16px;
-  right: 17px;
-  height: 1.2px;
-  background: #FFD9B3;
 }
 
 /* Progress Section */
@@ -709,7 +844,7 @@ onBeforeUnmount(() => {
 
 .cat-container {
   position: absolute;
-  top: -255px;
+  top: -200px;
   width: 400px;
   height: 400px;
   z-index: 2;
@@ -721,7 +856,7 @@ onBeforeUnmount(() => {
   .cat-container {
     width: 300px;
     height: 300px;
-    top: -200px;
+    top: -150px;
   }
 }
 
@@ -730,7 +865,7 @@ onBeforeUnmount(() => {
   .cat-container {
     width: 200px;
     height: 200px;
-    top: -150px;
+    top: -100px;
   }
 }
 
@@ -778,31 +913,6 @@ onBeforeUnmount(() => {
   font-size: 18px;
   border-radius: 22px;
   transition: width 0.5s ease, opacity 0.5s ease;
-}
-
-/* Checklist Title */
-.checklist-title {
-  text-align: center;
-  color: #FF8243;
-  font-size: 32px;
-  font-weight: bold;
-  margin: 0;
-  margin-bottom: 30px;
-  padding-bottom: 18px;
-  padding-left: 20px;
-  padding-right: 20px;
-  line-height: 1.2;
-  position: relative;
-}
-
-.checklist-title::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0px;
-  right: 0px;
-  height: 1.2px;
-  background: #FFD9B3;
 }
 
 /* Checklist Area */
@@ -861,32 +971,116 @@ onBeforeUnmount(() => {
 
 .item-text {
   flex: 1;
-  background: #D97539;
-  color: white;
+  background: #FFF8F0;
+  border-left: 5px solid #2196F3;
+  color: #5D4E37;
   padding: 15px 20px;
-  border-radius: 5px;
+  border-radius: 10px;
   font-size: 15px;
+  font-weight: 600;
   transition: all 0.3s ease;
+}
+
+.checklist-item:nth-child(1) .item-text {
+  border-left-color: #2196F3;
+}
+
+.checklist-item:nth-child(2) .item-text {
+  border-left-color: #E91E63;
+}
+
+.checklist-item:nth-child(3) .item-text {
+  border-left-color: #FBC02D;
+}
+
+.checklist-item:nth-child(4) .item-text {
+  border-left-color: #9C27B0;
+}
+
+.checklist-item:nth-child(5) .item-text {
+  border-left-color: #009688;
+}
+
+.checklist-item:nth-child(6) .item-text {
+  border-left-color: #FF9800;
 }
 
 .checklist-item.completed .item-text {
   opacity: 0.7;
   text-decoration: line-through;
+  background: #F1F8E9;
+  border-left-color: #4CAF50;
+}
+
+.checklist-item:hover .item-text {
+  transform: translateX(5px);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
 }
 
 /* Responsive */
-@media (max-width: 991px) {
-  .row {
-    flex-direction: column;
+.row { 
+  display: flex; 
+  flex-wrap: wrap; 
+  margin: -12px; 
+}
+
+.g-4 > * { 
+  padding: 12px; 
+}
+
+.col-lg-7,
+.col-lg-5 {
+  width: 100%;
+}
+
+@media (min-width: 992px) {
+  .col-lg-7 {
+    width: 58.333333%;
   }
   
-  .col-lg-7,
   .col-lg-5 {
-    width: 100%;
+    width: 41.666667%;
   }
 }
 
+.h-100 {
+  height: 100%;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.py-5 {
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+}
+
+.me-3 {
+  margin-right: 1rem;
+}
+
+.me-2 {
+  margin-right: 0.5rem;
+}
+
 @media (max-width: 768px) {
+  .hero-section {
+    padding: 20px 0 60px;
+  }
+
+  .hero-title {
+    font-size: 2rem; 
+  }
+
+  .hero-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .content-container {
+    margin-top: -40px;
+  }
+
   .card-body {
     padding: 20px;
   }
