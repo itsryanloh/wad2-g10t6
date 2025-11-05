@@ -9,8 +9,8 @@
       <!-- Post Content -->
       <div v-else-if="currentPost" class="post-wrapper">
         <!-- Back Button -->
-        <button class="back-btn" @click="navigateTo('/forum/main')">
-          <i class="fas fa-arrow-left me-2"></i>Back to Forum
+        <button class="back-btn" @click="router.back">
+          <i class="fas fa-arrow-left me-2"></i>Back to Previous Page
         </button>
 
         <!-- Main Post Card -->
@@ -327,6 +327,7 @@ import { useRoute } from 'vue-router'
 import { useForum } from '~/composables/useForum'
 
 const route = useRoute()
+const router = useRouter()
 const {
   currentPost,
   loading,
