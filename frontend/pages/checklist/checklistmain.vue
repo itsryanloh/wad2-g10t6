@@ -12,122 +12,138 @@
     </div>
 
     <div class="container content-container">
-      <!-- Progress Section -->
-      <div class="card mb-4 progress-card">
-        <div class="progress-card-header">
-          <div class="header-left">
-            <i class="fas fa-paw me-2"></i>
-            Current Adoption Paw-gress
-          </div>
-          <div class="adoption-counter">
-            <i class="fas fa-heart me-1"></i>
-            {{ totalAdoptedCats }} {{ totalAdoptedCats === 1 ? 'cat' : 'cats' }} adopted
-          </div>
-        </div>
-        <div class="card-body">
-          <!-- Cat Info Section -->
-          <div v-if="catPostData.title" class="cat-info-section">
-            <img :src="catPostData.image" alt="Cat" class="cat-thumbnail-progress">
-            <div class="cat-details-progress">
-              <h3 class="cat-title-progress">{{ catPostData.title }}</h3>
-              <p class="cat-location-progress">
-                <i class="fas fa-map-marker-alt"></i>
-                {{ catPostData.location }}
-              </p>
-            </div>
-          </div>
-
-          <div class="progress-section">
-            <!-- Rive Cat Animation -->
-            <div 
-              class="cat-container" 
-              ref="catContainer"
-              :style="{ left: catPosition + 'px' }"
-            >
-              <canvas ref="canvas" class="cat-canvas"></canvas>
-            </div>
-            
-            <div class="progress-container">
-              <div class="progress-bar-custom">
-                <div 
-                  class="progress-fill" 
-                  :style="{ 
-                    width: progress + '%',
-                    opacity: progress > 0 ? 1 : 0
-                  }"
-                >
-                  {{ Math.round(progress) }}%
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Loading State -->
+      <!-- Main Content -->
       <div v-if="loading" class="text-center py-5">
         <div class="spinner">🐾</div>
         <p>Loading your checklist...</p>
       </div>
 
-      <!-- Two Column Layout -->
-      <div v-else class="row g-4">
-        <!-- Left Column: Checklist -->
-        <div class="col-lg-7">
-          <div class="card h-100 checklist-card">
-            <div class="card-header-orange">
-              <div class="header-left">
-                <i class="fas fa-clipboard-check me-2"></i>
-                Adoption Checklist
+      <div v-else class="checklist-content">
+        <!-- Progress Section -->
+        <div class="card mb-4 progress-card">
+          <div class="progress-card-header">
+            <div class="header-left">
+              <i class="fas fa-paw me-2"></i>
+              Current Adoption Paw-gress
+            </div>
+            <div class="adoption-counter">
+              <i class="fas fa-heart me-1"></i>
+              {{ totalAdoptedCats }} {{ totalAdoptedCats === 1 ? 'cat' : 'cats' }} adopted
+            </div>
+
+          </div>
+          <div class="card-body">
+            <!-- Cat Info Section -->
+            <div v-if="catPostData.title" class="cat-info-section">
+              <img :src="catPostData.image" alt="Cat" class="cat-thumbnail-progress">
+              <div class="cat-details-progress">
+                <h3 class="cat-title-progress">{{ catPostData.title }}</h3>
+                <p class="cat-location-progress">
+                  <i class="fas fa-map-marker-alt"></i>
+                  {{ catPostData.location }}
+                </p>
               </div>
             </div>
-            <div class="card-body">
-              <div class="checklist-area">
-                <div class="checklist-items">
-                  <div 
-                    v-for="(item, index) in checklistItems" 
-                    :key="index"
-                    class="checklist-item"
-                    :class="{ completed: item.completed }"
-                    @click="toggleItem(index)"
-                  >
-                    <div class="checkbox" :class="{ checked: item.completed }"></div>
-                    <div class="item-text">
-                      {{ item.text }}
-                    </div>
-                  </div>
-                </div>
 
-                <!-- Finish Adoption Button -->
-                <div v-if="isChecklistComplete" class="finish-adoption-section">
-                  <button 
-                    class="finish-adoption-btn" 
-                    @click="handleFinishAdoption"
-                    :disabled="finishingAdoption"
+            <div class="progress-section">
+              <!-- Rive Cat Animation -->
+              <div 
+                class="cat-container" 
+                ref="catContainer"
+                :style="{ left: catPosition + 'px' }"
+              >
+                <canvas ref="canvas" class="cat-canvas"></canvas>
+              </div>
+              
+              <div class="progress-container">
+                <div class="progress-bar-custom">
+                  <div 
+                    class="progress-fill" 
+                    :style="{ 
+                      width: progress + '%',
+                      opacity: progress > 0 ? 1 : 0
+                    }"
                   >
-                    <i class="fas fa-heart me-2"></i>
-                    {{ finishingAdoption ? 'Processing...' : 'Finish Adoption' }}
-                    <i class="fas fa-arrow-right ms-2"></i>
-                  </button>
+                    {{ Math.round(progress) }}%
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Right Column: Trophy Case -->
-        <div class="col-lg-5">
-          <div class="card h-100 trophy-card">
-            <div class="card-header-orange">
-              <i class="fas fa-trophy me-2"></i>
-              Your Adoption Badges
+        <!-- Two Column Layout -->
+        <div class="row g-4">
+          <!-- Left Column: Checklist -->
+          <div class="col-lg-7">
+            <div class="card h-100 checklist-card">
+              <div class="card-header-orange">
+                <div class="header-left">
+                  <i class="fas fa-clipboard-check me-2"></i>
+                  Adoption Checklist
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="checklist-area">
+                  <div class="checklist-items">
+                    <div 
+                      v-for="(item, index) in checklistItems" 
+                      :key="index"
+                      class="checklist-item"
+                      :class="{ completed: item.completed }"
+                      @click="toggleItem(index)"
+                    >
+                      <div class="checkbox" :class="{ checked: item.completed }"></div>
+                      <div class="item-text">
+                        {{ item.text }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Finish Adoption Button -->
+                  <div v-if="isChecklistComplete" class="finish-adoption-section">
+                    <button 
+                      class="finish-adoption-btn" 
+                      @click="handleFinishAdoption"
+                      :disabled="finishingAdoption"
+                    >
+                      <i class="fas fa-heart me-2"></i>
+                      {{ finishingAdoption ? 'Processing...' : 'Finish Adoption' }}
+                      <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="card-body">
-              <BadgeDisplay 
-                :all-badges="allBadges" 
-                :next-badge="nextBadge" 
-              />
+          </div>
+
+          <!-- Right Column: Trophy Case -->
+          <div class="col-lg-5">
+            <div class="card h-100 trophy-card">
+              <div class="card-header-orange">
+                <i class="fas fa-trophy me-2"></i>
+                Your Adoption Badges
+              </div>
+              <div class="card-body">
+                <BadgeDisplay 
+                  :all-badges="allBadges" 
+                  :next-badge="nextBadge" 
+                />
+              </div>
             </div>
+          </div>
+        </div>
+
+        <!-- Login Required Overlay -->
+        <div v-if="!isLoggedIn" class="checklist-overlay">
+          <div class="overlay-content">
+            <i class="fas fa-lock"></i>
+            <h2>Login Required</h2>
+            <p>Please log in to track your adoption journey</p>
+            <button class="btn-login" @click="goToLogin">
+              <i class="fas fa-sign-in-alt me-2"></i>
+              Log In Now
+            </button>
           </div>
         </div>
       </div>
@@ -328,6 +344,10 @@ const isChecklistComplete = computed(() => {
   return checklistItems.value.every(item => item.completed)
 })
 
+const isLoggedIn = computed(() => {
+  return !!token.value;
+})
+
 // Base positions
 const desktopPositions = {
   0: -175,  // 0 items completed
@@ -398,11 +418,9 @@ async function loadUserData() {
     const headers = getAuthHeaders();
     
     if (!headers.Authorization) {
-      console.log('No user logged in - checklist available but not saved');
-      // Load mock adoption count even without login
-      totalAdoptedCats.value = 3 // Mock: user has adopted 3 cats before
-      loading.value = false
-      return
+      console.log('No user logged in - access restricted');
+      loading.value = false;
+      return;
     }
     
     console.log('Fetching from:', `${base_url}/users/me/checklist`);
@@ -549,6 +567,11 @@ async function showBadgeNotifications(badges) {
 }
 
 const toggleItem = async (index) => {
+  if (!isLoggedIn.value) {
+    goToLogin();
+    return;
+  }
+  
   const headers = getAuthHeaders();
   
   // Check if user is logged in
@@ -575,7 +598,7 @@ const handleFinishAdoption = async () => {
   finishingAdoption.value = true
   
   try {
-    // TODO: Replace with actual API calls when backend is ready
+    // Replace with actual API calls later
     // const postId = route.params.postId // Get from route
     // await fetch(`${base_url}/posts/${postId}/mark-adopted`, {
     //   method: 'POST',
@@ -596,7 +619,6 @@ const handleFinishAdoption = async () => {
     showCongratulationsModal.value = true
     
     // Reset checklist for next adoption (after modal closes)
-    // This would normally be done after navigating away
     
   } catch (error) {
     console.error('Error finishing adoption:', error)
@@ -609,14 +631,14 @@ const handleFinishAdoption = async () => {
 const closeCongratulationsModal = () => {
   showCongratulationsModal.value = false
   
-  // Reset checklist for demo purposes
+  // Reset checklist
   checklistItems.value.forEach(item => item.completed = false)
   earnedBadges.value = []
   
-  // TODO: Navigate back to forum or post page
+  // Navigate back to forum or post page
   // navigateTo('/forum/main')
   
-  // Mock: For demo, just log
+  // For demo, just log
   console.log('Returning to forum...')
 }
 
@@ -646,7 +668,7 @@ onMounted(async () => {
   // Set initial window width
   windowWidth.value = window.innerWidth
   
-  // --- Load cat post data from route query or use mock data for testing ---
+  // mock data for testing
   catPostData.value = {
     title: route.query.title || 'Friendly Orange Tabby Looking for Home',
     location: route.query.location || 'Block 123 Ang Mo Kio Ave 3',
@@ -669,16 +691,13 @@ onMounted(async () => {
       },
     });
 
-    // --- Handle window resize with debounce for performance ---
+    // Handle window resize with debounce for performance
     let resizeTimeout;
     onResize = () => {
-      // Clear previous timeout
       clearTimeout(resizeTimeout);
       
-      // Update immediately for cat position (smooth)
       windowWidth.value = window.innerWidth;
       
-      // Debounce canvas resize for performance
       resizeTimeout = setTimeout(() => {
         riveInstance?.resizeDrawingSurfaceToCanvas();
       }, 100);
@@ -705,7 +724,7 @@ onBeforeUnmount(() => {
   padding-bottom: 40px;
 }
 
-/* Hero Section - Matches Forum Style */
+/* match forum landing page UI */
 .hero-section {
   background: linear-gradient(135deg, #FFB74D 0%, #FFA726 50%, #FF9800 100%);
   padding: 40px 0 70px;
@@ -1649,6 +1668,192 @@ onBeforeUnmount(() => {
   
   .cat-location-progress {
     font-size: 0.85rem;
+  }
+}
+
+/* Login Required Overlay */
+.login-required-overlay {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.login-required-card {
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  max-width: 500px;
+  margin: 0 auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.login-required-card i {
+  font-size: 3rem;
+  color: #FF8243;
+  margin-bottom: 20px;
+  display: block;
+}
+
+.login-required-card h2 {
+  font-size: 1.8rem;
+  color: #5D4E37;
+  margin-bottom: 15px;
+}
+
+.login-required-card p {
+  color: #666;
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.login-required-card .text-muted {
+  color: #999;
+  font-size: 0.9rem;
+}
+
+.login-required-card .btn-login {
+  background: linear-gradient(135deg, #FF8243 0%, #FFA566 100%);
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 20px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.login-required-card .btn-login:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(255, 130, 67, 0.4);
+}
+
+/* Content Wrapper and Overlay */
+.content-wrapper {
+  position: relative;
+}
+
+.login-required-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 15px;
+}
+
+.login-required-content {
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  max-width: 400px;
+  margin: 0 20px;
+}
+
+.login-required-content i {
+  font-size: 2.5rem;
+  color: #FF8243;
+  margin-bottom: 15px;
+}
+
+.login-required-content h2 {
+  margin-bottom: 10px;
+  color: #5D4E37;
+}
+
+.login-required-content p {
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.disabled {
+  display: none;
+}
+
+.checklist-content {
+  position: relative;
+}
+
+.checklist-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.overlay-content {
+  background: white;
+  padding: 40px;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 400px;
+  width: 100%;
+  animation: fadeInUp 0.4s ease;
+}
+
+.overlay-content i {
+  font-size: 3rem;
+  color: #FF8243;
+  margin-bottom: 20px;
+  display: block;
+}
+
+.overlay-content h2 {
+  font-size: 1.8rem;
+  color: #5D4E37;
+  margin-bottom: 15px;
+}
+
+.overlay-content p {
+  color: #666;
+  margin-bottom: 25px;
+  line-height: 1.6;
+}
+
+.overlay-content .btn-login {
+  background: linear-gradient(135deg, #FF8243 0%, #FFA566 100%);
+  color: white;
+  border: none;
+  padding: 15px 35px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.overlay-content .btn-login:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(255, 130, 67, 0.4);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 </style>
