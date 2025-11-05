@@ -114,9 +114,12 @@ import DashboardCard from '~/components/DashboardCard.vue'
 import type { Suggestion } from '~/components/Suggestion.vue'
 import type { post_types } from '~/composables/usePetDashboard'
 
-const selectedCommunity = ref<Community | null>()
-
 const { statistics, communities, posts, error, fetchAllData } = await usePetDashboard()
+
+const q: string = useRoute().query.q as string
+const init = communities.value?.find(({ id }) => id === q)
+const selectedCommunity = ref<Community | undefined>(init)
+const searchBar = ref(selectedCommunity.value?.name)
 
 function getStatisticsValue(type: typeof post_types[number] | "total") {
   return `${selectedCommunity.value ? statistics.value[selectedCommunity.value.id]?.[type] ?? 0 : 0}`
@@ -186,8 +189,14 @@ async function keyDown(searchString: string, _: any): Promise<Suggestion[]> {
 }
 
 function selectIdx(idx: number): string {
-  selectedCommunity.value = suggestions.value[idx]!
-  return (suggestions.value = [selectedCommunity.value])[0]!.name
+  const comm = suggestions.value[idx]!
+  selectedCommunity.value = comm
+  useRouter().replace({
+    query: {
+      q: comm.id
+    }
+  })
+  return (suggestions.value = [comm])[0]!.name
 }
 
 const truncateText = (text: string, maxLength: number): string => {
@@ -195,13 +204,9 @@ const truncateText = (text: string, maxLength: number): string => {
   return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text
 }
 
-const searchBar = ref("")
-
 async function refreshData() {
   await fetchAllData()
   suggestions.value = communities.value!
-  selectedCommunity.value = null
-  searchBar.value = ""
 }
 
 onBeforeMount(refreshData)
