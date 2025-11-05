@@ -5,9 +5,11 @@
         <h1 class="hero-title">
           <i class="fas fa-comments me-3"></i>Adoption Checklist
         </h1>
-        <p class="hero-subtitle">Share, discover, and connect with fellow cat lovers</p>
+        <p class="hero-subtitle">Track your journey to becoming a cat parent</p>
       </div>
       <div class="wave-animation" />
+    </div>
+    <div>
     </div>
   </div>
 </template>
@@ -17,9 +19,8 @@
 
 <style scoped>
 .forum-page {
-  background: linear-gradient(135deg, #FFF5E6 0%, #FFE8D6 50%, #FFF0E0 100%);
-  height: 100%;
-  min-height: fit-content;
+  background: #FFE6C2;
+  height: 100vh;
   padding-bottom: 0;
 }
 

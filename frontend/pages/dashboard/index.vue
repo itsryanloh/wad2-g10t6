@@ -437,9 +437,8 @@ onBeforeMount(refreshData)
 }
 
 .forum-page {
-  background: linear-gradient(135deg, #FFF5E6 0%, #FFE8D6 50%, #FFF0E0 100%);
+  background: #FFE6C2;
   height: 100%;
-  min-height: fit-content;
   padding-bottom: 0;
 }
 
