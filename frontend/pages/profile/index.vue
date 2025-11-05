@@ -141,8 +141,8 @@
                   />
                 </div>
 
-                <div v-if="currentUser.role !== 'org'" class="row mx-0">
-                  <div class="col-md-6">
+                <div v-if="currentUser.role !== 'org'" class="row row-cols-1 row-cols-md-2 gx-5">
+                  <div class="col pe-0 ps-0 pe-md-2">
                     <div class="form-section">
                       <label class="section-label">
                         <i class="fas fa-birthday-cake me-2"></i>Age
@@ -158,12 +158,12 @@
                     </div>
                   </div>
                   
-                  <div class="col-md-6">
+                  <div class="col ps-0 pe-0 ps-md-2">
                     <div class="form-section">
                       <label class="section-label">
                         <i class="fas fa-venus-mars me-2"></i>Gender
                       </label>
-                      <select v-model="form.gender" class="form-input">
+                      <select v-model="form.gender" class="form-input form-select">
                         <option value="">Select gender</option>
                         <option value="male">Male</option>
                         <option value="female">Female</option>
