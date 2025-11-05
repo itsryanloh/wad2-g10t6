@@ -39,15 +39,23 @@ async function onLocationChange(searchString: string, signal: AbortSignal): Prom
     })
 }
 
-const community = ref("None")
+const COMMUNITY_DEFAULT = "None"
+
+const community = ref(COMMUNITY_DEFAULT)
+
+watch(model, async (newModel) => {
+  const { lng, lat } = newModel
+  community.value = await fetch(`${base_url}/maps/community?${new URLSearchParams({ lng: lng.toString(), lat: lat.toString() })}`)
+    .then<{ data: { area: Record<"id" | "name", string> } }>(data => data.json())
+    .then(({ data: { area } }) => area.name || COMMUNITY_DEFAULT)
+    .catch(_ => COMMUNITY_DEFAULT)
+})
+
 function chooseSuggestion(idx: number) {
   const { SEARCHVAL: name, LATITUDE: lat, LONGITUDE: lng } = suggestedLocations.value[idx]!
   model.value = {
     name, lat: Number(lat), lng: Number(lng)
   }
-  fetch(`${base_url}/maps/community?${new URLSearchParams({ lng, lat })}`)
-    .then<{ data: { area: Record<"id" | "name", string | null | undefined> } }>(data => data.json())
-    .then(({ data: { area } }) => community.value = area?.name || "None")
   return name
 }
 </script>
