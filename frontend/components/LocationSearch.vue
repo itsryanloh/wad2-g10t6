@@ -4,7 +4,7 @@
       <i class="fas fa-map-marker-alt me-2"></i>Location
     </label>
     <AutocompleteBar placeholder="e.g., Block 123 Ang Mo Kio Ave 3" :key-down="onLocationChange"
-      :select-idx="chooseSuggestion" suggestion-icon="fa-map-marker-alt" />
+      :select-idx="chooseSuggestion" suggestion-icon="fa-map-marker-alt" v-model="model.name" />
     <small class="form-hint">Where did you spot the cat?</small>
     <PetMap :lat="model.lat" :lng="model.lng" :style="{ height: '50dvh' }" />
     <small class="form-hint">This post will be in community (based on location):
