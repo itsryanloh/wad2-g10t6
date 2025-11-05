@@ -439,7 +439,7 @@ onBeforeMount(refreshData)
 
 .forum-page {
   background: #FFE6C2;
-  height: 100%;
+  height: 100svh;
   padding-bottom: 0;
 }
 

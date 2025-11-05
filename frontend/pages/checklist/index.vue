@@ -89,7 +89,7 @@ onMounted(loadUserData);
 <style scoped>
 .forum-page {
   background: #FFE6C2;
-  height: 100vh;
+  height: 100svh;
   padding-bottom: 0;
 }
 
