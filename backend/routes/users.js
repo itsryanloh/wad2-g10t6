@@ -3,6 +3,7 @@ import supabase from "../database.js";
 import twilio from "twilio";
 import { User } from "../schemas/user.js"
 import jwt from "jsonwebtoken";
+import { Checklist } from "../schemas/checklist.js";
 
 const router = express.Router();
 const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH)
@@ -58,7 +59,7 @@ router.patch("/:id", async (req, res) => {
 
 router.delete("/:id", async (req, res) => {
   const id = req.params.id;
-  const { data  } = await supabase.from("users").select("id").eq("id", id);
+  const { data } = await supabase.from("users").select("id").eq("id", id);
   if (!data.length) return res.status(404).send(`User with id ${id} not found`);
 
   const { error } = await supabase.from("users").delete().eq("id", id);
@@ -78,7 +79,7 @@ router.post("/verify-code", async (req, res) => {
   const { phone, code } = req.body;
   const check = await client.verify.v2.services(process.env.TWILIO_VERIFY_SID)
     .verificationChecks.create({ to: phone, code });
-  
+
   if (check.status === "approved") {
     res.json({ success: true });
   } else {
@@ -90,38 +91,44 @@ router.post("/verify-code", async (req, res) => {
 router.get("/me/checklist", async (req, res) => {
   console.log('✅ Checklist route hit');
   const authHeader = req.headers.authorization;
-  
+
+  const { post_id } = req.query
+
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).send({ error: 'Unauthorized' });
   }
-  
+
   const token = authHeader.split(' ')[1];
-  
+
   try {
     // console.log('🔑 Received token:', req.headers.authorization);
     const payload = jwt.verify(token, process.env.TOKEN_SECRET);
-    
+
     // Get user ID from database
     const { data: userData, error: userError } = await supabase
       .from("users")
       .select("id")
       .eq("username", payload.username)
       .single();
-    
+
     if (userError || !userData) {
       return res.status(401).send({ error: 'User not found' });
     }
-    
+
     // Get checklist items
-    const { error, data } = await supabase
-      .from("checklist_items")
-      .select("item_index")
-      .eq("user_id", userData.id);
-    
+    const { error, data } = await (async () => {
+      let query = supabase
+        .from("checklist_items")
+        .select("item_index,post_id,posts(title)")
+        .eq("user_id", userData.id)
+      if (post_id) query = query.eq("post_id", post_id)
+      return query
+    })();
+
     if (error) {
       return res.status(400).send(error.message);
     }
-    
+
     res.send(data);
   } catch (error) {
     return res.status(401).send({ error: 'Invalid token' });
@@ -129,45 +136,45 @@ router.get("/me/checklist", async (req, res) => {
 });
 
 // Add checklist item (protected)
-router.post("/me/checklist/:itemIndex", async (req, res) => {
-  const authHeader = req.headers.authorization;
-  
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).send({ error: 'Unauthorized' });
-  }
-  
-  const token = authHeader.split(' ')[1];
-  
+router.post("/me/checklist", async (req, res) => {
+  const checklist = req.body;
+
+  const { error: parseError } = Checklist.safeParse(checklist);
+  if (parseError) return res.status(400).send(JSON.parse(parseError.message));
+
   try {
-    const payload = jwt.verify(token, process.env.TOKEN_SECRET);
-    
     // Get user ID
     const { data: userData, error: userError } = await supabase
       .from("users")
       .select("id")
-      .eq("username", payload.username)
+      .eq("id", checklist.user_id)
       .single();
-    
+
     if (userError || !userData) {
       return res.status(401).send({ error: 'User not found' });
     }
-    
-    const { itemIndex } = req.params;
-    
+
+    const { data: postData, error: postError } = await supabase
+      .from("posts")
+      .select("id")
+      .eq("id", checklist.post_id)
+      .single();
+
+    if (postError || !postData) {
+      return res.status(401).send({ error: 'Post not found' });
+    }
+
     // Insert checklist item
     const { error, data } = await supabase
       .from("checklist_items")
-      .insert({ 
-        user_id: userData.id, 
-        item_index: parseInt(itemIndex) 
-      })
+      .insert(checklist)
       .select();
-    
+
     if (error && error.code !== '23505') {
       return res.status(400).send(error.message);
     }
-    
-    return res.status(201).send(data || { message: "Item already checked" });
+
+    return res.status(201).send(data || { message: "Item has been checked" });
   } catch (error) {
     return res.status(401).send({ error: 'Invalid token' });
   }
@@ -176,40 +183,40 @@ router.post("/me/checklist/:itemIndex", async (req, res) => {
 // Delete checklist item (protected)
 router.delete("/me/checklist/:itemIndex", async (req, res) => {
   const authHeader = req.headers.authorization;
-  
+
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).send({ error: 'Unauthorized' });
   }
-  
+
   const token = authHeader.split(' ')[1];
-  
+
   try {
     const payload = jwt.verify(token, process.env.TOKEN_SECRET);
-    
+
     // Get user ID
     const { data: userData, error: userError } = await supabase
       .from("users")
       .select("id")
       .eq("username", payload.username)
       .single();
-    
+
     if (userError || !userData) {
       return res.status(401).send({ error: 'User not found' });
     }
-    
+
     const { itemIndex } = req.params;
-    
+
     // Delete checklist item
     const { error } = await supabase
       .from("checklist_items")
       .delete()
       .eq("user_id", userData.id)
       .eq("item_index", parseInt(itemIndex));
-    
+
     if (error) {
       return res.status(400).send(error.message);
     }
-    
+
     return res.send({ message: "Item unchecked" });
   } catch (error) {
     return res.status(401).send({ error: 'Invalid token' });

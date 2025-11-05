@@ -87,6 +87,10 @@ function handleBlur() {
   padding-right: 45px;
 }
 
+.address-input:focus {
+  outline: none;
+}
+
 .search-spinner {
   position: absolute;
   right: 20px;

@@ -47,23 +47,16 @@
 
             <div class="progress-section">
               <!-- Rive Cat Animation -->
-              <div 
-                class="cat-container" 
-                ref="catContainer"
-                :style="{ left: catPosition + 'px' }"
-              >
+              <div class="cat-container" ref="catContainer" :style="{ left: catPosition + 'px' }">
                 <canvas ref="canvas" class="cat-canvas"></canvas>
               </div>
-              
+
               <div class="progress-container">
                 <div class="progress-bar-custom">
-                  <div 
-                    class="progress-fill" 
-                    :style="{ 
-                      width: progress + '%',
-                      opacity: progress > 0 ? 1 : 0
-                    }"
-                  >
+                  <div class="progress-fill" :style="{
+                    width: progress + '%',
+                    opacity: progress > 0 ? 1 : 0
+                  }">
                     {{ Math.round(progress) }}%
                   </div>
                 </div>
@@ -86,13 +79,8 @@
               <div class="card-body">
                 <div class="checklist-area">
                   <div class="checklist-items">
-                    <div 
-                      v-for="(item, index) in checklistItems" 
-                      :key="index"
-                      class="checklist-item"
-                      :class="{ completed: item.completed }"
-                      @click="toggleItem(index)"
-                    >
+                    <div v-for="(item, index) in checklistItems" :key="index" class="checklist-item"
+                      :class="{ completed: item.completed }" @click="toggleItem(index)">
                       <div class="checkbox" :class="{ checked: item.completed }"></div>
                       <div class="item-text">
                         {{ item.text }}
@@ -102,11 +90,7 @@
 
                   <!-- Finish Adoption Button -->
                   <div v-if="isChecklistComplete" class="finish-adoption-section">
-                    <button 
-                      class="finish-adoption-btn" 
-                      @click="handleFinishAdoption"
-                      :disabled="finishingAdoption"
-                    >
+                    <button class="finish-adoption-btn" @click="handleFinishAdoption" :disabled="finishingAdoption">
                       <i class="fas fa-heart me-2"></i>
                       {{ finishingAdoption ? 'Processing...' : 'Finish Adoption' }}
                       <i class="fas fa-arrow-right ms-2"></i>
@@ -125,10 +109,7 @@
                 Your Adoption Badges
               </div>
               <div class="card-body">
-                <BadgeDisplay 
-                  :all-badges="allBadges" 
-                  :next-badge="nextBadge" 
-                />
+                <BadgeDisplay :all-badges="allBadges" :next-badge="nextBadge" />
               </div>
             </div>
           </div>
@@ -182,20 +163,23 @@
           <div class="congrats-icon">
             <i class="fas fa-trophy"></i>
           </div>
-          
+
           <h2 class="congrats-title">Congratulations! 🎉</h2>
-          
+
           <p class="congrats-message">
             You've successfully completed the adoption checklist and welcomed your new furry friend into your home!
           </p>
-          
+
           <div class="congrats-highlight">
             <i class="fas fa-paw me-2"></i>
-            <span>This is your <strong>{{ totalAdoptedCats }}{{ getOrdinalSuffix(totalAdoptedCats) }}</strong> successful adoption! You've contributed to reducing the stray cat population and given loving homes to cats in need.</span>
+            <span>This is your <strong>{{ totalAdoptedCats }}{{ getOrdinalSuffix(totalAdoptedCats) }}</strong>
+              successful adoption! You've contributed to reducing the stray cat population and given loving homes to
+              cats in need.</span>
           </div>
-          
+
           <p class="congrats-submessage">
-            Your kindness and dedication make the world a better place for our feline friends. Thank you for choosing adoption!
+            Your kindness and dedication make the world a better place for our feline friends. Thank you for choosing
+            adoption!
           </p>
 
           <button class="congrats-close-btn" @click="closeCongratulationsModal">
@@ -214,6 +198,7 @@ import { useRoute } from 'vue-router'
 import { Rive } from '@rive-app/canvas'
 import BadgeDisplay from './badgedisplay.vue'
 import BadgeNotification from './badgenotification.vue'
+import { jwtDecode } from 'jwt-decode';
 
 const base_url = import.meta.env.VITE_BASE_URL;
 
@@ -288,8 +273,8 @@ const catContainer = ref(null)
 let riveInstance = null
 let onResize = null
 const token = useCookie("token")
-
 const route = useRoute()
+const postId = route.params.postId
 const catPostData = ref({
   title: '',
   location: '',
@@ -297,7 +282,7 @@ const catPostData = ref({
 })
 
 const checklistItems = ref([
-  { text: 'Research cat breeds and temperament to match your lifestyle.', completed: false},
+  { text: 'Research cat breeds and temperament to match your lifestyle.', completed: false },
   { text: 'Schedule a vet visit within the first week (even if the cat looks healthy).', completed: false },
   { text: 'Prepare a safe space with food, water, litter box, and hiding spots.', completed: false },
   { text: 'Purchase essential supplies: food bowls, litter, scratching post, toys.', completed: false },
@@ -321,7 +306,7 @@ const allBadges = computed(() => {
 
 const nextBadge = computed(() => {
   const totalRemaining = checklistItems.value.filter(item => !item.completed).length
-  
+
   for (const badge of BADGE_CONFIG) {
     if (!checklistItems.value[badge.itemIndex].completed) {
       return {
@@ -369,14 +354,14 @@ const scalingFactors = {
 // Auto-calculate positions for all screen sizes
 const catPositionMaps = computed(() => {
   const maps = {}
-  
+
   for (const [breakpoint, factor] of Object.entries(scalingFactors)) {
     maps[breakpoint] = {}
     for (const [index, position] of Object.entries(desktopPositions)) {
       maps[breakpoint][index] = Math.round(position * factor)
     }
   }
-  
+
   return maps
 })
 
@@ -391,9 +376,9 @@ const catPosition = computed(() => {
   const completed = checklistItems.value.filter(i => i.completed).length
   const breakpoint = currentBreakpoint.value
   const position = catPositionMaps.value[breakpoint][completed] || catPositionMaps.value[breakpoint][0]
-  
+
   console.log(`Cat Position - Breakpoint: ${breakpoint}, Items: ${completed}, Position: ${position}px`)
-  
+
   return position
 })
 
@@ -413,24 +398,25 @@ function getAuthHeaders() {
   };
 }
 
+// TODO: only load checklist items for post_id query param
 async function loadUserData() {
   try {
     const headers = getAuthHeaders();
-    
+
     if (!headers.Authorization) {
       console.log('No user logged in - access restricted');
       loading.value = false;
       return;
     }
-    
+
     console.log('Fetching from:', `${base_url}/users/me/checklist`);
-    
-    const response = await fetch(`${base_url}/users/me/checklist`, {
+
+    const response = await fetch(`${base_url}/users/me/checklist?${new URLSearchParams({ post_id: postId })}`, {
       headers: headers
     })
-    
+
     console.log('Response status:', response.status);
-    
+
     if (response.status === 401) {
       console.log('Session expired');
       // Load mock adoption count
@@ -438,19 +424,19 @@ async function loadUserData() {
       loading.value = false
       return
     }
-    
+
     if (!response.ok) {
       const errorData = await response.text()
       console.error('Error response:', errorData)
       throw new Error(`Failed to load checklist: ${response.status}`)
     }
-    
+
     const items = await response.json()
     console.log('Loaded items:', items);
-    
+
     // Reset all items to uncompleted
     checklistItems.value.forEach(item => item.completed = false)
-    
+
     // Mark completed items
     if (items && items.length > 0) {
       items.forEach(item => {
@@ -458,20 +444,20 @@ async function loadUserData() {
           checklistItems.value[item.item_index].completed = true
         }
       })
-      
+
       rebuildBadges()
     }
-    
+
     // Fetch actual adoption count from API
     // const countResponse = await fetch(`${base_url}/users/me/adoptions/count`, { headers })
     // const countData = await countResponse.json()
     // totalAdoptedCats.value = countData.count
-    
+
     // Mock data
     totalAdoptedCats.value = 3
-    
+
     error.value = ''
-    
+
   } catch (err) {
     console.error('Error loading data:', err)
     error.value = 'Failed to load checklist. Please try again.'
@@ -482,26 +468,32 @@ async function loadUserData() {
 
 async function saveChecklistItem(index, completed) {
   const headers = getAuthHeaders();
-  
+
   if (!headers.Authorization) {
     console.log('Not logged in - changes not saved');
     return
   }
-  
+  const payload = jwtDecode(token.value)
+
   try {
     if (completed) {
       console.log(`Adding item ${index}`);
-      const response = await fetch(`${base_url}/users/me/checklist/${index}`, {
+      const response = await fetch(`${base_url}/users/me/checklist`, {
         method: 'POST',
-        headers: headers
+        body: JSON.stringify({
+          user_id: payload.user_id,
+          post_id: postId,
+          item_index: index,
+        }),
+        headers: { 'Content-Type': 'application/json' }
       })
-      
+
       if (!response.ok) {
         const errorData = await response.text()
         console.error('Error saving:', errorData)
         throw new Error('Failed to save')
       }
-      
+
       console.log('Item added');
     } else {
       console.log(`Removing item ${index}`);
@@ -509,16 +501,16 @@ async function saveChecklistItem(index, completed) {
         method: 'DELETE',
         headers: headers
       })
-      
+
       if (!response.ok) {
         const errorData = await response.text()
         console.error('Error deleting:', errorData)
         throw new Error('Failed to delete')
       }
-      
+
       console.log('Item removed');
     }
-    
+
   } catch (err) {
     console.error('Error saving:', err)
     error.value = 'Failed to save. Please try again.'
@@ -537,16 +529,16 @@ function rebuildBadges() {
 
 function checkForNewBadges() {
   const newBadges = []
-  
+
   for (const badge of BADGE_CONFIG) {
     const itemCompleted = checklistItems.value[badge.itemIndex].completed
     const badgeEarned = earnedBadges.value.includes(badge.id)
-    
+
     if (itemCompleted && !badgeEarned) {
       earnedBadges.value.push(badge.id)
       newBadges.push(badge)
     }
-    
+
     if (!itemCompleted && badgeEarned) {
       const index = earnedBadges.value.indexOf(badge.id)
       if (index > -1) {
@@ -554,7 +546,7 @@ function checkForNewBadges() {
       }
     }
   }
-  
+
   if (newBadges.length > 0) {
     showBadgeNotifications(newBadges)
   }
@@ -571,15 +563,15 @@ const toggleItem = async (index) => {
     goToLogin();
     return;
   }
-  
+
   const headers = getAuthHeaders();
-  
+
   // Check if user is logged in
   if (!headers.Authorization && !userDismissedWarning.value) {
     showLoginModal.value = true
     return
   }
-  
+
   checklistItems.value[index].completed = !checklistItems.value[index].completed
   await saveChecklistItem(index, checklistItems.value[index].completed)
   checkForNewBadges()
@@ -596,30 +588,26 @@ function continueWithoutSaving() {
 
 const handleFinishAdoption = async () => {
   finishingAdoption.value = true
-  
+
   try {
     // Replace with actual API calls later
-    // const postId = route.params.postId // Get from route
-    // await fetch(`${base_url}/posts/${postId}/mark-adopted`, {
-    //   method: 'POST',
-    //   headers: getAuthHeaders()
-    // })
-    // await fetch(`${base_url}/users/me/adoptions/increment`, {
-    //   method: 'POST',
-    //   headers: getAuthHeaders()
-    // })
-    
-    // Mock: Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
+    await fetch(`${base_url}/posts/${postId}/mark-adopted`, {
+      method: 'POST',
+      headers: getAuthHeaders()
+    })
+    await fetch(`${base_url}/users/me/adoptions/increment`, {
+      method: 'POST',
+      headers: getAuthHeaders()
+    })
+
     // Update adoption count
     totalAdoptedCats.value++
-    
+
     // Show congratulations
     showCongratulationsModal.value = true
-    
+
     // Reset checklist for next adoption (after modal closes)
-    
+
   } catch (error) {
     console.error('Error finishing adoption:', error)
     alert('Failed to complete adoption. Please try again.')
@@ -630,14 +618,14 @@ const handleFinishAdoption = async () => {
 
 const closeCongratulationsModal = () => {
   showCongratulationsModal.value = false
-  
+
   // Reset checklist
   checklistItems.value.forEach(item => item.completed = false)
   earnedBadges.value = []
-  
+
   // Navigate back to forum or post page
   // navigateTo('/forum/main')
-  
+
   // For demo, just log
   console.log('Returning to forum...')
 }
@@ -664,17 +652,17 @@ onMounted(async () => {
 
   console.log('Component mounted');
   console.log('Base URL:', base_url);
-  
+
   // Set initial window width
   windowWidth.value = window.innerWidth
-  
+
   // mock data for testing
   catPostData.value = {
     title: route.query.title || 'Friendly Orange Tabby Looking for Home',
     location: route.query.location || 'Block 123 Ang Mo Kio Ave 3',
     image: route.query.image || '/uniform_cat1.png'
   }
-  
+
   // --- Load user data ---
   await loadUserData();
 
@@ -695,14 +683,14 @@ onMounted(async () => {
     let resizeTimeout;
     onResize = () => {
       clearTimeout(resizeTimeout);
-      
+
       windowWidth.value = window.innerWidth;
-      
+
       resizeTimeout = setTimeout(() => {
         riveInstance?.resizeDrawingSurfaceToCanvas();
       }, 100);
     };
-    
+
     window.addEventListener('resize', onResize);
   } catch (err) {
     console.error('Rive initialization failed:', err);
@@ -758,6 +746,7 @@ onBeforeUnmount(() => {
     opacity: 0;
     transform: translateY(-30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -794,8 +783,13 @@ onBeforeUnmount(() => {
 }
 
 @keyframes wave-flow {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-1200px); }
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-1200px);
+  }
 }
 
 /* Container */
@@ -827,8 +821,13 @@ onBeforeUnmount(() => {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .modal-content {
@@ -846,6 +845,7 @@ onBeforeUnmount(() => {
     transform: translateY(50px);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
@@ -947,6 +947,7 @@ onBeforeUnmount(() => {
     opacity: 0;
     transform: scale(0.5) rotate(-5deg);
   }
+
   to {
     opacity: 1;
     transform: scale(1) rotate(0deg);
@@ -978,6 +979,7 @@ onBeforeUnmount(() => {
     opacity: 1;
     transform: rotate(0deg);
   }
+
   100% {
     top: 100%;
     opacity: 0;
@@ -1006,10 +1008,23 @@ onBeforeUnmount(() => {
 }
 
 @keyframes iconBounce {
-  0%, 100% { transform: scale(1); }
-  25% { transform: scale(1.2); }
-  50% { transform: scale(0.9); }
-  75% { transform: scale(1.1); }
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  25% {
+    transform: scale(1.2);
+  }
+
+  50% {
+    transform: scale(0.9);
+  }
+
+  75% {
+    transform: scale(1.1);
+  }
 }
 
 .congrats-icon i {
@@ -1019,8 +1034,15 @@ onBeforeUnmount(() => {
 }
 
 @keyframes iconSpin {
-  0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(20deg); }
+
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  50% {
+    transform: rotate(20deg);
+  }
 }
 
 .congrats-title {
@@ -1034,8 +1056,15 @@ onBeforeUnmount(() => {
 }
 
 @keyframes titlePulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
 }
 
 .congrats-message {
@@ -1110,8 +1139,15 @@ onBeforeUnmount(() => {
 }
 
 @keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-20px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
 }
 
 /* Cat Info in Progress Card */
@@ -1168,7 +1204,7 @@ onBeforeUnmount(() => {
 .card {
   background: white;
   border-radius: 15px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   border: none;
   animation: cardFadeIn 0.6s ease;
   overflow: hidden;
@@ -1274,6 +1310,7 @@ onBeforeUnmount(() => {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1479,6 +1516,7 @@ onBeforeUnmount(() => {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1527,21 +1565,34 @@ onBeforeUnmount(() => {
 }
 
 @keyframes heartBeat {
-  0%, 100% { transform: scale(1); }
-  25% { transform: scale(1.2); }
-  50% { transform: scale(1); }
-  75% { transform: scale(1.2); }
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  25% {
+    transform: scale(1.2);
+  }
+
+  50% {
+    transform: scale(1);
+  }
+
+  75% {
+    transform: scale(1.2);
+  }
 }
 
 /* Responsive */
-.row { 
-  display: flex; 
-  flex-wrap: wrap; 
-  margin: -12px; 
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin: -12px;
 }
 
-.g-4 > * { 
-  padding: 12px; 
+.g-4>* {
+  padding: 12px;
 }
 
 .col-lg-7,
@@ -1553,7 +1604,7 @@ onBeforeUnmount(() => {
   .col-lg-7 {
     width: 58.333333%;
   }
-  
+
   .col-lg-5 {
     width: 41.666667%;
   }
@@ -1644,28 +1695,28 @@ onBeforeUnmount(() => {
     padding: 15px 30px;
     font-size: 1rem;
   }
-  
+
   .adoption-counter,
   .cat-name-badge {
     font-size: 0.85rem;
     padding: 6px 12px;
   }
-  
+
   .cat-info-section {
     gap: 12px;
     padding: 12px;
     margin-bottom: 15px;
   }
-  
+
   .cat-thumbnail-progress {
     width: 70px;
     height: 70px;
   }
-  
+
   .cat-title-progress {
     font-size: 1rem;
   }
-  
+
   .cat-location-progress {
     font-size: 0.85rem;
   }
@@ -1851,6 +1902,7 @@ onBeforeUnmount(() => {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

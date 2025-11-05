@@ -151,7 +151,10 @@
                     Start your adoption journey by completing our adoption checklist to ensure
                     you're ready to welcome a new furry friend into your home.
                   </p>
-                  <button @click="navigateTo('/checklist/checklistmain')" class="adoption-btn">
+                  <button @click="navigateTo({
+                    name: 'checklist-postId',
+                    params: { postId: route.params.postId }
+                  })" class="adoption-btn">
                     <i class="fas fa-heart me-2"></i>
                     Start Adoption Checklist
                     <i class="fas fa-arrow-right ms-2"></i>
