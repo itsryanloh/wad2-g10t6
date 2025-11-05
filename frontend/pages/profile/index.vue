@@ -120,22 +120,6 @@
                     required
                   />
                 </div>
-
-                <div class="form-section">
-                  <label class="section-label">
-                    <i class="fas fa-at me-2"></i>Username
-                    <span class="required">*</span>
-                  </label>
-                  <input
-                    v-model="form.username"
-                    type="text"
-                    class="form-input"
-                    placeholder="Enter your username"
-                    required
-                  />
-                  <small class="form-hint">This is how others will identify you</small>
-                </div>
-
                 <div class="form-section">
                   <label class="section-label d-flex justify-content-between">
                     <div>
@@ -158,7 +142,7 @@
                 </div>
 
                 <div v-if="currentUser.role !== 'org'" class="row mx-0">
-                  <div class="col-md-6 ps-0">
+                  <div class="col-md-6">
                     <div class="form-section">
                       <label class="section-label">
                         <i class="fas fa-birthday-cake me-2"></i>Age
@@ -174,7 +158,7 @@
                     </div>
                   </div>
                   
-                  <div v-if="currentUser.role !== 'org'" class="col-md-6 pe-0">
+                  <div class="col-md-6">
                     <div class="form-section">
                       <label class="section-label">
                         <i class="fas fa-venus-mars me-2"></i>Gender

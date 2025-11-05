@@ -447,6 +447,7 @@ onActivated(async () => {
 .sidebar-column {
   position: absolute;
   grid-row: 1;
+  width: 310px;
 }
 
 .main-column {
@@ -918,6 +919,7 @@ onActivated(async () => {
 .empty-state {
   text-align: center;
   padding: 80px 20px;
+  grid-column: 2;
 }
 
 .empty-state i {
@@ -992,7 +994,7 @@ onActivated(async () => {
 /* Responsiveness related */
 @media (max-width: 1024px) {
   .forum-layout { grid-template-columns: 1fr; }
-  .sidebar-column { position: relative; grid-column: 2; grid-row: 2; }
+  .sidebar-column { position: relative; grid-column: 2; grid-row: 2; width: unset;}
   .main-column { order: 1; }
 }
 
