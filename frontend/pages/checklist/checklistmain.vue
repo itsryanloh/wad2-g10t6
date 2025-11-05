@@ -107,6 +107,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { Rive } from '@rive-app/canvas'
 import BadgeDisplay from './badgedisplay.vue'
 import BadgeNotification from './badgenotification.vue'
+import { jwtDecode } from 'jwt-decode';
 
 const base_url = import.meta.env.VITE_BASE_URL;
 
@@ -178,6 +179,7 @@ const catContainer = ref(null)
 let riveInstance = null
 let onResize = null
 const token = useCookie("token")
+const route = useRoute()
 
 const checklistItems = ref([
   { text: 'Research cat breeds and temperament to match your lifestyle.', completed: false},
@@ -289,6 +291,7 @@ function getAuthHeaders() {
   };
 }
 
+// TODO: only load checklist items for post_id query param
 async function loadUserData() {
   try {
     const headers = getAuthHeaders();
@@ -353,13 +356,19 @@ async function saveChecklistItem(index, completed) {
     console.log('Not logged in - changes not saved');
     return
   }
+  const payload = jwtDecode(token.value)
   
   try {
     if (completed) {
       console.log(`Adding item ${index}`);
-      const response = await fetch(`${base_url}/users/me/checklist/${index}`, {
+      const response = await fetch(`${base_url}/users/me/checklist`, {
         method: 'POST',
-        headers: headers
+        body: JSON.stringify({
+          user_id: payload.user_id,
+          post_id: route.query.post_id,
+          item_index: index,
+        }),
+        headers: { 'Content-Type': 'application/json' }
       })
       
       if (!response.ok) {

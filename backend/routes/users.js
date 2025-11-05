@@ -3,6 +3,7 @@ import supabase from "../database.js";
 import twilio from "twilio";
 import { User } from "../schemas/user.js"
 import jwt from "jsonwebtoken";
+import { Checklist } from "../schemas/checklist.js";
 
 const router = express.Router();
 const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH)
@@ -86,6 +87,7 @@ router.post("/verify-code", async (req, res) => {
   }
 });
 
+// TODO: accept post_id filter
 // Get current user's checklist (protected)
 router.get("/me/checklist", async (req, res) => {
   console.log('✅ Checklist route hit');
@@ -129,45 +131,45 @@ router.get("/me/checklist", async (req, res) => {
 });
 
 // Add checklist item (protected)
-router.post("/me/checklist/:itemIndex", async (req, res) => {
-  const authHeader = req.headers.authorization;
+router.post("/me/checklist", async (req, res) => {
+  const checklist = req.body;
   
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).send({ error: 'Unauthorized' });
-  }
-  
-  const token = authHeader.split(' ')[1];
+  const { error: parseError } = Checklist.safeParse(checklist);
+  if (parseError) return res.status(400).send(JSON.parse(parseError.message));
   
   try {
-    const payload = jwt.verify(token, process.env.TOKEN_SECRET);
-    
     // Get user ID
     const { data: userData, error: userError } = await supabase
       .from("users")
       .select("id")
-      .eq("username", payload.username)
+      .eq("id", checklist.user_id)
       .single();
     
     if (userError || !userData) {
       return res.status(401).send({ error: 'User not found' });
     }
+
+    const { data: postData, error: postError } = await supabase
+      .from("posts")
+      .select("id")
+      .eq("id", checklist.post_id)
+      .single();
     
-    const { itemIndex } = req.params;
+    if (postError || !postData) {
+      return res.status(401).send({ error: 'Post not found' });
+    }
     
     // Insert checklist item
     const { error, data } = await supabase
       .from("checklist_items")
-      .insert({ 
-        user_id: userData.id, 
-        item_index: parseInt(itemIndex) 
-      })
+      .insert(checklist)
       .select();
     
     if (error && error.code !== '23505') {
       return res.status(400).send(error.message);
     }
     
-    return res.status(201).send(data || { message: "Item already checked" });
+    return res.status(201).send(data || { message: "Item has been checked" });
   } catch (error) {
     return res.status(401).send({ error: 'Invalid token' });
   }

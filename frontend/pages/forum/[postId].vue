@@ -162,7 +162,7 @@
                     you're ready to welcome a new furry friend into your home.
                   </p>
                   <button 
-                    @click="navigateTo('/checklist/checklistmain')" 
+                    @click="navigateTo({ path: '/checklist/checklistmain', query: { post_id: route.params.postId } })" 
                     class="adoption-btn"
                   >
                     <i class="fas fa-heart me-2"></i>
