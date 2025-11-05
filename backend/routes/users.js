@@ -119,9 +119,11 @@ router.get("/me/checklist", async (req, res) => {
     const { error, data } = await (async () => {
       let query = supabase
         .from("checklist_items")
-        .select("item_index")
+        .select("item_index,post_id,posts(title)")
         .eq("user_id", userData.id)
       if (post_id) query = query.eq("post_id", post_id)
+        .limit(1)
+        .maybeSingle()
       return query
     })();
 
