@@ -63,10 +63,6 @@
         </div>
         <div id="error" class="form-text text-danger mb-2" v-text="error"></div>
         <div id="success" class="form-text text-success mb-2" v-text="success"></div>
-        <div class="d-flex justify-content-center align-items-center btn-singpass mb-3">
-          <button type="submit" class="btn fw-bold w-75">Retrieve Myinfo with
-          <img src="/singpass.png"/></button>
-        </div>
         <div class="text-center">
           <button type="submit" class="btn btn-save w-75" :disabled="isLoading">
             {{ isLoading ? 'Creating Account...' : 'Create Account' }}

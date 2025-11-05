@@ -141,15 +141,6 @@ onMounted(() => {
           <span class="text-muted ">Don't have an account? </span>
           <NuxtLink to="/register" class="link-primary">Register here</NuxtLink>
         </div>
-        <div class="d-flex align-items-center my-4">
-          <hr class="bg-dark border-2 border-top border-secondary w-50" />
-          <div style="font-size: 12px;" class="mx-4 fw-bold">OR</div>
-          <hr class="bg-dark border-2 border-top border-secondary w-50" />
-        </div>
-        <div class="d-flex justify-content-center align-items-center btn-singpass">
-          <button type="submit" class="btn fw-bold w-75">Log in with
-          <img src="/singpass.png"/></button>
-        </div>
       </form>
     </div>
   </div>
