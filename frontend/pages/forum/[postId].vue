@@ -188,120 +188,11 @@
             <div class="comment-skeleton"></div>
             <div class="comment-skeleton"></div>
           </div>
-
           <div v-else-if="topLevelComments.length" class="comments-list">
             <div v-for="comment in topLevelComments" :key="comment.id" class="comment-thread">
-              <!-- Parent Comment -->
-              <div class="comment-item">
-                <img :src="comment.users?.avatar_url || 'https://i.pravatar.cc/150'" class="comment-avatar" />
-                <div class="comment-content">
-                  <div class="comment-header">
-                    <span class="comment-author">{{ comment.users?.name || 'Anonymous' }}</span>
-                    <span class="comment-date">{{ formatDate(comment.created_at) }}</span>
-                  </div>
-                  <p class="comment-text">{{ comment.content }}</p>
-
-                  <!-- Reply Button -->
-                  <button class="reply-btn" @click="toggleReply(comment.id)">
-                    <i class="fas fa-reply me-1"></i>
-                    Reply
-                  </button>
-
-                  <!-- Reply Form -->
-                  <div v-if="replyingTo === comment.id" class="reply-form">
-                    <textarea v-model="replyContent" placeholder="Write a reply..." rows="2"
-                      class="reply-textarea"></textarea>
-                    <div class="reply-actions">
-                      <button @click="cancelReply" class="cancel-reply-btn">
-                        Cancel
-                      </button>
-                      <button @click="handleReply(comment.id)" :disabled="!replyContent.trim() || addingComment"
-                        class="submit-reply-btn">
-                        <i class="fas fa-paper-plane me-1"></i>
-                        {{ addingComment ? 'Posting...' : 'Reply' }}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Nested Replies -->
-              <div v-if="getReplies(comment.id).length" class="replies-container">
-                <div v-for="reply in getReplies(comment.id)" :key="reply.id" class="reply-wrapper">
-                  <div class="comment-item reply-item">
-                    <img :src="reply.users?.avatar_url || 'https://i.pravatar.cc/150'" class="comment-avatar" />
-                    <div class="comment-content">
-                      <div class="comment-header">
-                        <span class="comment-author">{{ reply.users?.name || 'Anonymous' }}</span>
-                        <span class="comment-date">{{ formatDate(reply.created_at) }}</span>
-                      </div>
-                      <p class="comment-text">{{ reply.content }}</p>
-
-                      <!-- Reply Button on Replies -->
-                      <button class="reply-btn" @click="toggleReply(reply.id)">
-                        <i class="fas fa-reply me-1"></i>
-                        Reply
-                      </button>
-
-                      <!-- Reply Form on Replies -->
-                      <div v-if="replyingTo === reply.id" class="reply-form">
-                        <textarea v-model="replyContent" placeholder="Write a reply..." rows="2"
-                          class="reply-textarea"></textarea>
-                        <div class="reply-actions">
-                          <button @click="cancelReply" class="cancel-reply-btn">
-                            Cancel
-                          </button>
-                          <button @click="handleReply(reply.id)" :disabled="!replyContent.trim() || addingComment"
-                            class="submit-reply-btn">
-                            <i class="fas fa-paper-plane me-1"></i>
-                            {{ addingComment ? 'Posting...' : 'Reply' }}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Show nested replies to this reply -->
-                  <div v-if="getReplies(reply.id).length" class="nested-replies">
-                    <div v-for="nestedReply in getReplies(reply.id)" :key="nestedReply.id"
-                      class="comment-item reply-item nested-reply-item">
-                      <img :src="nestedReply.users?.avatar_url || 'https://i.pravatar.cc/150'"
-                        class="comment-avatar small-avatar" />
-                      <div class="comment-content">
-                        <div class="comment-header">
-                          <span class="comment-author">{{ nestedReply.users?.name || 'Anonymous' }}</span>
-                          <span class="comment-date">{{ formatDate(nestedReply.created_at) }}</span>
-                        </div>
-                        <p class="comment-text">{{ nestedReply.content }}</p>
-
-                        <!-- Can also reply to nested replies -->
-                        <button class="reply-btn small-reply-btn" @click="toggleReply(nestedReply.id)">
-                          <i class="fas fa-reply me-1"></i>
-                          Reply
-                        </button>
-
-                        <div v-if="replyingTo === nestedReply.id" class="reply-form">
-                          <textarea v-model="replyContent" placeholder="Write a reply..." rows="2"
-                            class="reply-textarea"></textarea>
-                          <div class="reply-actions">
-                            <button @click="cancelReply" class="cancel-reply-btn">
-                              Cancel
-                            </button>
-                            <button @click="handleReply(nestedReply.id)"
-                              :disabled="!replyContent.trim() || addingComment" class="submit-reply-btn">
-                              <i class="fas fa-paper-plane me-1"></i>
-                              {{ addingComment ? 'Posting...' : 'Reply' }}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <Comment @refresh="loadComments" :comment="comment" :comments="comments" :currentUserId="currentUserId" />
             </div>
           </div>
-
           <div v-else class="no-comments">
             <i class="far fa-comment-dots"></i>
             <p>Be the first to comment!</p>
@@ -328,6 +219,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useForum } from '~/composables/useForum'
+import Comment from '~/components/Comment.vue'
 
 const route = useRoute()
 const router = useRouter()
