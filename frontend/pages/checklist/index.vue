@@ -18,15 +18,14 @@
 
       <div v-else style="width: 90%;">
         <div class="row g-4">
-          <ChecklistSection
-            :checklists="checklists.filter(({ completed_count }) => completed_count.size < CHECKLIST_ITEMS)"
+          <ChecklistSection :checklists="checklists.filter(({ completed_count }) => completed_count < CHECKLIST_ITEMS)"
             style="background: linear-gradient(135deg, #FF9800 0%, #FFA726 50%, #FFB74D 100%);">
             <h2 class="text-center fw-semibold fs-1" style="filter: drop-shadow(1px 2px 2px rgba(0, 0, 0, 0.2));">
               <i class="fas fa-bars-progress me-2"></i>In-Progress
             </h2>
           </ChecklistSection>
           <ChecklistSection
-            :checklists="checklists.filter(({ completed_count }) => completed_count.size === CHECKLIST_ITEMS)"
+            :checklists="checklists.filter(({ completed_count }) => completed_count === CHECKLIST_ITEMS)"
             style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);">
             <h2 class="text-center fw-semibold fs-1" style="filter: drop-shadow(1px 2px 2px rgba(0, 0, 0, 0.2));">
               <i class="far fa-circle-check me-2"></i>Completed
@@ -39,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-export type CList = Record<"post_id" | "title", string> & { completed_count: Set<number> }
+export type CList = Record<"post_id" | "title", string> & { completed_count: number }
 const loading = ref(true)
 const checklists = ref<CList[]>([])
 const { VITE_BASE_URL: base_url } = import.meta.env;
@@ -68,14 +67,16 @@ async function loadUserData() {
     checklists.value = await (response.json() as (Promise<
       { posts: { title: string }, post_id: string, item_index: number }[]
     >))
-      .then(arr => arr.reduce(
-        (accum, { post_id, item_index, posts: { title } }) => {
-          const entry = accum.find(({ post_id: id }) => id === post_id)
-          if (entry) entry.completed_count.add(item_index)
-          else accum.push({ post_id, title, completed_count: new Set([item_index]) })
-          return accum
-        },
-        [] as CList[])
+      .then(arr => arr
+        .reduce(
+          (accum, { post_id, item_index, posts: { title } }) => {
+            const entry = accum.find(({ post_id: id }) => id === post_id)
+            if (entry) entry.completed_set.add(item_index)
+            else accum.push({ post_id, title, completed_set: new Set([item_index]) })
+            return accum
+          }, [] as (Omit<CList, "completed_count"> & { completed_set: Set<number> })[]
+        )
+        .map(({ title, post_id, completed_set }) => ({ title, post_id, completed_count: completed_set.size }))
       )
     loading.value = false
   } catch (err) {
