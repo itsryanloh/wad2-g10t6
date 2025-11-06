@@ -225,8 +225,8 @@ router.delete("/me/checklist", async (req, res) => {
       .from("checklist_items")
       .select("id")
       .eq("post_id", checklist.post_id)
-      .eq("user_id",checklist.user_id)
-      .eq("item_index",checklist.item_index)
+      .eq("user_id", checklist.user_id)
+      .eq("item_index", checklist.item_index)
       .single();
 
     // Checks if post exist
@@ -240,7 +240,7 @@ router.delete("/me/checklist", async (req, res) => {
       .from("checklist_items")
       .delete()
       .eq("id", checklistItem.id);
-    
+
     if (error) {
       return res.status(400).send(error.message);
     }
@@ -251,5 +251,51 @@ router.delete("/me/checklist", async (req, res) => {
     console.error('❌ Checklist error:', err.message);
   }
 });
+
+router.get("/me/adoptions/count", async (req, res) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).send({ error: 'Unauthorized: No Bearer token provided or invalid format.' });
+  }
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const payload = jwt.verify(token, process.env.TOKEN_SECRET);
+    // Get user ID from database
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("username", payload.username)
+      .single();
+
+    const { data, error } = await supabase
+      .from("checklist_items")
+      .select("post_id,item_index")
+      .eq("user_id", userData?.id)
+
+    if (error) {
+      return res.status(400).send(error)
+    }
+
+    const count = data
+      .reduce(
+        (accum, { post_id, item_index }) => {
+          const entry = accum.find(([id]) => id === post_id)
+          if (entry) entry[1].add(item_index)
+          else accum.push([post_id, new Set([item_index])])
+          return accum
+        }, []
+      )
+      .map(([post_id, completed_set]) => completed_set.size)
+      .filter(num => num === 6)
+      .length
+    console.log(count)
+
+    return res.send({ count })
+  } catch (error) {
+    res.status(401).send({ error: error })
+  }
+})
 
 export default router;

@@ -34,13 +34,13 @@
           </div>
           <div class="card-body">
             <!-- Cat Info Section -->
-            <div v-if="catPostData.title" class="cat-info-section">
-              <img :src="catPostData.image" alt="Cat" class="cat-thumbnail-progress">
+            <div v-if="catPostData" class="cat-info-section">
+              <img :src="catPostData.image_urls[0]" alt="Cat" class="cat-thumbnail-progress">
               <div class="cat-details-progress">
                 <h3 class="cat-title-progress">{{ catPostData.title }}</h3>
                 <p class="cat-location-progress">
                   <i class="fas fa-map-marker-alt"></i>
-                  {{ catPostData.location }}
+                  {{ catPostData.location_name }}
                 </p>
               </div>
             </div>
@@ -194,7 +194,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { Rive } from '@rive-app/canvas'
 import BadgeDisplay from './badgedisplay.vue'
 import BadgeNotification from './badgenotification.vue'
@@ -274,12 +274,10 @@ let riveInstance = null
 let onResize = null
 const token = useCookie("token")
 const route = useRoute()
+const router = useRouter()
 const postId = route.params.postId
-const catPostData = ref({
-  title: '',
-  location: '',
-  image: ''
-})
+
+const catPostData = await useForum().fetchPostById(postId)
 
 const checklistItems = ref([
   { text: 'Research cat breeds and temperament to match your lifestyle.', completed: false },
@@ -398,7 +396,6 @@ function getAuthHeaders() {
   };
 }
 
-// TODO: only load checklist items for post_id query param
 async function loadUserData() {
   try {
     const headers = getAuthHeaders();
@@ -419,8 +416,6 @@ async function loadUserData() {
 
     if (response.status === 401) {
       console.log('Session expired');
-      // Load mock adoption count
-      totalAdoptedCats.value = 3
       loading.value = false
       return
     }
@@ -449,12 +444,9 @@ async function loadUserData() {
     }
 
     // Fetch actual adoption count from API
-    // const countResponse = await fetch(`${base_url}/users/me/adoptions/count`, { headers })
-    // const countData = await countResponse.json()
-    // totalAdoptedCats.value = countData.count
-
-    // Mock data
-    totalAdoptedCats.value = 3
+    const countResponse = await fetch(`${base_url}/users/me/adoptions/count`, { headers })
+    const countData = await countResponse.json()
+    totalAdoptedCats.value = countData.count
 
     error.value = ''
 
@@ -600,10 +592,6 @@ const handleFinishAdoption = async () => {
       method: 'POST',
       headers: getAuthHeaders()
     })
-    await fetch(`${base_url}/users/me/adoptions/increment`, {
-      method: 'POST',
-      headers: getAuthHeaders()
-    })
 
     // Update adoption count
     totalAdoptedCats.value++
@@ -624,12 +612,8 @@ const handleFinishAdoption = async () => {
 const closeCongratulationsModal = () => {
   showCongratulationsModal.value = false
 
-  // Reset checklist
-  checklistItems.value.forEach(item => item.completed = false)
-  earnedBadges.value = []
-
   // Navigate back to forum or post page
-  // navigateTo('/forum/main')
+  router.back()
 
   // For demo, just log
   console.log('Returning to forum...')
@@ -660,13 +644,6 @@ onMounted(async () => {
 
   // Set initial window width
   windowWidth.value = window.innerWidth
-
-  // mock data for testing
-  catPostData.value = {
-    title: route.query.title || 'Friendly Orange Tabby Looking for Home',
-    location: route.query.location || 'Block 123 Ang Mo Kio Ave 3',
-    image: route.query.image || '/uniform_cat1.png'
-  }
 
   // --- Load user data ---
   await loadUserData();
