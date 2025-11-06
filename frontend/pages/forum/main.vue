@@ -19,21 +19,21 @@
           <div class="search-card mb-4">
             <div class="row g-4">
               <!-- Community Info Banner (when community selected) -->
-              <div v-if="selectedCommunity" class="col-12">
+              <div v-if="selectedCommunity" class="col-12 mt-0">
                 <div class="community-banner">
                   <div class="community-banner-content">
                     <i class="fas fa-map-marker-alt me-2"></i>
                     <span class="community-banner-name">{{ selectedCommunity.name }}</span>
                     <span class="community-banner-desc">{{ selectedCommunity.description }}</span>
                   </div>
-                  <button @click="handleCommunitySelect(null)" class="clear-community-btn">
+                  <button @click="handleCommunitySelect(null)" class="clear-community-btn ms-2">
                     <i class="fas fa-times"></i>
                   </button>
                 </div>
               </div>
 
               <!-- Search Bar -->
-              <div class="col-lg-12">
+              <div class="col-lg-12 mt-0">
                 <div class="search-wrapper">
                   <i class="fas fa-search search-icon"></i>
                   <input
@@ -49,7 +49,7 @@
               </div>
 
               <!-- Filter Chips -->
-              <div class="col-12">
+              <div class="col-12 mt-0">
                 <div class="filter-section">
                   <span class="filter-label">
                     <i class="fas fa-filter me-2"></i>Filter by:
@@ -69,7 +69,7 @@
               </div>
 
               <!-- Active Filters Display -->
-              <div v-if="selectedType || searchQuery || selectedCommunity" class="col-12">
+              <div v-if="selectedType || searchQuery || selectedCommunity" class="col-12 mt-0">
                 <div class="active-filters">
                   <span class="me-2">Active filters:</span>
                   <span v-if="searchQuery" class="filter-tag">
@@ -86,11 +86,13 @@
                   </span>
                 </div>
               </div>
+              <div class="mt-0">
+              <button class="create-post-btn" @click="navigateTo('/forum/createPost')">
+                <i class="fas fa-plus me-2"></i>
+                Create new post
+              </button>
+              </div>
             </div>
-          <button class="create-post-btn" @click="navigateTo('/forum/createPost')">
-            <i class="fas fa-plus me-2"></i>
-            Create new post
-          </button>
           </div>
 
         <!-- Left Sidebar - Communities -->
@@ -475,6 +477,7 @@ onActivated(async () => {
 }
 
 .create-post-btn {
+  margin-top: 0px;
   grid-column: 2;
   background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
 }

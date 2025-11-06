@@ -192,7 +192,6 @@ const selectCommunity = (community) => {
   background: linear-gradient(135deg, #FFE0B2 0%, #FFCC80 100%);
   border: 2px solid #FFB74D; 
   box-shadow: 0 3px 10px rgba(255, 183, 77, 0.2); 
-  margin-bottom: 8px; 
 }
 
 .community-item.all-posts:hover {
