@@ -109,7 +109,8 @@
               <h3>No posts yet</h3>
               <p>Start sharing your cat stories with the community!</p>
               <button class="btn-primary" @click="navigateTo('/forum/createPost')">
-                <i class="fas fa-plus me-2"></i>Create Your First Post
+                <i class="fas fa-plus"></i>
+                <span>Create Your First Post</span>
               </button>
             </div>
 
@@ -761,13 +762,37 @@ const handleLogout = () => {
   background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
   color: white;
   border: none;
-  padding: 12px 30px;
+  padding: 14px 28px;
   border-radius: 10px;
   font-weight: 600;
+  font-size: 1.05rem;
   cursor: pointer;
   transition: all 0.3s;
   box-shadow: 0 5px 15px rgba(255, 152, 0, 0.3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 }
+
+.btn-primary i {
+  font-size: 1.3rem;
+  line-height: 1;
+  position: relative;
+  top: 11px;      
+  color:white;                  
+}
+
+.btn-primary span {
+  font-size: 1.05rem;
+  line-height: 1.05rem;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(255, 152, 0, 0.4);
+}
+
 
 .btn-primary:hover {
   transform: translateY(-2px);
