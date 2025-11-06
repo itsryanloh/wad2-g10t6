@@ -44,7 +44,7 @@
               </NuxtLink>
             </li>
             <li class="nav-item">
-              <NuxtLink to="/checklist/checklistmain" style="text-decoration: none;">
+              <NuxtLink to="/checklist" style="text-decoration: none;">
                 <button class="btn nav-link" :class="{ active: $route.path.startsWith('/checklist') }"
                   data-bs-toggle="collapse" data-bs-target="#navbarContent">
                   <i class="fas fa-list-check me-2"></i>Checklist

@@ -1,17 +1,18 @@
 <template>
-  <div class="forum-page d-flex flex-column flex-grow-1">
-    <div class="hero-section position-absolute w-100">
+  <div class="forum-page">
+    <div class="hero-section">
+      <div class="container">
+        <h1 class="hero-title">
+          <i class="fas fa-bar-chart me-3" />Pet Dashboard
+        </h1>
+        <p class="hero-subtitle">Track lost pets and adoption statistics in real-time</p>
+      </div>
       <div class="wave-animation" />
     </div>
-    <div class="flex-grow-1 d-flex mt-1">
+    <div class="flex-grow-1 d-flex mt-2">
       <div class="mx-auto" style="z-index: 100;">
-        <div class="dashboard-header text-light" style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);">
-          <h1 class="dashboard-title"><i class="fas fa-bar-chart me-3" />Pet Dashboard</h1>
-          <p class="dashboard-subtitle">Track lost pets and adoption statistics in real-time</p>
-        </div>
-
         <div v-if="!communities?.length" class="loading-container">
-          <div class="spinner"></div>
+          <div class="spinner">🐾</div>
           <p>Loading dashboard data...</p>
         </div>
 
@@ -241,18 +242,19 @@ onBeforeMount(refreshData)
 }
 
 .spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid #e5e7eb;
-  border-top-color: #3b82f6;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 16px;
+  font-size: 3em;
+  animation: bounce 1s infinite;
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
+@keyframes bounce {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-20px);
   }
 }
 
@@ -436,9 +438,8 @@ onBeforeMount(refreshData)
 }
 
 .forum-page {
-  background: linear-gradient(135deg, #FFF5E6 0%, #FFE8D6 50%, #FFF0E0 100%);
-  height: 100%;
-  min-height: fit-content;
+  background: #FFE6C2;
+  height: 100svh;
   padding-bottom: 0;
 }
 
@@ -448,6 +449,26 @@ onBeforeMount(refreshData)
   padding: 60px 0 100px;
   position: relative;
   overflow: hidden;
+}
+
+.hero-title {
+  color: white;
+  font-size: 2.5rem;
+  font-weight: 800;
+  text-align: center;
+  margin-bottom: 10px;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
+  animation: fadeInDown 1s ease;
+  letter-spacing: 1px;
+}
+
+.hero-subtitle {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 1.1rem;
+  text-align: center;
+  margin: 0;
+  font-weight: 500;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .wave-animation {
