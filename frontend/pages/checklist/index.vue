@@ -9,7 +9,7 @@
       </div>
       <div class="wave-animation" />
     </div>
-    <div class="d-flex justify-content-center">
+    <div class="d-flex justify-content-center pt-3">
       <!-- Loading State -->
       <div v-if="loading" class="text-center py-5 d-flex flex-column">
         <div class="spinner">🐾</div>
@@ -90,8 +90,7 @@ onMounted(loadUserData);
 <style scoped>
 .forum-page {
   background: #FFE6C2;
-  height: 100svh;
-  padding-bottom: 0;
+  min-height: 100vh;
 }
 
 .hero-section {
