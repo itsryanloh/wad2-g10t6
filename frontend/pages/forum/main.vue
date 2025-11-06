@@ -357,8 +357,8 @@ onActivated(async () => {
 /* Page Layout */
 .forum-page {
   background: linear-gradient(135deg, #FFF5E6 0%, #FFE8D6 50%, #FFF0E0 100%);
-  min-height: 100vh;
   padding-bottom: 80px;
+  flex-grow: 1;
 }
 
 /* Hero Section */
