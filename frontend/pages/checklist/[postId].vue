@@ -35,7 +35,7 @@
           <div class="card-body">
             <!-- Cat Info Section -->
             <div v-if="catPostData" class="cat-info-section">
-              <img :src="catPostData.image_urls[0]" alt="Cat" class="cat-thumbnail-progress">
+              <img :src="catPostData.image_urls[0] || '/uniform_cat1.png'" alt="Cat" class="cat-thumbnail-progress">
               <div class="cat-details-progress">
                 <h3 class="cat-title-progress">{{ catPostData.title }}</h3>
                 <p class="cat-location-progress">
@@ -290,10 +290,6 @@ const checklistItems = ref([
   { text: 'Register with local authorities and get your cat microchipped.', completed: false }
 ])
 
-const completedCount = computed(() => {
-  return checklistItems.value.filter(item => item.completed).length
-})
-
 const allBadges = computed(() => {
   return BADGE_CONFIG.map(config => {
     const earned = earnedBadges.value.includes(config.id)
@@ -539,7 +535,7 @@ const closeCongratulationsModal = () => {
   router.back()
 }
 
-const getConfettiStyle = (index) => {
+const getConfettiStyle = () => {
   return {
     left: `${Math.random() * 100}%`,
     animationDelay: `${Math.random() * 3}s`,

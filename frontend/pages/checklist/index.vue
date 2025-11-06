@@ -277,18 +277,23 @@ async function loadUserData() {
     }
 
     checklists.value = await (response.json() as (Promise<
-      { posts: { title: string }, post_id: string, item_index: number }[]
+      { posts: Post, post_id: string, item_index: number }[]
     >))
       .then(arr => arr
         .reduce(
-          (accum, { post_id, item_index, posts: { title } }) => {
+          (accum, { post_id, item_index, posts: { title, image_urls } }) => {
             const entry = accum.find(({ post_id: id }) => id === post_id)
             if (entry) entry.completed_set.add(item_index)
-            else accum.push({ post_id, title, completed_set: new Set([item_index]) })
+            else accum.push({
+              post_id,
+              title,
+              image_url: image_urls?.[0] || '/uniform_cat1.png',
+              completed_set: new Set([item_index])
+            })
             return accum
           }, [] as (Omit<CList, "completed_count"> & { completed_set: Set<number> })[]
         )
-        .map(({ title, post_id, completed_set }) => ({ title, post_id, completed_count: completed_set.size }))
+        .map(({ title, post_id, image_url, completed_set }) => ({ title, post_id, image_url, completed_count: completed_set.size }))
       )
     loading.value = false
   } catch (err) {

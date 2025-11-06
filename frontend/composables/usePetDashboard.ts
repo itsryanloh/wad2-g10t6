@@ -1,7 +1,7 @@
 const { VITE_BASE_URL } = import.meta.env;
 
 export type Community = Record<"id" | "name" | "description", string>
-type Post = {
+export type Post = {
   id: string,
   user_id: string,
   title: string,
