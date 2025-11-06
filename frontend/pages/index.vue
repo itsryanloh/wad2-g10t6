@@ -83,8 +83,10 @@ definePageMeta({
 <style scoped>
 .landing-page {
   position: relative;
-  min-height: 100vh; 
   overflow: hidden;
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
 }
 
 /* Video Background */
@@ -93,7 +95,7 @@ definePageMeta({
   top: 0;
   left: 0;
   width: 100%;
-  height: calc(100% + 200px);
+  height: 100%;
   z-index: 0;
   pointer-events: none; 
 }
@@ -125,7 +127,7 @@ definePageMeta({
 .content-wrapper {
   position: relative;
   z-index: 10;
-  min-height: 100vh; 
+  height: 100%; 
   display: flex;
   align-items: center;
   justify-content: flex-start;
