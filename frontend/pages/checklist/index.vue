@@ -90,7 +90,8 @@ onMounted(loadUserData);
 <style scoped>
 .forum-page {
   background: #FFE6C2;
-  min-height: 100vh;
+  min-height: 100svh;
+  padding-bottom: 40px;
 }
 
 .hero-section {
