@@ -26,6 +26,11 @@
               <i class="fas fa-paw me-2"></i>
               Current Adoption Paw-gress
             </div>
+            <div class="adoption-counter">
+              <i class="fas fa-heart me-1"></i>
+              {{ totalAdoptedCats }} {{ totalAdoptedCats === 1 ? 'cat' : 'cats' }} adopted
+            </div>
+
           </div>
           <div class="card-body">
             <!-- Cat Info Section -->
@@ -873,6 +878,19 @@ onBeforeUnmount(() => {
   gap: 10px;
 }
 
+.adoption-counter {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  animation: fadeIn 0.6s ease;
+  background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+  color: white;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -880,6 +898,11 @@ onBeforeUnmount(() => {
   to {
     opacity: 1;
   }
+}
+
+.adoption-counter i {
+  color: #f21010;
+  animation: heartBeat 1.5s ease-in-out infinite;
 }
 
 @keyframes heartBeat {
@@ -1474,6 +1497,11 @@ onBeforeUnmount(() => {
   .finish-adoption-btn {
     padding: 15px 30px;
     font-size: 1rem;
+  }
+
+  .adoption-counter {
+    font-size: 0.85rem;
+    padding: 6px 12px;
   }
 
   .cat-info-section {
