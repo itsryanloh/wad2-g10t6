@@ -87,12 +87,18 @@
                   </div>
 
                   <!-- Finish Adoption Button -->
-                  <div v-if="isChecklistComplete" class="finish-adoption-section">
+                  <div v-if="isChecklistComplete && !isAdoptionCompleted" class="finish-adoption-section">
                     <button class="finish-adoption-btn" @click="handleFinishAdoption" :disabled="finishingAdoption">
                       <i class="fas fa-heart me-2"></i>
                       {{ finishingAdoption ? 'Processing...' : 'Finish Adoption' }}
                       <i class="fas fa-arrow-right ms-2"></i>
                     </button>
+                  </div>
+
+                  <!-- Already Adopted Message -->
+                  <div v-if="isAdoptionCompleted" class="adoption-completed-message">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <span>Adoption completed! This cat has found their forever home.</span>
                   </div>
                 </div>
               </div>
@@ -264,6 +270,7 @@ const userDismissedWarning = ref(false)
 const showCongratulationsModal = ref(false)
 const finishingAdoption = ref(false)
 const totalAdoptedCats = ref(0)
+const isAdoptionCompleted = ref(false)
 
 const canvas = ref(null)
 const catContainer = ref(null)
@@ -377,6 +384,13 @@ async function loadUserData() {
       rebuildBadges()
     }
 
+    // Check if this post has already been adopted by this user
+    const adoptionStatusResponse = await fetch(`${base_url}/users/me/adoptions/${postId}/status`, { headers })
+    if (adoptionStatusResponse.ok) {
+      const adoptionData = await adoptionStatusResponse.json()
+      isAdoptionCompleted.value = adoptionData.is_adopted || false
+    }
+
     const countResponse = await fetch(`${base_url}/users/me/adoptions/count`, { headers })
     const countData = await countResponse.json()
     totalAdoptedCats.value = countData.count
@@ -484,6 +498,11 @@ const toggleItem = async (index) => {
     return;
   }
 
+  // Prevent toggling items if adoption is already completed
+  if (isAdoptionCompleted.value) {
+    return;
+  }
+
   const headers = getAuthHeaders();
 
   if (!headers.Authorization && !userDismissedWarning.value) {
@@ -515,6 +534,7 @@ const handleFinishAdoption = async () => {
     })
 
     totalAdoptedCats.value++
+    isAdoptionCompleted.value = true
     showCongratulationsModal.value = true
 
   } catch (error) {
@@ -585,7 +605,6 @@ onBeforeUnmount(() => {
 });
 
 </script>
-
 <style scoped>
 .checklist-page {
   background: linear-gradient(135deg, #FFF5E6 0%, #FFE8D6 50%, #FFF0E0 100%);
@@ -1035,6 +1054,29 @@ onBeforeUnmount(() => {
   opacity: 0.7;
   cursor: not-allowed;
   transform: none;
+}
+
+/* Adoption Completed Message */
+.adoption-completed-message {
+  margin-top: 30px;
+  padding: 20px;
+  background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+  border-left: 5px solid #4CAF50;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #2E7D32;
+  font-weight: 600;
+  font-size: 1.05rem;
+  animation: slideIn 0.6s ease;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.2);
+}
+
+.adoption-completed-message i {
+  font-size: 1.5rem;
+  color: #4CAF50;
 }
 
 /* Modal Styles */
