@@ -433,7 +433,7 @@ const handleSubmit = async () => {
         name: form.value.name.trim(),
         username: form.value.username.trim(),
         contact_no: form.value.contact_no?.trim() || null,
-        age: form.value.age || null,
+        age: form.value.age || 0,
         gender: form.value.gender || null,
         avatar_url: form.value.avatar_url || null,
         has_2fa_enabled: !!form.value.has_2fa_enabled
