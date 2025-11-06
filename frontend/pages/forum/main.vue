@@ -598,7 +598,6 @@ onActivated(async () => {
   outline: none;
   border-color: #FF9800;
   box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.1);
-  transform: translateY(-2px);
 }
 
 .clear-btn {
