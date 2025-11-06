@@ -265,7 +265,7 @@ const getReplies = (commentId) => {
 }
 
 .replies-container {
-  margin-left: 60px;
+  margin-left: 20px;
   display: flex;
   flex-direction: column;
   gap: 15px;
@@ -275,7 +275,7 @@ const getReplies = (commentId) => {
 .replies-container::before {
   content: '';
   position: absolute;
-  left: -30px;
+  left: -10px;
   top: 0;
   bottom: 0;
   width: 2px;
