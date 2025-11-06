@@ -573,16 +573,11 @@ onMounted(loadUserData);
   height: 4px;
   background: linear-gradient(90deg, #FF9800 0%, #FFB74D 100%);
   transform: scaleX(0);
-  transform-origin: left;
   transition: transform 0.3s ease;
 }
 
 .checklist-card.completed::before {
   background: linear-gradient(90deg, #4CAF50 0%, #66BB6A 100%);
-}
-
-.checklist-card:hover::before {
-  transform: scaleX(1);
 }
 
 .checklist-card:hover {
