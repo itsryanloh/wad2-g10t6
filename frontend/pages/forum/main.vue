@@ -250,7 +250,7 @@ const searchQuery = ref('')
 const selectedType = ref(null)
 const selectedCommunity = ref(null)
 const selectedCommunityId = ref(null)
-const currentUserId = ref(null)
+const currentUserId = ref("")
 const showCommunityBrowser = ref(false)
 
 const postTypes = [
