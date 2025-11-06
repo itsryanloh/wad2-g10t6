@@ -22,7 +22,7 @@
         </div>
 
         <div v-else>
-          <div class="container w-100">
+          <div class="container">
             <div class="d-flex mb-4 gap-2">
               <AutocompleteBar class="flex-grow-1 d-block" placeholder="Select a community" suggestion-icon="fa-cat"
                 :key-down="keyDown" :select-idx="selectIdx" v-model="searchBar" />
@@ -65,9 +65,9 @@
                       <span class="activity-time">{{ formatDate(created_at) }}</span>
                     </div>
 
-                    <h3 class="activity-title">{{ title }}</h3>
+                    <h3 class="activity-title">{{ truncateText(title, 100) }}</h3>
 
-                    <p class="activity-description">{{ truncateText(content, 100) }}</p>
+                    <p class="activity-description">{{ truncateText(content, 120) }}</p>
 
                     <div class="activity-meta">
                       <span class="meta-item">
