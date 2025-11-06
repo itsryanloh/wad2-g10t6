@@ -497,8 +497,13 @@ async function saveChecklistItem(index, completed) {
       console.log('Item added');
     } else {
       console.log(`Removing item ${index}`);
-      const response = await fetch(`${base_url}/users/me/checklist/${index}`, {
+      const response = await fetch(`${base_url}/users/me/checklist`, {
         method: 'DELETE',
+        body: JSON.stringify({
+          user_id: payload.user_id,
+          post_id: postId,
+          item_index: index,
+        }),
         headers: headers
       })
 
