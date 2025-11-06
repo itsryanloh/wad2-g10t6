@@ -361,7 +361,8 @@ const handleLogout = () => {
 /* Use all styles from profile index.vue for consistency */
 .profile-page {
   background: linear-gradient(135deg, #FFF5E6 0%, #FFE8D6 100%);
-  min-height: 100vh;
+  display: flex;
+  flex-grow: 1;
 }
 
 .container-fluid {
@@ -369,13 +370,14 @@ const handleLogout = () => {
 }
 
 .row {
+  height: 100%;
   margin: 0;
 }
 
 /* Sidebar Styles (Same as profile index) */
 .sidebar {
   background: white;
-  min-height: 100vh;
+  min-height: 100%;
   padding: 0;
   box-shadow: 2px 0 20px rgba(0, 0, 0, 0.05);
   position: sticky;
@@ -487,7 +489,7 @@ const handleLogout = () => {
 /* Main Content */
 .main-content {
   padding: 40px;
-  min-height: 100vh;
+  min-height: 100%;
 }
 
 .my-posts-page {
