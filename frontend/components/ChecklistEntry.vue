@@ -1,6 +1,6 @@
 <template>
   <div role="button"
-    class="g-5 border border-3 border-warning rounded-4 w-100 text-center user-select-none community-item"
+    class="g-5 border border-3 border-warning rounded-4 w-100 h-100 text-center user-select-none community-item d-flex flex-column"
     style="transition: all 0.3s;" @click="navigateTo({
       name: 'checklist-postId',
       params: { postId: post_id }
