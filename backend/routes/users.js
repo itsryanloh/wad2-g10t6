@@ -298,4 +298,45 @@ router.get("/me/adoptions/count", async (req, res) => {
   }
 })
 
+// Check if a specific post adoption is completed by current user
+router.get("/me/adoptions/:postId/status", async (req, res) => {
+  const authHeader = req.headers.authorization;
+  const { postId } = req.params;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).send({ error: 'Unauthorized: No Bearer token provided or invalid format.' });
+  }
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const payload = jwt.verify(token, process.env.TOKEN_SECRET);
+    // Get user ID from database
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("username", payload.username)
+      .single();
+
+    if (userError || !userData) {
+      return res.status(401).send({ error: 'User not found' });
+    }
+
+    // Check if post exists in adopted_posts table
+    const { data: adoptedPost, error: adoptedError } = await supabase
+      .from("adopted_posts")
+      .select("*")
+      .eq("user_id", userData.id)
+      .eq("post_id", postId)
+      .maybeSingle();
+
+    if (adoptedError) {
+      return res.status(400).send({ error: adoptedError.message });
+    }
+
+    return res.send({ is_adopted: !!adoptedPost });
+  } catch (error) {
+    return res.status(401).send({ error: 'Invalid token' });
+  }
+});
+
 export default router;

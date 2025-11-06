@@ -8,6 +8,7 @@ import authRouter from './routes/auth.js';
 import communitiesRouter from './routes/communities.js'
 import mapsRouter from './routes/maps.js'
 import morgan from 'morgan';
+import postsRouter from './routes/posts.js';
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.use('/api/avatars', avatarsRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/communities', communitiesRouter)
 app.use('/api/maps', mapsRouter)
+app.use('/api/posts', postsRouter);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
