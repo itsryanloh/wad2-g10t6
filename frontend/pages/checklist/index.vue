@@ -20,14 +20,16 @@
         <div class="row g-4">
           <ChecklistSection :checklists="checklists.filter(({ completed_count }) => completed_count < CHECKLIST_ITEMS)"
             style="background: linear-gradient(135deg, #FF9800 0%, #FFA726 50%, #FFB74D 100%);">
-            <h2 class="text-center fw-semibold fs-1" style="filter: drop-shadow(1px 2px 2px rgba(0, 0, 0, 0.2));">
+            <div>
+            <h2 class="text-center fw-semibold fs-4 mb-0" style="filter: drop-shadow(1px 2px 2px rgba(0, 0, 0, 0.2));">
               <i class="fas fa-bars-progress me-2"></i>In-Progress
             </h2>
+            </div>
           </ChecklistSection>
           <ChecklistSection
             :checklists="checklists.filter(({ completed_count }) => completed_count === CHECKLIST_ITEMS)"
             style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);">
-            <h2 class="text-center fw-semibold fs-1" style="filter: drop-shadow(1px 2px 2px rgba(0, 0, 0, 0.2));">
+            <h2 class="text-center fw-semibold fs-4 mb-0" style="filter: drop-shadow(1px 2px 2px rgba(0, 0, 0, 0.2));">
               <i class="far fa-circle-check me-2"></i>Completed
             </h2>
           </ChecklistSection>

@@ -1,15 +1,17 @@
 <template>
   <div role="button"
-    class="g-5 border border-3 border-warning rounded-4 w-100 user-select-none hover-effect d-flex flex-md-column align-items-center p-2"
+    class="g-5 border h-100 border-3 border-warning rounded-4 w-100 user-select-none hover-effect d-flex flex-md-column align-items-center p-2"
     style="transition: all 0.3s;" @click="navigateTo({
       name: 'checklist-postId',
       params: { postId: post_id }
     }
     )">
-    <div class="my-auto text-center w-100 d-flex gap-3 align-items-center">
+    <div class="my-auto text-center w-100 d-flex gap-3 align-items-center justify-content-center">
+      <div>
       <img :src="image_url"
         :style="Object.fromEntries(['minWidth', 'minHeight', 'maxWidth', 'maxHeight'].map(k => [k, image_size]))" />
-      <p class="fs-3 fw-medium m-0 flex-grow-1" style="color: #FF9C0C;">
+      </div>
+      <p class="fs-5 fw-medium m-0 d-inline" style="color: #FF9C0C;">
         {{ title }}
       </p>
     </div>
