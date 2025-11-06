@@ -82,7 +82,7 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="main-content flex-grow-1 d-flex flex-column">
+    <main class="flex-grow-1 d-flex flex-column">
       <slot />
     </main>
 
@@ -277,10 +277,6 @@ const handleLogin = async () => {
   .navbar .collapsing {
     transition: height 0.3s ease;
   }
-}
-
-.main-content {
-  min-height: calc(100vh - 200px);
 }
 
 .footer-custom {

@@ -253,8 +253,6 @@ const reactionCounts = ref({
 const newComment = ref('')
 const addingComment = ref(false)
 const currentCarouselIndex = ref(0)
-const replyingTo = ref(null)
-const replyContent = ref('')
 const currentUserId = ref(null)
 const base_url = import.meta.env.VITE_BASE_URL
 
@@ -262,55 +260,6 @@ const base_url = import.meta.env.VITE_BASE_URL
 const topLevelComments = computed(() => {
   return comments.value.filter(c => !c.parent_comment_id)
 })
-
-// Get replies for a specific comment
-const getReplies = (commentId) => {
-  return comments.value.filter(c => c.parent_comment_id === commentId)
-}
-
-const toggleReply = (commentId) => {
-  if (replyingTo.value === commentId) {
-    replyingTo.value = null
-    replyContent.value = ''
-  } else {
-    replyingTo.value = commentId
-    replyContent.value = ''
-  }
-}
-
-const cancelReply = () => {
-  replyingTo.value = null
-  replyContent.value = ''
-}
-
-const handleReply = async (parentCommentId) => {
-  if (!replyContent.value.trim()) return
-
-  if (!currentUserId.value) {
-    alert('Please log in to comment')
-    return
-  }
-
-  addingComment.value = true
-  try {
-    const result = await addComment(route.params.postId, {
-      content: replyContent.value,
-      user_id: currentUserId.value,
-      parent_comment_id: parentCommentId
-    })
-
-    if (result) {
-      replyContent.value = ''
-      replyingTo.value = null
-      await loadComments()
-    }
-  } catch (error) {
-    console.error('Error adding reply:', error)
-    alert('Error posting reply. Please try again.')
-  } finally {
-    addingComment.value = false
-  }
-}
 
 const formatDate = (date) => {
   const now = new Date()

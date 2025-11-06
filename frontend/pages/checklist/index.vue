@@ -502,14 +502,14 @@ onMounted(loadUserData);
 }
 
 .section-header {
-  padding: 30px;
+  padding: 15px;
   color: white;
   text-align: center;
 }
 
 .section-title {
   margin: 0;
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 700;
   filter: drop-shadow(1px 2px 2px rgba(0, 0, 0, 0.2));
 }
@@ -561,6 +561,7 @@ onMounted(loadUserData);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   position: relative;
   overflow: hidden;
+  height: 100%;
 }
 
 .checklist-card::before {
@@ -572,16 +573,11 @@ onMounted(loadUserData);
   height: 4px;
   background: linear-gradient(90deg, #FF9800 0%, #FFB74D 100%);
   transform: scaleX(0);
-  transform-origin: left;
   transition: transform 0.3s ease;
 }
 
 .checklist-card.completed::before {
   background: linear-gradient(90deg, #4CAF50 0%, #66BB6A 100%);
-}
-
-.checklist-card:hover::before {
-  transform: scaleX(1);
 }
 
 .checklist-card:hover {
