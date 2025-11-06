@@ -73,7 +73,7 @@ A web application for helping cats find a home. It is publicly accessible on ado
     npm i && npm run start
     ```
 
-The frontend will be available at http://localhost:3001.
+The frontend will be available at http://localhost/.
 
 ## Folder Structure
 

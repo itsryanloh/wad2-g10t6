@@ -2,8 +2,8 @@
   <div class="create-page">
     <div class="container">
       <!-- Back Button -->
-      <button class="back-btn" @click="navigateTo('/forum/main')">
-        <i class="fas fa-arrow-left me-2"></i>Back to Forum
+      <button class="back-btn" @click="router.back">
+        <i class="fas fa-arrow-left me-2"></i>Back to Previous Page
       </button>
 
       <!-- Page Header -->

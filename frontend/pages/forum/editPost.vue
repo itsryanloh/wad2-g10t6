@@ -9,8 +9,8 @@
       <!-- Edit Form -->
       <div v-else-if="currentPost" class="edit-wrapper">
         <!-- Back Button -->
-        <button class="back-btn" @click="navigateTo(`/forum/${route.query.postId}`)">
-          <i class="fas fa-arrow-left me-2"></i>Back to Post
+        <button class="back-btn" @click="router.back">
+          <i class="fas fa-arrow-left me-2"></i>Back to Previous Page
         </button>
 
         <!-- Page Header -->
@@ -171,6 +171,7 @@ import { useForum } from '~/composables/useForum'
 import LocationSearch from '~/components/LocationSearch.vue'
 
 const route = useRoute()
+const router = useRouter()
 const { currentPost, loading, fetchPostById, updatePost } = useForum()
 
 const updating = ref(false)
