@@ -288,10 +288,6 @@ const checklistItems = ref([
   { text: 'Register with local authorities and get your cat microchipped.', completed: false }
 ])
 
-const completedCount = computed(() => {
-  return checklistItems.value.filter(item => item.completed).length
-})
-
 const allBadges = computed(() => {
   return BADGE_CONFIG.map(config => {
     const earned = earnedBadges.value.includes(config.id)
@@ -619,7 +615,7 @@ const closeCongratulationsModal = () => {
   console.log('Returning to forum...')
 }
 
-const getConfettiStyle = (index) => {
+const getConfettiStyle = () => {
   return {
     left: `${Math.random() * 100}%`,
     animationDelay: `${Math.random() * 3}s`,
