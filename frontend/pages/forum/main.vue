@@ -87,6 +87,10 @@
                 </div>
               </div>
             </div>
+          <button class="create-post-btn" @click="navigateTo('/forum/createPost')">
+            <i class="fas fa-plus me-2"></i>
+            Create new post
+          </button>
           </div>
 
         <!-- Left Sidebar - Communities -->
@@ -207,10 +211,6 @@
               No posts found in {{ selectedCommunity.name }}. Try selecting a different community or create a post!
             </p>
             <p v-else>Try adjusting your filters or create a new post</p>
-            <button class="btn-primary" @click="navigateTo('/forum/createPost')">
-              <i class="fas fa-plus"></i>
-              <span>Create First Post</span>
-            </button>
           </div>
       </div>
     </div>
@@ -225,7 +225,7 @@
     />
 
     <!-- Floating Action Button -->
-    <button class="fab" @click="navigateTo('/forum/createPost')" title="Create New Post">
+    <button class="fab d-sm-none" @click="navigateTo('/forum/createPost')" title="Create New Post">
       <i class="fas fa-plus"></i>
     </button>
   </div>
@@ -456,7 +456,7 @@ onActivated(async () => {
 }
 
 /* Find Community Button */
-.find-communities-btn {
+.find-communities-btn, .create-post-btn {
   width: 100%;
   margin-top: 15px;
   padding: 15px 20px;
@@ -472,6 +472,11 @@ onActivated(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.create-post-btn {
+  grid-column: 2;
+  background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
 }
 
 .find-communities-btn:hover {
