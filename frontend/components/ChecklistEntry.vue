@@ -1,16 +1,30 @@
 <template>
   <div role="button"
-    class="g-5 border border-3 border-warning rounded-4 w-100 text-center user-select-none community-item"
-    style="transition: all 0.3s;" @click="navigateTo(`/checklist/${post_id}`)">
+    class="g-5 border border-3 border-warning rounded-4 w-100 h-100 text-center user-select-none community-item d-flex flex-column"
+    style="transition: all 0.3s;" @click="navigateTo({
+      name: 'checklist-postId',
+      params: { postId: post_id }
+    }
+    )">
     <p class="m-auto fs-3 fw-medium" style="color: #FF9C0C;">
       {{ title }}
     </p>
-    <small class="fs-4 fw-normal" style="color: #449d48;">{{ completed_count.size }}/{{ CHECKLIST_ITEMS }}</small>
+    <small class="fs-4 fw-normal" style="color: #449d48;">{{ completed_count }}/{{ CHECKLIST_ITEMS }}</small>
+    <!--<div class="progress-container">
+      <div class="progress-bar-custom">
+        <div class="progress-fill" :style="{
+          width: progress + '%',
+          opacity: progress > 0 ? 1 : 0
+        }">
+          {{ Math.round(progress) }}%
+        </div>
+      </div>
+</div>-->
   </div>
 </template>
 
 <script setup lang="ts">
-defineProps<{ title: string, post_id: string, completed_count: Set<number> }>()
+defineProps<{ title: string, post_id: string, completed_count: number }>()
 </script>
 
 <style>
