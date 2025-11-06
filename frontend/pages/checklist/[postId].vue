@@ -857,7 +857,7 @@ onBeforeUnmount(() => {
   font-size: 1.2rem;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   box-shadow: 0 2px 5px rgba(255, 152, 0, 0.2);
   flex-wrap: wrap;
   gap: 10px;
