@@ -26,10 +26,6 @@
               <i class="fas fa-paw me-2"></i>
               Current Adoption Paw-gress
             </div>
-            <div class="adoption-counter">
-              <i class="fas fa-heart me-1"></i>
-              {{ totalAdoptedCats }} {{ totalAdoptedCats === 1 ? 'cat' : 'cats' }} adopted
-            </div>
 
           </div>
           <div class="card-body">
@@ -268,7 +264,6 @@ const showLoginModal = ref(false)
 const userDismissedWarning = ref(false)
 const showCongratulationsModal = ref(false)
 const finishingAdoption = ref(false)
-const totalAdoptedCats = ref(0)
 
 const canvas = ref(null)
 const catContainer = ref(null)
@@ -381,10 +376,6 @@ async function loadUserData() {
       })
       rebuildBadges()
     }
-
-    const countResponse = await fetch(`${base_url}/users/me/adoptions/count`, { headers })
-    const countData = await countResponse.json()
-    totalAdoptedCats.value = countData.count
 
     error.value = ''
 
@@ -562,7 +553,7 @@ onMounted(async () => {
       src: '/cute_cat2.0.riv',
       canvas: canvas.value,
       autoplay: true,
-      animations: 'Main',
+      stateMachines: 'Main',
       onLoad: () => {
         riveInstance.resizeDrawingSurfaceToCanvas();
         riveInstance.play('Main');
@@ -876,19 +867,6 @@ onBeforeUnmount(() => {
   box-shadow: 0 2px 5px rgba(255, 152, 0, 0.2);
   flex-wrap: wrap;
   gap: 10px;
-}
-
-.adoption-counter {
-  display: flex;
-  align-items: center;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  animation: fadeIn 0.6s ease;
-  background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
-  color: white;
 }
 
 @keyframes fadeIn {
