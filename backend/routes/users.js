@@ -119,7 +119,7 @@ router.get("/me/checklist", async (req, res) => {
     const { error, data } = await (async () => {
       let query = supabase
         .from("checklist_items")
-        .select("item_index")
+        .select("item_index,post_id,posts(title,image_urls)")
         .eq("user_id", userData.id)
       if (post_id) query = query.eq("post_id", post_id)
       return query
@@ -135,7 +135,7 @@ router.get("/me/checklist", async (req, res) => {
   }
 });
 
-// Add checklist item (protected)
+// Update checklist item to checked (protected)
 router.post("/me/checklist", async (req, res) => {
   const checklist = req.body;
 
@@ -150,16 +150,19 @@ router.post("/me/checklist", async (req, res) => {
       .eq("id", checklist.user_id)
       .single();
 
+    // Checks if user exists
     if (userError || !userData) {
       return res.status(401).send({ error: 'User not found' });
     }
 
+    // Get post ID
     const { data: postData, error: postError } = await supabase
       .from("posts")
       .select("id")
       .eq("id", checklist.post_id)
       .single();
 
+    // Checks if post exist
     if (postError || !postData) {
       return res.status(401).send({ error: 'Post not found' });
     }
@@ -181,8 +184,10 @@ router.post("/me/checklist", async (req, res) => {
 });
 
 // Delete checklist item (protected)
-router.delete("/me/checklist/:itemIndex", async (req, res) => {
+router.delete("/me/checklist", async (req, res) => {
   const authHeader = req.headers.authorization;
+  const checklist = req.body;
+
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).send({ error: 'Unauthorized' });
@@ -192,7 +197,6 @@ router.delete("/me/checklist/:itemIndex", async (req, res) => {
 
   try {
     const payload = jwt.verify(token, process.env.TOKEN_SECRET);
-
     // Get user ID
     const { data: userData, error: userError } = await supabase
       .from("users")
@@ -204,14 +208,38 @@ router.delete("/me/checklist/:itemIndex", async (req, res) => {
       return res.status(401).send({ error: 'User not found' });
     }
 
-    const { itemIndex } = req.params;
+    // Get post ID
+    const { data: postData, error: postError } = await supabase
+      .from("posts")
+      .select("id")
+      .eq("id", checklist.post_id)
+      .single();
 
-    // Delete checklist item
-    const { error } = await supabase
+    // Checks if post exist
+    if (postError || !postData) {
+      return res.status(401).send({ error: 'Post not found' });
+    }
+
+    // Get Checklist_item ID
+    const { data: checklistItem, error: checklistItemError } = await supabase
+      .from("checklist_items")
+      .select("id")
+      .eq("post_id", checklist.post_id)
+      .eq("user_id", checklist.user_id)
+      .eq("item_index", checklist.item_index)
+      .single();
+
+    // Checks if post exist
+    if (checklistItemError || !checklistItem) {
+      return res.status(401).send({ error: 'Checklist_item not found' });
+    }
+
+    console.log("CHECKLIST ITEM HERE", checklistItem);
+
+    const { error, data } = await supabase
       .from("checklist_items")
       .delete()
-      .eq("user_id", userData.id)
-      .eq("item_index", parseInt(itemIndex));
+      .eq("id", checklistItem.id);
 
     if (error) {
       return res.status(400).send(error.message);
@@ -223,5 +251,51 @@ router.delete("/me/checklist/:itemIndex", async (req, res) => {
     console.error('❌ Checklist error:', err.message);
   }
 });
+
+router.get("/me/adoptions/count", async (req, res) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).send({ error: 'Unauthorized: No Bearer token provided or invalid format.' });
+  }
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const payload = jwt.verify(token, process.env.TOKEN_SECRET);
+    // Get user ID from database
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("username", payload.username)
+      .single();
+
+    const { data, error } = await supabase
+      .from("checklist_items")
+      .select("post_id,item_index")
+      .eq("user_id", userData?.id)
+
+    if (error) {
+      return res.status(400).send(error)
+    }
+
+    const count = data
+      .reduce(
+        (accum, { post_id, item_index }) => {
+          const entry = accum.find(([id]) => id === post_id)
+          if (entry) entry[1].add(item_index)
+          else accum.push([post_id, new Set([item_index])])
+          return accum
+        }, []
+      )
+      .map(([post_id, completed_set]) => completed_set.size)
+      .filter(num => num === 6)
+      .length
+    console.log(count)
+
+    return res.send({ count })
+  } catch (error) {
+    res.status(401).send({ error: error })
+  }
+})
 
 export default router;
